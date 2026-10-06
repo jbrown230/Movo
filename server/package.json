@@ -1,0 +1,20 @@
+{
+  "name": "puraplata-api",
+  "version": "1.3.0",
+  "private": true,
+  "description": "API mínima de PuraPlata: configuración, tipo de cambio y respaldo opcional por usuario.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "SERVE_STATIC=../web node --watch src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0",
+    "redis": "^4.7.0"
+  },
+  "license": "MIT"
+}

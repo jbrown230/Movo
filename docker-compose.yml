@@ -1,0 +1,52 @@
+# PuraPlata en un VPS: Caddy (HTTPS automático + archivos de la PWA),
+# API mínima en Node, Redis (caché efímera) y MongoDB (respaldo opcional).
+#   cp .env.example .env   # y completa DOMAIN y GOOGLE_CLIENT_ID
+#   docker compose up -d --build
+# Sin respaldo en la nube: CLOUD_SYNC=false y `docker compose up -d caddy api redis`.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web:/srv/web:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/puraplata}
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Caché pura: sin persistencia y con memoria acotada.
+    command: ["redis-server", "--save", "", "--appendonly", "no", "--maxmemory", "64mb", "--maxmemory-policy", "allkeys-lru"]
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  caddy_data:
+  caddy_config:
+  mongo_data:
