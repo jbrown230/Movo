@@ -1,11 +1,26 @@
 # Cambios
 
+## v2.0.0
+
+La app pasó a React con una arquitectura por capas. El aspecto y el funcionamiento para quien la usa son los mismos.
+
+- **React y Vite.** La interfaz se reescribió en componentes React (pantallas, ventanas y proveedores de estado) conservando los estilos. La app se compila con Vite.
+- **Arquitectura por capas.** El código se separó en `domain` (reglas puras), `application` (casos de uso), `infrastructure` (SQLite, Gmail, API, navegador), `presentation` (React) y `composition`. Ver `docs/ARQUITECTURA.md`.
+- **Código más legible.** Nombres completos en lugar de abreviaturas, una plantilla del lector por archivo, un repositorio por tabla, constantes con nombre y el vocabulario del negocio en un solo lugar (`domain/types.js`).
+- **Sin cambios en los datos.** Las bases SQLite ya guardadas y el respaldo del servidor siguen funcionando: no cambiaron columnas ni formato de red.
+- **Pruebas por capa** (dominio, aplicación, infraestructura, interfaz y privacidad). Se agregaron casos de error de conexión, datos inválidos, correos vacíos y fallos a mitad de una escritura.
+- **Privacidad de los datos de prueba.** Los correos de ejemplo se anonimizaron por completo (comercios, fechas, referencias y enlaces de WhatsApp incluidos). Una prueba automática (`tests/privacy`) revisa que no se cuele ningún dato real. Nueva guía en `docs/CONTRIBUIR.md`.
+- **Despliegue.** La imagen de Docker compila la app con Vite; los archivos llevan un código en el nombre y se guardan en caché por un año.
+- **Arreglos.** El número de gasto del inicio ya no puede animarse hacia valores negativos en el primer cuadro; el autofoco de las ventanas ya no le quita el cursor a quien está escribiendo; al cerrar sesión o borrar datos no se vuelve a guardar la base borrada.
+- El nombre del almacenamiento local pasó de `pp:` a `movo:`: se pide iniciar sesión otra vez una sola vez.
+- Capturas de pantalla nuevas.
+
 ## v1.3.0
 
 - Validado con el HTML real de cuatro notificaciones del BCR (SINPE enviado, SINPE entre cuentas propias, tarjeta aprobada y tarjeta negada). Quedan como pruebas automáticas anonimizadas en `tests/fixtures/bcr-html/`.
 - Conversión de HTML a texto que colapsa los espacios como un navegador: el BCR parte etiquetas con saltos de línea ("Estimado\r\n(a):") y pone tabuladores entre celdas.
 - Las horas de los correos se interpretan en hora de Costa Rica (UTC−6), aunque el teléfono esté en otra zona horaria.
-- Nombres de comercio limpios para mostrar ("Anthropic Claude Sub" en vez de "ANTHROPIC CLAUDE SUB 14152360599 US").
+- Nombres de comercio limpios para mostrar ("Servicio Digital Sub" en vez de "SERVICIO DIGITAL SUB 00000000000 US").
 
 ## v1.2.0
 

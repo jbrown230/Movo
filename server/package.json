@@ -5,10 +5,13 @@
   "description": "API mínima de Movo: configuración, tipo de cambio y respaldo opcional por usuario.",
   "type": "module",
   "main": "src/index.js",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node src/index.js",
-    "dev": "SERVE_STATIC=../web node --watch src/index.js",
+    "start:web": "node src/index.js --static ../web/dist",
+    "dev": "node --watch src/index.js",
     "test": "node --test"
   },
   "dependencies": {

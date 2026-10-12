@@ -6,22 +6,65 @@ Movo está pensada para muchos usuarios con un servidor pequeño y barato, porqu
 
 ## Componentes
 
-`web/` es la PWA, sin paso de compilación (módulos ES). Archivos clave:
+### La app del teléfono (`web/src`)
 
-- `js/gmail.js`: OAuth 2.0 para apps de cliente (`response_type=token`) y consulta a la Gmail API desde el navegador.
-- `js/parser.js`: plantillas por banco y lector genérico por etiquetas. Es un módulo puro que se prueba en Node.
-- `js/repo.js`: esquema SQLite, ingesta idempotente, consultas y control de cambios para el respaldo.
-- `js/db.js`: carga sql.js (SQLite en WebAssembly) y guarda la base en IndexedDB. Hay una base por usuario (`db:<sub de Google>`) y otra para el demo.
-- `sw.js`: app shell en caché para abrir sin conexión.
+Es una PWA hecha con **React** y compilada con **Vite**. El código está dividido en capas para que cada parte se pueda leer, probar y cambiar sin romper las demás.
 
-`server/` es una API Express con cuatro rutas:
+```
+web/src/
+  domain/           Reglas del negocio. Funciones puras: sin pantalla, sin base de datos, sin red.
+    emailParser/      Lee un correo del banco (una plantilla por formato, en templates/)
+    categories.js     Categorías y cómo se asignan automáticamente
+    names.js, money.js, ids.js, period.js, banks.js, types.js
+  application/      Casos de uso: lo que la app puede hacer. Solo conocen el dominio y "puertos".
+    ingestMail.js     Lee un correo y registra sus movimientos
+    reparseMails.js   Vuelve a leer correos cuando mejora el lector
+    transactionActions.js  Cambiar categoría o cómo se cuenta, agregar a mano, eliminar
+    scanInbox.js, backupSync.js, refreshExchangeRate.js, seedDemoData.js
+    queries.js, preferences.js, ports.js, createServices.js
+  infrastructure/   Conexión con el exterior. Implementa los puertos.
+    sqlite/           Esquema, migraciones y un repositorio por tabla (sql.js)
+    gmail/            Inicio de sesión con Google, API de Gmail, conversión de HTML a texto
+    backend/          Cliente de la API de Movo
+    browser/          IndexedDB y almacenamiento del perfil
+  presentation/     Interfaz React.
+    screens/          Inicio, Bandeja, Ajustes, Bienvenida
+    modals/           Las hojas que suben desde abajo
+    components/       Piezas pequeñas: íconos, campos de formulario
+    state/            Proveedores: sesión, navegación, avisos, Gmail
+    hooks/, format/, styles/
+  composition/      Arma las capas entre sí (openSession.js) y expone lo del navegador (platform.js)
+  demo/             Correos sintéticos para el modo demo, las pruebas y el benchmark
+```
+
+**Regla de dependencias:** cada capa solo puede usar las que están "debajo".
+
+| Capa | Puede usar | No puede usar |
+|---|---|---|
+| `domain` | nada más (ni React, ni SQL, ni `fetch`) | todo lo demás |
+| `application` | `domain` y los puertos de `ports.js` | React, SQLite, Gmail directamente |
+| `infrastructure` | `domain` | `application`, `presentation` |
+| `presentation` | `domain`, `application` y `composition` | `infrastructure` directamente |
+| `composition` | todas | |
+
+Por eso los casos de uso se prueban en Node con una base SQLite real en memoria y un correo y un servidor simulados (`tests/helpers/createTestApp.js`), y la interfaz se prueba con Vitest y Testing Library.
+
+Un movimiento recorre las capas así: la persona pega un aviso en `PasteModal` (presentation) -> `services.readMail` (application, `ingestMail`) -> `parseMail` lee el texto (domain) -> `transactions.insert` guarda en SQLite (infrastructure) -> `refresh()` hace que las pantallas vuelvan a leer.
+
+### El servidor (`server/`)
+
+Es una API Express con cuatro rutas:
 
 - `GET /api/config` entrega el client id de Google y dice si hay respaldo.
 - `GET /api/fx` entrega el tipo de cambio del BCCR, cacheado en Redis.
 - `POST /api/sync` sincroniza el respaldo por usuario.
 - `DELETE /api/me` borra los datos del usuario.
 
-`Caddyfile` sirve los archivos estáticos con HTTPS automático, sin pasar por Node.
+En producción, Caddy sirve la app compilada (`web/dist`) con HTTPS automático, sin pasar por Node, y reenvía `/api` a la API.
+
+### Service worker
+
+`web/public/sw.js` hace que la app abra sin Internet: guarda las páginas y los archivos de la app la primera vez que se piden. Nunca guarda `/api` ni lo de Google.
 
 ## Decisión: leer Gmail desde el teléfono y no con un worker en el servidor
 
@@ -43,6 +86,8 @@ El costo es que la lectura ocurre solo con la app abierta, porque el token dura 
 - `updated_at`, `deleted` y `dirty` sirven para la sincronización.
 
 `mail` guarda el correo leído: `message_id` con índice único, cuerpo, estado (`registrado`, `sin_movimiento`, `negada` o `descartado`), la plantilla usada y una nota con el resultado. Un correo puede producir varios movimientos (tabla de tarjeta del BCR); el id de cada uno se deriva del Message-ID y la posición de la fila.
+
+En el código, las filas se traducen a entidades con nombres claros (por ejemplo `crc_cents` es `crcCents` y `who` es `counterparty`): ver `infrastructure/sqlite/*Repository.js` y los tipos en `domain/types.js`. Los nombres de las columnas no cambian, para no romper las bases ya guardadas.
 
 `rule` guarda las reglas de categoría del usuario. `setting` guarda los ajustes que se sincronizan (presupuesto, búsqueda de Gmail). `meta` guarda estado solo local: cursores y caché del tipo de cambio.
 

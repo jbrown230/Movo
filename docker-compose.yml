@@ -1,4 +1,4 @@
-# Movo en un VPS: Caddy (HTTPS automático + archivos de la PWA),
+# Movo en un VPS: Caddy (HTTPS automático + la PWA ya compilada),
 # API mínima en Node, Redis (caché efímera) y MongoDB (respaldo opcional).
 #   cp .env.example .env   # y completa DOMAIN y GOOGLE_CLIENT_ID
 #   docker compose up -d --build
@@ -6,7 +6,7 @@
 
 services:
   caddy:
-    image: caddy:2-alpine
+    build: .   # compila la PWA con Vite (ver Dockerfile) y la sirve con Caddy
     restart: unless-stopped
     ports:
       - "80:80"
@@ -15,8 +15,6 @@ services:
     environment:
       DOMAIN: ${DOMAIN:-localhost}
     volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./web:/srv/web:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:

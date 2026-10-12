@@ -1,19 +1,34 @@
 {
   "name": "movo",
-  "version": "1.3.0",
+  "version": "2.0.0",
   "private": true,
   "description": "PWA de gastos personales para Costa Rica que lee las notificaciones bancarias desde el teléfono.",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/client.test.mjs && npm --prefix server test",
-    "test:web": "node --test tests/client.test.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite build && npm --prefix server run start:web",
+    "test": "npm run test:core && npm run test:ui && npm --prefix server test",
+    "test:core": "node --test \"tests/**/*.test.js\"",
+    "test:ui": "vitest run",
     "bench": "node scripts/bench-parser.mjs",
-    "dev": "npm --prefix server run dev",
     "dataset": "node scripts/dataset.mjs"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "jsdom": "^25.0.1",
     "linkedom": "^0.18.13",
-    "sql.js": "1.13.0"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.13.0"
+  }
 }

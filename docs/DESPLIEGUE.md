@@ -50,7 +50,7 @@ git pull
 docker compose up -d --build
 ```
 
-Si cambias archivos de `web/`, sube la versión de `VERSION` en `web/sw.js` para que los teléfonos descarguen la nueva versión.
+La app se compila sola dentro de la imagen de Docker (`Dockerfile`, con Vite). Los archivos de la app llevan un código en el nombre que cambia con cada versión, así que los teléfonos descargan la nueva versión sin que hagas nada más. Solo si cambias la lógica de `web/public/sw.js`, sube su constante `VERSION`.
 
 Servidor mínimo sin respaldo: pon `CLOUD_SYNC=false` y levanta solo `docker compose up -d caddy api redis`. Así el servidor no guarda ningún dato de usuarios.
 
@@ -61,9 +61,10 @@ Omite el servicio `caddy`, expón la API (por ejemplo `ports: ["127.0.0.1:3000:3
 ```nginx
 server {
   server_name movo.tudominio.com;
-  root /ruta/a/Movo/web;
+  root /ruta/a/Movo/web/dist;   # primero: npm ci && npm run build
   location /api/ { proxy_pass http://127.0.0.1:3000; proxy_set_header Host $host; proxy_set_header X-Forwarded-For $remote_addr; }
   location = /sw.js { add_header Cache-Control "no-cache"; }
+  location /assets/ { add_header Cache-Control "public, max-age=31536000, immutable"; }
   location / { try_files $uri /index.html; }
   # + certificado con certbot
 }
@@ -89,4 +90,4 @@ Si el inicio de sesión se abre en una ventana aparte, termina ahí y vuelve a l
 
 - La primera lectura revisa los últimos 45 días.
 - En **Bandeja** se ven los correos leídos. Si un banco no aparece, en **Ajustes**, "Bancos que se leen", agrega `from:dominio-del-banco`.
-- Los correos que el lector no entiende quedan como "Sin movimiento". Copia el texto anonimizado para crear una plantilla nueva en `web/js/parser.js`, con su prueba en `tests/client.test.mjs`.
+- Los correos que el lector no entiende quedan como "Sin movimiento". Anonimiza el texto del correo y crea una plantilla nueva en `web/src/domain/emailParser/templates/`, con su prueba. El paso a paso está en [CONTRIBUIR.md](CONTRIBUIR.md).

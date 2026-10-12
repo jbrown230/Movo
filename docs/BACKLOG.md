@@ -22,7 +22,7 @@ Los bancos se reparten uno por persona, para que nadie cargue con toda la lógic
 Reglas:
 - Cada issue se trabaja en una rama `tipo/numero-descripcion` (ej. `feat/18-plantilla-bn`) y entra a `main` por pull request.
 - Revisión cruzada: Jordy revisa a Dylan, Dylan a Jose, Jose a Yader y Yader a Jordy.
-- Para cada banco, Jordy explica a quien lo tome cómo se escribió la plantilla del BCR (`web/js/parser.js`, `tests/fixtures/bcr-html/`): ese es el modelo a seguir.
+- Para cada banco, Jordy explica a quien lo tome cómo se escribió la plantilla del BCR (`web/src/domain/emailParser/templates/bcrSinpe.js` y `bcrCard.js`, `tests/fixtures/bcr-html/`): ese es el modelo a seguir.
 - Si alguien termina antes, toma un issue de otra persona de acuerdo con ella, sin dejar la carga desigual.
 
 ---
@@ -79,8 +79,8 @@ El `CHANGELOG.md` llega a v1.3.0 pero el repositorio no tiene tags ni releases.
 ### 18. Plantilla real de Banco Nacional (BN) · 3 pts
 `parser` · Hito: Más bancos
 - [ ] Descargar con "Mostrar original" notificaciones reales de BN (tarjeta y SINPE).
-- [ ] Anonimizar y guardar en `tests/fixtures/bn-html/`.
-- [ ] Escribir la plantilla en `web/js/parser.js` y sus pruebas en `tests/client.test.mjs`, siguiendo el modelo del BCR.
+- [ ] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bn-html/`.
+- [ ] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
 - [ ] Reemplazar las plantillas sintéticas de BN en la demo y el benchmark.
 
 ### 19. Cobertura de estados y casos raros del lector · 3 pts
@@ -109,8 +109,8 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 ### 22. Plantilla real de BAC · 3 pts
 `parser` · Hito: Más bancos
 - [ ] Descargar con "Mostrar original" notificaciones reales de BAC (tarjeta y SINPE).
-- [ ] Anonimizar y guardar en `tests/fixtures/bac-html/`.
-- [ ] Escribir la plantilla en `web/js/parser.js` y sus pruebas en `tests/client.test.mjs`, siguiendo el modelo del BCR.
+- [ ] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bac-html/`.
+- [ ] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
 - [ ] Reemplazar las plantillas sintéticas de BAC en la demo y el benchmark.
 
 ### 23. Alertas de presupuesto · 2 pts
@@ -144,8 +144,8 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 ### 27. Plantilla real de Davivienda · 2 pts
 `parser` · Hito: Más bancos
 - [ ] Notificaciones reales de Davivienda (tarjeta y transferencias) anonimizadas en `tests/fixtures/davivienda-html/`.
-- [ ] Plantilla en `web/js/parser.js` con sus pruebas, siguiendo el modelo del BCR.
-- [ ] Agregar el remitente en la búsqueda de Gmail (`web/js/gmail.js`).
+- [ ] Plantilla en `web/src/domain/emailParser/templates/` con sus pruebas, siguiendo el modelo del BCR.
+- [ ] Agregar el remitente en la búsqueda de Gmail (`web/src/domain/banks.js` y `web/src/application/preferences.js`).
 
 ### 28. Plantilla real de Promerica · 2 pts
 `parser` · Hito: Más bancos
