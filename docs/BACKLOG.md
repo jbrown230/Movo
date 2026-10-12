@@ -55,7 +55,7 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 ### 15. Publicar el release con etiqueta y notas · 2 pts
 `docs` · Hito: Publicación
 El `CHANGELOG.md` llega a v1.3.0 pero el repositorio no tiene tags ni releases.
-- [ ] Crear tags `v1.0.0` a `v1.3.0` sobre los commits correspondientes (o solo `v1.3.0` si no se pueden ubicar).
+- [ ] Crear el tag `v1.3.0` sobre el commit actual de `main`. Las versiones anteriores no tienen commit propio en el historial, así que no se etiquetan.
 - [ ] Publicar el release en GitHub con las notas tomadas del changelog.
 - [ ] Verificar que el repositorio es público y que el CI pasa en `main`.
 - [ ] Crear las etiquetas e hitos para el resto del equipo.
