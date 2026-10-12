@@ -1,0 +1,9 @@
+**/node_modules
+web/dist
+tests
+docs
+scripts
+.git
+.github
+.env
+*.md

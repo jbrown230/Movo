@@ -1,0 +1,65 @@
+# Configuración de nginx para Movo (VPS con nginx en el sistema).
+#
+# Cómo usarla:
+#   1. Copia este archivo a /etc/nginx/sites-available/movo y cambia TU_DOMINIO por tu dominio.
+#   2. Consigue el certificado HTTPS (la primera vez, con certbot):
+#        certbot certonly --webroot -w /opt/movo/web/dist -d TU_DOMINIO
+#   3. Actívala: ln -s /etc/nginx/sites-available/movo /etc/nginx/sites-enabled/movo
+#   4. Revisa y recarga: nginx -t && systemctl reload nginx
+#
+# Nginx sirve los archivos de la app compilada (web/dist) y reenvía /api a la API, que corre en
+# Docker y solo escucha en 127.0.0.1:3002 (ver docker-compose.nginx.yml).
+
+server {
+    listen 80;
+    server_name TU_DOMINIO;
+    location /.well-known/acme-challenge/ { root /opt/movo/web/dist; }
+    location / { return 301 https://$host$request_uri; }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name TU_DOMINIO;
+    ssl_certificate     /etc/letsencrypt/live/TU_DOMINIO/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/TU_DOMINIO/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
+    client_max_body_size 5M;
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml application/wasm application/manifest+json;
+
+    root /opt/movo/web/dist;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:3002;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Estos archivos no se guardan en caché: así los teléfonos ven siempre la versión nueva.
+    location = /sw.js { add_header Cache-Control "no-cache"; }
+    location = /index.html { add_header Cache-Control "no-cache"; }
+    # El manifiesto lleva su tipo propio. OJO: no uses la directiva `types { ... }` a nivel de server,
+    # porque reemplaza TODOS los tipos de archivo y el navegador empieza a descargar la página.
+    location = /manifest.webmanifest {
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache";
+    }
+
+    # Los íconos se revalidan siempre: así, si cambia el logo, los teléfonos lo ven en la próxima instalación.
+    location /icons/ { add_header Cache-Control "no-cache"; }
+
+    # Los archivos de /assets llevan un código en el nombre que cambia con cada versión: se guardan un año.
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff always;
+    }
+
+    location / { try_files $uri /index.html; }
+}

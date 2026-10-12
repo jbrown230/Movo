@@ -1,0 +1,23 @@
+{
+  "name": "movo-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API mínima de Movo: configuración, tipo de cambio y respaldo opcional por usuario.",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "start:web": "node src/index.js --static ../web/dist",
+    "dev": "node --watch src/index.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongodb": "^6.12.0",
+    "redis": "^4.7.0"
+  },
+  "license": "MIT"
+}

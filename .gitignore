@@ -1,0 +1,11 @@
+node_modules/
+.env
+*.log
+.DS_Store
+coverage/
+web/dist/
+
+# Correos reales: nunca al repositorio. Anonimízalos antes (ver docs/CONTRIBUIR.md).
+*.eml
+*.msg
+correos*.json

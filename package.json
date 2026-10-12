@@ -1,0 +1,46 @@
+{
+  "name": "movo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PWA de gastos personales para Costa Rica que lee las notificaciones bancarias desde el teléfono.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite build && npm --prefix server run start:web",
+    "test": "npm run test:core && npm run test:ui && npm --prefix server test",
+    "test:core": "node --test \"tests/**/*.test.js\"",
+    "test:ui": "vitest run",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test && npm run build",
+    "bench": "node scripts/bench-parser.mjs",
+    "dataset": "node scripts/dataset.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.37.3",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "globals": "^15.14.0",
+    "jsdom": "^25.0.1",
+    "linkedom": "^0.18.13",
+    "prettier": "^3.4.2",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.8"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sql.js": "^1.13.0"
+  }
+}

@@ -1,0 +1,44 @@
+# Movo en un VPS que YA usa nginx (en el sistema) en los puertos 80 y 443.
+# Es igual a docker-compose.yml pero sin Caddy: nginx sirve la app compilada (web/dist)
+# y reenvía /api a la API, que solo escucha en 127.0.0.1:3002 (no se ve desde Internet).
+#
+#   docker compose -f docker-compose.nginx.yml up -d --build
+#
+# Lo normal es usar deploy/update.sh, que además baja el código y compila la app.
+# La configuración de nginx está en deploy/nginx-movo.conf.example.
+
+name: movo
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      PORT: 3000
+      REDIS_URL: redis://redis:6379
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/movo}
+    ports:
+      - '127.0.0.1:3002:3000'
+    depends_on:
+      - redis
+      - mongo
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Caché pura: sin persistencia y con memoria acotada.
+    command:
+      ['redis-server', '--save', '', '--appendonly', 'no', '--maxmemory', '64mb', '--maxmemory-policy', 'allkeys-lru']
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ['--wiredTigerCacheSizeGB', '0.25']
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
