@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#3B22B5">
 <meta name="description" content="Gastos personales para Costa Rica que se registran solos leyendo las notificaciones de tus bancos.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://gmail.googleapis.com https://openidconnect.googleapis.com; base-uri 'self'; form-action 'self'">
-<title>PuraPlata</title>
+<title>Movo</title>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
@@ -23,7 +23,7 @@
     <div class="ob-hero">
       <div class="mark" aria-hidden="true">PP</div>
       <h1>Tus gastos se registran solos.</h1>
-      <p>PuraPlata lee las notificaciones de tus bancos en Gmail y las convierte en movimientos ordenados por categoría. Sin teclear nada.</p>
+      <p>Movo lee las notificaciones de tus bancos en Gmail y las convierte en movimientos ordenados por categoría. Sin teclear nada.</p>
     </div>
     <div class="ob-actions">
       <button class="cta light" id="googleBtn">Conectar con Google</button>
@@ -59,7 +59,7 @@
       </header>
       <div class="body">
         <div class="sim" id="simCard" hidden>
-          <div class="sim-t"><b>Modo demo: simula a tu banco</b><span>En la vida real esto lo haces en la app de tu banco, no aquí. PuraPlata nunca mueve dinero: solo lee el correo que el banco te envía después.</span></div>
+          <div class="sim-t"><b>Modo demo: simula a tu banco</b><span>En la vida real esto lo haces en la app de tu banco, no aquí. Movo nunca mueve dinero: solo lee el correo que el banco te envía después.</span></div>
           <div class="sim-b"><button data-open="sinpe">Hacer un SINPE</button><button data-open="compra">Pagar con tarjeta</button></div>
         </div>
         <div class="sec-h"><h2>Por categoría</h2><span id="catCount"></span></div>
@@ -71,7 +71,7 @@
 
     <!-- Bandeja -->
     <section id="view-inbox" aria-label="Bandeja" hidden>
-      <div class="ihead"><h1>Bandeja</h1><p>Correos de tus bancos que PuraPlata leyó en este teléfono.</p></div>
+      <div class="ihead"><h1>Bandeja</h1><p>Correos de tus bancos que Movo leyó en este teléfono.</p></div>
       <div class="group" style="margin:12px 16px" id="mailList"></div>
     </section>
 

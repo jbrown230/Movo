@@ -2,7 +2,7 @@
 
 ## 1. Dominio
 
-Crea un registro DNS tipo A (por ejemplo `puraplata.tudominio.com`) que apunte a la IP del VPS. HTTPS es obligatorio: sin él no se instala la PWA ni funciona el inicio de sesión de Google. Abre los puertos 80 y 443 en el firewall.
+Crea un registro DNS tipo A (por ejemplo `movo.tudominio.com`) que apunte a la IP del VPS. HTTPS es obligatorio: sin él no se instala la PWA ni funciona el inicio de sesión de Google. Abre los puertos 80 y 443 en el firewall.
 
 ## 2. Google Cloud (una sola vez)
 
@@ -16,11 +16,11 @@ Crea un registro DNS tipo A (por ejemplo `puraplata.tudominio.com`) que apunte a
    - Deja el estado en **Prueba**.
 4. En "Credenciales", elige "Crear credenciales" y luego "ID de cliente de OAuth":
    - Tipo: **Aplicación web**.
-   - Orígenes autorizados de JavaScript: `https://puraplata.tudominio.com`.
-   - URI de redireccionamiento autorizados: `https://puraplata.tudominio.com/` (con la barra final).
+   - Orígenes autorizados de JavaScript: `https://movo.tudominio.com`.
+   - URI de redireccionamiento autorizados: `https://movo.tudominio.com/` (con la barra final).
 5. Copia el **ID de cliente** al `.env`. No hace falta el secreto: la app no lo usa.
 
-Al conectar, Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "Configuración avanzada" y luego "Ir a PuraPlata".
+Al conectar, Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "Configuración avanzada" y luego "Ir a Movo".
 
 ## 3. Tipo de cambio del BCCR (opcional)
 
@@ -32,13 +32,13 @@ Suscríbete al servicio web de indicadores económicos del Banco Central de Cost
 # Ubuntu: instalar Docker (una vez)
 curl -fsSL https://get.docker.com | sh
 
-git clone https://github.com/<usuario>/puraplata.git
-cd puraplata
+git clone https://github.com/jbrown230/Movo.git
+cd Movo
 cp .env.example .env
 nano .env                       # DOMAIN y GOOGLE_CLIENT_ID
 docker compose up -d --build
 docker compose logs -f api      # debe decir "Google configurado"
-curl https://puraplata.tudominio.com/api/health
+curl https://movo.tudominio.com/api/health
 ```
 
 Caddy obtiene el certificado HTTPS automáticamente la primera vez.
@@ -60,8 +60,8 @@ Omite el servicio `caddy`, expón la API (por ejemplo `ports: ["127.0.0.1:3000:3
 
 ```nginx
 server {
-  server_name puraplata.tudominio.com;
-  root /ruta/a/puraplata/web;
+  server_name movo.tudominio.com;
+  root /ruta/a/Movo/web;
   location /api/ { proxy_pass http://127.0.0.1:3000; proxy_set_header Host $host; proxy_set_header X-Forwarded-For $remote_addr; }
   location = /sw.js { add_header Cache-Control "no-cache"; }
   location / { try_files $uri /index.html; }
@@ -73,9 +73,9 @@ server {
 
 En Android con Chrome:
 
-1. Abre `https://puraplata.tudominio.com`.
+1. Abre `https://movo.tudominio.com`.
 2. En el menú ⋮, toca "Instalar app".
-3. Abre PuraPlata y toca "Conectar con Google".
+3. Abre Movo y toca "Conectar con Google".
 4. Marca el permiso de Gmail.
 
 En iPhone con Safari:

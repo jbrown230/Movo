@@ -1,8 +1,8 @@
 {
-  "name": "puraplata-api",
+  "name": "movo-api",
   "version": "1.3.0",
   "private": true,
-  "description": "API mínima de PuraPlata: configuración, tipo de cambio y respaldo opcional por usuario.",
+  "description": "API mínima de Movo: configuración, tipo de cambio y respaldo opcional por usuario.",
   "type": "module",
   "main": "src/index.js",
   "engines": { "node": ">=20" },

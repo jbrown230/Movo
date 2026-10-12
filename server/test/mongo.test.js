@@ -6,7 +6,7 @@ import { mongoStore } from '../src/store.js';
 
 const url = process.env.MONGO_URL;
 test('MongoDB: separación por usuario, último en escribir gana y borrado', { skip: !url && 'MONGO_URL no definido' }, async () => {
-  const u = new URL(url); u.pathname = '/puraplata_test_' + Date.now();
+  const u = new URL(url); u.pathname = '/movo_test_' + Date.now();
   const s = mongoStore(u.toString(), {});
   const rec = (id, updatedAt, cat) => ({ kind: 'tx', id, updatedAt, deleted: false, data: { cat } });
   await s.push('ana', [rec('m1', 2, 'super'), rec('m2', 1, 'ocio')]);

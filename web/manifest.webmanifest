@@ -1,6 +1,6 @@
 {
-  "name": "PuraPlata",
-  "short_name": "PuraPlata",
+  "name": "Movo",
+  "short_name": "Movo",
   "description": "Gastos personales que se registran solos leyendo las notificaciones de tus bancos.",
   "lang": "es-CR",
   "start_url": "/",

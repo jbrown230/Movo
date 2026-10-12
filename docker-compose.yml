@@ -1,4 +1,4 @@
-# PuraPlata en un VPS: Caddy (HTTPS automático + archivos de la PWA),
+# Movo en un VPS: Caddy (HTTPS automático + archivos de la PWA),
 # API mínima en Node, Redis (caché efímera) y MongoDB (respaldo opcional).
 #   cp .env.example .env   # y completa DOMAIN y GOOGLE_CLIENT_ID
 #   docker compose up -d --build
@@ -29,7 +29,7 @@ services:
     environment:
       PORT: 3000
       REDIS_URL: redis://redis:6379
-      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/puraplata}
+      MONGO_URL: ${MONGO_URL:-mongodb://mongo:27017/movo}
     depends_on:
       - redis
 

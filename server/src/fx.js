@@ -8,7 +8,7 @@ const crDate = (d) => `${two(d.getDate())}/${two(d.getMonth() + 1)}/${d.getFullY
 export async function fetchBccr({ email, token }) {
   const today = new Date(), from = new Date(Date.now() - 7 * 86400e3);
   const u = new URL('https://gee.bccr.fi.cr/Indicadores/Suscripciones/WS/wsindicadoreseconomicos.asmx/ObtenerIndicadoresEconomicosXML');
-  u.search = new URLSearchParams({ Indicador: '318', FechaInicio: crDate(from), FechaFinal: crDate(today), Nombre: 'PuraPlata', SubNiveles: 'N', CorreoElectronico: email, Token: token });
+  u.search = new URLSearchParams({ Indicador: '318', FechaInicio: crDate(from), FechaFinal: crDate(today), Nombre: 'Movo', SubNiveles: 'N', CorreoElectronico: email, Token: token });
   const r = await fetch(u, { signal: AbortSignal.timeout(6000) });
   if (!r.ok) throw new Error('BCCR ' + r.status);
   const xml = (await r.text()).replace(/&lt;/g, '<').replace(/&gt;/g, '>');

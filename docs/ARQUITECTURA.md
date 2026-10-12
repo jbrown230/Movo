@@ -2,7 +2,7 @@
 
 ## Principio: el teléfono hace el trabajo
 
-PuraPlata está pensada para muchos usuarios con un servidor pequeño y barato, porque es código abierto y cualquiera debería poder alojarlo. Por eso la lectura de correos, el análisis, la categorización y las agregaciones ocurren en el teléfono. El servidor es opcional para usar la app: sin él, el modo demo y el registro manual funcionan igual.
+Movo está pensada para muchos usuarios con un servidor pequeño y barato, porque es código abierto y cualquiera debería poder alojarlo. Por eso la lectura de correos, el análisis, la categorización y las agregaciones ocurren en el teléfono. El servidor es opcional para usar la app: sin él, el modo demo y el registro manual funcionan igual.
 
 ## Componentes
 

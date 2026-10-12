@@ -1,4 +1,4 @@
-// PuraPlata — interfaz principal. Todo el procesamiento ocurre en el teléfono.
+// Movo — interfaz principal. Todo el procesamiento ocurre en el teléfono.
 import { openUserDb, idbDel } from './db.js';
 import { CATS, BANKS } from './parser.js';
 import { buildEmail, demoSeedEmails, MERCHANTS } from './demo-emails.js';
@@ -223,7 +223,7 @@ function renderSettings() {
       <button class="row" id="sScan"><span>Buscar correos ahora</span></button>
       ${getToken() ? '' : '<button class="row" id="sReconnect"><span>Reconectar Gmail</span></button>'}
       <button class="row" id="sQuery"><span>Bancos que se leen</span><b>Editar</b></button>
-      <p class="hint">PuraPlata lee tu correo desde este teléfono, con permiso de solo lectura. Los correos no se envían al servidor.</p>
+      <p class="hint">Movo lee tu correo desde este teléfono, con permiso de solo lectura. Los correos no se envían al servidor.</p>
     </div>
     <h2 class="sh">Respaldo en la nube</h2>
     <div class="group list">
@@ -239,9 +239,9 @@ function renderSettings() {
       <button class="row danger" id="sWipeLocal"><span>Borrar mis datos de este teléfono</span></button>
     </div>`}
     ${standalone ? '' : `<div class="group list">
-      ${installEvt ? '<button class="row" id="sInstall"><span>Instalar PuraPlata en este teléfono</span></button>' : `<div class="row"><span>Instalar la app</span></div><p class="hint">${ios ? 'En Safari: botón Compartir y luego "Agregar a pantalla de inicio".' : 'En Chrome: menú ⋮ y luego "Instalar app" o "Agregar a pantalla principal".'}</p>`}
+      ${installEvt ? '<button class="row" id="sInstall"><span>Instalar Movo en este teléfono</span></button>' : `<div class="row"><span>Instalar la app</span></div><p class="hint">${ios ? 'En Safari: botón Compartir y luego "Agregar a pantalla de inicio".' : 'En Chrome: menú ⋮ y luego "Instalar app" o "Agregar a pantalla principal".'}</p>`}
     </div>`}
-    <p class="foot">PuraPlata · código abierto (MIT)</p>`;
+    <p class="foot">Movo · código abierto (MIT)</p>`;
 
   const on = (id, fn) => { const el = $(id); if (el) el.onclick = fn; };
   on('sBudget', openBudget);
@@ -334,7 +334,7 @@ function openMail(id) {
   openModal(head(esc(m.subject || 'Correo')) + `
     <p class="meta">${esc(m.from_name || 'Remitente desconocido')}${m.from_addr && m.from_addr.includes('@') ? ' · ' + esc(m.from_addr.replace(/.*</, '').replace('>', '')) : ''}, ${esc(shortWhen(m.received_at))}</p>
     <div class="raw">${esc(m.body)}</div>
-    <div class="subh">Lo que leyó PuraPlata${m.template ? ` <span class="muted">· lector ${esc(m.template)}</span>` : ''}</div>
+    <div class="subh">Lo que leyó Movo${m.template ? ` <span class="muted">· lector ${esc(m.template)}</span>` : ''}</div>
     ${txs.map(row).join('')}
     ${m.note ? `<div class="notebox${m.status === 'negada' ? ' neg' : ''}">${esc(m.note)}</div>` : ''}
     ${canManual ? `<div class="subh">Registrar a mano</div>${amountBlock()}
@@ -394,7 +394,7 @@ function openBudget() {
   $('go').onclick = () => { const v = toCents($('amt').value); if (v > 0) { repo.setSetting('budget', v); render(); renderSettings(); } closeModal(); };
 }
 function openQuery() {
-  openModal(head('Bancos que se leen') + `<p class="meta">Búsqueda de Gmail que usa PuraPlata. Agrega el remitente de tu banco si no aparece, con <b>from:</b>dominio.</p>
+  openModal(head('Bancos que se leen') + `<p class="meta">Búsqueda de Gmail que usa Movo. Agrega el remitente de tu banco si no aparece, con <b>from:</b>dominio.</p>
     <div class="field"><label for="q">Búsqueda</label><textarea id="q" style="min-height:120px">${esc(repo.setting('gmail_query', DEFAULT_QUERY))}</textarea></div>
     <button class="cta" id="go">Guardar</button><button class="ghost" id="def">Restaurar la predeterminada</button>`);
   $('go').onclick = () => { repo.setSetting('gmail_query', $('q').value.trim() || DEFAULT_QUERY); repo.setMeta('last_scan', null); closeModal(); toast('Guardado. La próxima búsqueda revisa los últimos 45 días.'); };
@@ -414,7 +414,7 @@ const plain = (s) => s.trim().toUpperCase().normalize('NFD').replace(/[\u0300-\u
 function openSinpe() {
   let bank = 'BAC';
   openModal(head('Simulador: SINPE desde tu banco') +
-    '<p class="meta">Esto representa lo que harías en la app de tu banco. Al enviar, el banco te manda un correo y PuraPlata lo lee solo.</p>' +
+    '<p class="meta">Esto representa lo que harías en la app de tu banco. Al enviar, el banco te manda un correo y Movo lo lee solo.</p>' +
     `<div class="chips" role="group" aria-label="Contactos">${CONTACTS.map((c, i) => `<button class="chip" data-contact="${i}" aria-pressed="false"><span class="av" style="background:${c.c}">${esc(c.s[0])}</span>${esc(c.s)}</button>`).join('')}</div>` +
     amountBlock() +
     '<div class="field"><label for="ph">Número de teléfono</label><input id="ph" inputmode="numeric" maxlength="9" placeholder="8888 8888" autocomplete="off"></div>' +
@@ -437,12 +437,12 @@ function openSinpe() {
   go2.onclick = () => {
     const v = toCents($('amt').value) / 100, who = plain(nm.value);
     const mail = buildEmail({ bank, type: 'sinpe', who, amount: v, phone: ph.value.replace(/\D/g, ''), desc: plain($('ds').value) || null });
-    success('Tu banco envió el SINPE', `Mandaste ${crc0(v * 100)} a ${prettyName(who)}. Fíjate arriba: llega el correo del banco y PuraPlata lo registra sin que hagas nada.`, mail, bank);
+    success('Tu banco envió el SINPE', `Mandaste ${crc0(v * 100)} a ${prettyName(who)}. Fíjate arriba: llega el correo del banco y Movo lo registra sin que hagas nada.`, mail, bank);
   };
 }
 function openCompra() {
   let bank = 'BAC', cur = 'CRC';
-  openModal(head('Simulador: compra con tarjeta') + '<p class="meta">Imagina que pagas en un comercio. Tu banco te notifica por correo y PuraPlata lo registra.</p>' + amountBlock() +
+  openModal(head('Simulador: compra con tarjeta') + '<p class="meta">Imagina que pagas en un comercio. Tu banco te notifica por correo y Movo lo registra.</p>' + amountBlock() +
     '<div class="seg" role="group" aria-label="Moneda"><button type="button" data-cur="CRC" aria-pressed="true">Colones</button><button type="button" data-cur="USD" aria-pressed="false">Dólares</button></div>' +
     '<div class="field"><label for="mc">Comercio</label><input id="mc" placeholder="Nombre del comercio" autocomplete="off"></div>' +
     `<div class="chips" role="group" aria-label="Comercios sugeridos">${MERCHANTS.slice(0, 6).map((m) => `<button class="chip plain" data-m="${esc(m)}">${esc(prettyName(m))}</button>`).join('')}</div>` +

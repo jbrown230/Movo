@@ -4,7 +4,7 @@
 
 import { migrate, createRepo } from './repo.js';
 
-const IDB_NAME = 'puraplata', STORE = 'kv';
+const IDB_NAME = 'movo', STORE = 'kv';
 
 function idb() {
   return new Promise((res, rej) => {

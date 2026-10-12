@@ -41,7 +41,7 @@ const t2 = performance.now(); for (let i = 0; i < 20; i++) repo.monthSummary(); 
 const t3 = performance.now(); for (const c of cases.slice(0, 500)) repo.ingestMail(c.mail); const tDup = performance.now() - t3;
 
 const pct = (n) => ((n / N) * 100).toFixed(2) + ' %';
-console.log(`\nPuraPlata · benchmark con ${N} correos sintéticos (semilla fija)\n`);
+console.log(`\nMovo · benchmark con ${N} correos sintéticos (semilla fija)\n`);
 console.log('Precisión del lector');
 for (const [k, v] of Object.entries(ok)) console.log(`  ${k.padEnd(10)} ${pct(v)}`);
 console.log('\nRendimiento (en este equipo)');

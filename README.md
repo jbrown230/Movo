@@ -1,6 +1,8 @@
-# PuraPlata
+# Movo
 
-Gastos personales para Costa Rica que se registran solos. PuraPlata lee las notificaciones que tus bancos ya te envían por correo (compras con tarjeta, SINPE Móvil enviados y recibidos), extrae monto, comercio y fecha, y las ordena por categoría. Es una PWA: se instala en el teléfono desde el navegador, funciona sin conexión y todo el procesamiento ocurre en el propio teléfono.
+> *Movo* = *money* + *movimiento*.
+
+Gastos personales para Costa Rica que se registran solos. Movo lee las notificaciones que tus bancos ya te envían por correo (compras con tarjeta, SINPE Móvil enviados y recibidos), extrae monto, comercio y fecha, y las ordena por categoría. Es una PWA: se instala en el teléfono desde el navegador, funciona sin conexión y todo el procesamiento ocurre en el propio teléfono.
 
 Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacional (Grupo 1).
 
@@ -8,7 +10,7 @@ Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacio
 
 ## El problema
 
-Registrar gastos a mano se abandona en pocas semanas. La información ya existe: cada compra o SINPE genera un correo del banco, pero queda dispersa en la bandeja de entrada. PuraPlata convierte esos correos en movimientos sin que la persona teclee nada.
+Registrar gastos a mano se abandona en pocas semanas. La información ya existe: cada compra o SINPE genera un correo del banco, pero queda dispersa en la bandeja de entrada. Movo convierte esos correos en movimientos sin que la persona teclee nada.
 
 Usuarios: personas en Costa Rica que pagan con tarjeta y SINPE Móvil, con cuentas en uno o varios bancos.
 
@@ -16,7 +18,7 @@ Usuarios: personas en Costa Rica que pagan con tarjeta y SINPE Móvil, con cuent
 
 1. Haces una compra o un SINPE como siempre, en la app de tu banco.
 2. El banco te envía el correo de notificación.
-3. Al abrir PuraPlata, el teléfono consulta Gmail con permiso de solo lectura, lee los correos nuevos de remitentes bancarios y los convierte en movimientos.
+3. Al abrir Movo, el teléfono consulta Gmail con permiso de solo lectura, lee los correos nuevos de remitentes bancarios y los convierte en movimientos.
 4. Ves el gasto del mes, el presupuesto y el detalle por categoría. Si corriges una categoría, se guarda como regla.
 
 Los SINPE recibidos cuentan como ingreso, las compras negadas por el banco no se registran, y los SINPE entre tus propias cuentas (mismo titular en origen y destino) no cuentan ni como gasto ni como ingreso.
@@ -64,7 +66,7 @@ Sin `GOOGLE_CLIENT_ID` la app abre en modo demo. Para probar con tu Gmail en loc
 Resumen (paso a paso en [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)):
 
 ```bash
-git clone https://github.com/<usuario>/puraplata.git && cd puraplata
+git clone https://github.com/jbrown230/Movo.git && cd Movo
 cp .env.example .env      # DOMAIN y GOOGLE_CLIENT_ID
 docker compose up -d --build
 curl https://TU_DOMINIO/api/health
@@ -74,7 +76,7 @@ En Android abre el dominio en Chrome y toca "Instalar app". En iPhone, en Safari
 
 ## Modo demo
 
-En la pantalla de bienvenida, "Ver el modo demo" carga datos de ejemplo en una base separada y muestra un simulador del banco: haces un SINPE o una compra, llega la notificación y PuraPlata la registra sola. Los correos del modo demo son sintéticos.
+En la pantalla de bienvenida, "Ver el modo demo" carga datos de ejemplo en una base separada y muestra un simulador del banco: haces un SINPE o una compra, llega la notificación y Movo la registra sola. Los correos del modo demo son sintéticos.
 
 ![Simulador](docs/capturas/04-lectura-automatica.png)
 
