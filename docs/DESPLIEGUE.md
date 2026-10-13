@@ -97,7 +97,7 @@ docker compose up -d --build
 
 La app se compila sola dentro de la imagen de Docker (`Dockerfile`, con Vite). Los archivos de la app llevan un código en el nombre que cambia con cada versión, así que los teléfonos descargan la nueva versión sin que hagas nada más. Solo si cambias la lógica de `web/public/sw.js`, sube su constante `VERSION`.
 
-Servidor mínimo sin respaldo: pon `CLOUD_SYNC=false` y levanta solo `docker compose up -d caddy api redis`. Así el servidor no guarda ningún dato de usuarios.
+El respaldo en la nube viene apagado (`CLOUD_SYNC=false` en `.env.example`): la API no guarda datos de usuarios y la app oculta la sección "Respaldo en la nube" de Ajustes. Para activarlo pon `CLOUD_SYNC=true`. Servidor mínimo sin respaldo: levanta solo `docker compose up -d caddy api redis`. Así el servidor no guarda ningún dato de usuarios.
 
 ### Si el VPS ya usa Nginx
 

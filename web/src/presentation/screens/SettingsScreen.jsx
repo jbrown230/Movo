@@ -114,12 +114,11 @@ function GmailSettings() {
 }
 
 function CloudBackupSettings() {
-  const { services, config, refresh } = useSession();
+  const { services, refresh } = useSession();
   const { syncBackup } = useGmail();
   const { isCloudBackupEnabled, lastSyncAt, pendingBackupCount } = useAppData();
   const confirm = useConfirm();
   const showToast = useToast();
-  const isAvailable = Boolean(config?.cloudSync);
 
   const toggle = (event) => {
     services.preferences.setCloudBackupEnabled(event.target.checked);
@@ -154,13 +153,7 @@ function CloudBackupSettings() {
       <div className="group list">
         <label className="row">
           <span>Respaldar mis movimientos</span>
-          <input
-            type="checkbox"
-            className="switch"
-            checked={isCloudBackupEnabled}
-            disabled={!isAvailable}
-            onChange={toggle}
-          />
+          <input type="checkbox" className="switch" checked={isCloudBackupEnabled} onChange={toggle} />
         </label>
         {isCloudBackupEnabled && (
           <>
@@ -173,9 +166,8 @@ function CloudBackupSettings() {
           </>
         )}
         <p className="hint">
-          {isAvailable
-            ? 'Opcional. Sirve para usar varios teléfonos o no perder datos. Solo se guardan movimientos, reglas y presupuesto; nunca tus correos.'
-            : 'Este servidor no tiene respaldo habilitado.'}
+          Opcional. Sirve para usar varios teléfonos o no perder datos. Solo se guardan movimientos, reglas y
+          presupuesto; nunca tus correos.
         </p>
         {isCloudBackupEnabled && <Row label="Borrar mi respaldo del servidor" danger onClick={deleteBackup} />}
       </div>
@@ -241,7 +233,7 @@ function InstallSettings() {
 
 /** Ajustes: presupuesto, Gmail, respaldo en la nube y cuenta. */
 export function SettingsScreen() {
-  const { profile } = useSession();
+  const { profile, config } = useSession();
   const { openModal } = useModal();
   const { budgetCents, exchangeRate, exchangeRateInfo } = useAppData();
 
@@ -273,7 +265,7 @@ export function SettingsScreen() {
         ) : (
           <>
             <GmailSettings />
-            <CloudBackupSettings />
+            {config?.cloudSync && <CloudBackupSettings />}
             <AccountSettings />
           </>
         )}

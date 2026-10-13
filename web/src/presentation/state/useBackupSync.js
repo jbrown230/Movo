@@ -8,11 +8,13 @@ import { useToast } from './ToastProvider.jsx';
  * Con `quiet` no se muestran avisos (se usa cuando la app lo hace sola, sin que la persona lo pida).
  */
 export function useBackupSync() {
-  const { services, refresh } = useSession();
+  const { services, config, refresh } = useSession();
   const showToast = useToast();
+  const isBackupAvailable = Boolean(config?.cloudSync);
 
   return useCallback(
     async ({ quiet = false } = {}) => {
+      if (!isBackupAvailable) return; // el servidor tiene el respaldo apagado (CLOUD_SYNC=false)
       const token = getSavedToken();
       if (!token) {
         if (!quiet) showToast('Reconecta Gmail para sincronizar el respaldo.');
@@ -26,6 +28,6 @@ export function useBackupSync() {
         if (!quiet) showToast('No se pudo sincronizar: ' + error.message);
       }
     },
-    [services, refresh, showToast],
+    [services, refresh, showToast, isBackupAvailable],
   );
 }
