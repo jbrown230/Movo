@@ -12,12 +12,12 @@ Lo ya hecho (issues 1 a 14) lo hizo Jordy y suma 34 puntos. Por eso Jordy lleva 
 
 Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda y Promerica** (Yader).
 
-| Integrante | Hecho | Pendiente | Issues pendientes |
-|---|---|---|---|
-| Jordy Palacios | 34 pts (issues 1–14, cerrados) | **6 pts** | 15, 16, 17 |
-| Dylan Mejía Ruiz | — | **19 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36 |
-| Jose Meza Álvarez | — | **11 pts** | 22, 23, 24, 25, 26 |
-| Yader Barahona Villarreal | — | **11 pts** | 27, 28, 29, 30, 31 |
+| Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
+|---|---|---|---|---|
+| Jordy Palacios | @jbrown230 | 34 pts (issues 1–14, cerrados) | **6 pts** | 15, 16, 17 |
+| Dylan Mejía Ruiz | @DylanMR08 | — | **19 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36 |
+| Jose Meza Álvarez | @devJosemeza | — | **11 pts** | 22, 23, 24, 25, 26 |
+| Yader Barahona Villarreal | @YaderBarahona | — | **11 pts** | 27, 28, 29, 30, 31 |
 
 Reglas:
 - Cada issue se trabaja en una rama `tipo/numero-descripcion` (ej. `feat/18-plantilla-bn`) y entra a `main` por pull request.
@@ -127,10 +127,11 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 
 ### 36. Script para crear los issues con `gh` · 2 pts
 `infra`, `docs` · Hito: Publicación
-- [ ] Script en `scripts/` que crea etiquetas, hitos e issues de este backlog con la CLI `gh`, en el mismo orden.
-- [ ] Crear los issues 1 a 14 asignados a Jordy y cerrarlos de inmediato.
-- [ ] Que se pueda volver a ejecutar sin duplicar issues.
-- [ ] Documentar su uso en la sección "Cómo crearlos en GitHub".
+Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh`).
+- [x] Script en `scripts/` que crea etiquetas, hitos e issues de este backlog con la CLI `gh`, en el mismo orden.
+- [x] Crear los issues 1 a 14 asignados a Jordy y cerrarlos de inmediato.
+- [x] Que se pueda volver a ejecutar sin duplicar issues.
+- [x] Documentar su uso en la sección "Cómo crearlos en GitHub".
 
 ---
 
@@ -206,5 +207,14 @@ El PDF del curso pide responder qué cambia al escalar.
 ## Cómo crearlos en GitHub
 
 Con la CLI `gh` autenticada, crear antes las etiquetas y los hitos ("Más bancos", "Funciones de usuario", "Publicación", "Mediciones", "TFG"). Los issues 1 a 14 se crean asignados a Jordy y se cierran de inmediato (`gh issue close`, motivo "completed"). En el proyecto, agregar un campo numérico "Puntos" para ver la carga por persona. Cada integrante debe tener acceso al repositorio (Settings > Collaborators) para poder ser asignado, y debe tener `user.name` y `user.email` configurados para que sus commits aparezcan en su perfil.
+
+Todo esto lo hace `scripts/create-issues.mjs`, que lee este archivo: crea las etiquetas, los hitos y los issues en orden, cierra los ya hechos y deja los puntos en el cuerpo de cada issue. El usuario de GitHub de cada integrante sale de la columna "GitHub" de la tabla de reparto; quien no tenga recibe sus issues sin asignar.
+
+```bash
+npm run issues -- --dry-run   # muestra lo que haría, sin tocar GitHub
+npm run issues
+```
+
+Se puede volver a ejecutar: salta los issues cuyo título ya existe.
 
 Los números de issue que usa este archivo son de referencia: GitHub los asigna en orden de creación, así que conviene crearlos en el mismo orden.

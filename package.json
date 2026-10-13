@@ -18,7 +18,8 @@
     "format:check": "prettier --check .",
     "check": "npm run lint && npm run format:check && npm test && npm run build",
     "bench": "node scripts/bench-parser.mjs",
-    "dataset": "node scripts/dataset.mjs"
+    "dataset": "node scripts/dataset.mjs",
+    "issues": "node scripts/create-issues.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
