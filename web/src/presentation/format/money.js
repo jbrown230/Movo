@@ -17,7 +17,9 @@ export const formatDollars = (cents) => 'US$' + withTwoDecimals.format(cents / 1
  */
 export function formatColonesShort(cents) {
   const hasCents = cents % 100 !== 0;
-  if (hasCents && Math.abs(cents) < SMALL_AMOUNT_CENTS) return formatColones(cents);
+  if (hasCents && Math.abs(cents) < SMALL_AMOUNT_CENTS) {
+    return formatColones(cents);
+  }
   return '₡' + withoutDecimals.format(Math.round(cents / 100));
 }
 

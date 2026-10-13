@@ -7,7 +7,7 @@ import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
 import { useAppData } from '../hooks/useAppData.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { dayLabel, monthName, timeLabel } from '../format/dates.js';
-import { formatColonesShort, formatDollars, splitColonesDecimals } from '../format/money.js';
+import { formatColones, formatColonesShort, formatDollars, splitColonesDecimals } from '../format/money.js';
 import { amountClass, amountSign, describeTransaction } from '../format/transactionLabels.js';
 import { CashModal, PasteModal } from '../modals/SimpleModals.jsx';
 import { PurchaseSimulatorModal, SinpeSimulatorModal } from '../modals/SimulatorModals.jsx';
@@ -181,6 +181,9 @@ function groupByDay(transactions) {
 
 function TransactionRow({ transaction, isHighlighted }) {
   const { openModal } = useModal();
+  const isDollars = transaction.currency === Currency.USD;
+  // Un monto convertido desde dólares casi nunca es redondo: se muestra con sus céntimos.
+  const formatAmount = isDollars ? formatColones : formatColonesShort;
   return (
     <button
       type="button"
@@ -195,11 +198,9 @@ function TransactionRow({ transaction, isHighlighted }) {
       <span className="r">
         <div className={amountClass(transaction)}>
           {amountSign(transaction)}
-          {formatColonesShort(transaction.crcCents)}
+          {formatAmount(transaction.crcCents)}
         </div>
-        <div className="a2">
-          {transaction.currency === Currency.USD ? formatDollars(transaction.amountCents) : timeLabel(transaction.date)}
-        </div>
+        <div className="a2">{isDollars ? formatDollars(transaction.amountCents) : timeLabel(transaction.date)}</div>
       </span>
     </button>
   );

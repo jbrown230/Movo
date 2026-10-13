@@ -1,5 +1,9 @@
 # Cambios
 
+## Sin publicar
+
+- **Tipo de cambio.** El servidor consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del BCCR, que responde en JSON y se autentica con un token en el encabezado. Reemplaza al servicio web anterior (XML, con correo y token en la dirección). Ya no se usa `BCCR_EMAIL`: basta con `BCCR_TOKEN`.
+
 ## v0.1.0
 
 Primera versión pública de Movo.

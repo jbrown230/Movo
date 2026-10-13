@@ -115,9 +115,10 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 
 ### 34. Revisar el tipo de cambio · 1 pt
 `backend`, `frontend`, `bug` · Hito: Funciones de usuario
-- [ ] Verificar que el valor que muestra la app coincide con el del BCCR para la fecha.
-- [ ] Revisar la conversión de montos en dólares y qué pasa si la API o la caché no responden.
-- [ ] Corregir lo que falle y dejarlo cubierto con una prueba.
+Estado: hecho, issue de GitHub #36 (rama `36-revisar-el-tipo-de-cambio`).
+- [x] Verificar que el valor que muestra la app coincide con el del BCCR para la fecha. El servidor consultaba un servicio web anterior; se migró a la API nueva del BCCR (SDDE, JSON con token en el encabezado) y se comprobó con un token real (₡455,60 el 2026-10-12).
+- [x] Revisar la conversión de montos en dólares y qué pasa si la API o la caché no responden. La conversión es correcta y cada movimiento conserva el tipo de cambio con que se leyó; si la API no responde, la app usa el último valor conocido o el de reserva (510).
+- [x] Corregir lo que falle y dejarlo cubierto con una prueba.
 
 ### 35. Vista propia para el filtrado de movimientos · 2 pts
 `frontend` · Hito: Funciones de usuario

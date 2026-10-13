@@ -1,25 +1,27 @@
-// Lectura de la respuesta del BCCR. La respuesta es un XML escapado dentro de otro XML,
-// por eso primero se "desescapan" los símbolos < y >.
+// Lectura de la respuesta del BCCR (API del SDDE). Es un JSON con esta forma:
+// { estado, mensaje, datos: [{ codigoIndicador, nombreIndicador, series: [{ fecha, valorDatoPorPeriodo }] }] }
+// Un día sin valor publicado llega con `valorDatoPorPeriodo: null`.
 
-const ESCAPED_LESS_THAN = /&lt;/g;
-const ESCAPED_GREATER_THAN = /&gt;/g;
-const DATE_AND_VALUE = /<DES_FECHA>([^<]+)<\/DES_FECHA>\s*<NUM_VALOR>([\d.]+)<\/NUM_VALOR>/g;
-const DATE_LENGTH = 10; // "2026-01-15"; el BCCR agrega la hora detrás
+const DATE_LENGTH = 10; // "2026-01-15"; por si el BCCR agrega la hora detrás
 const SOURCE_TEXT = 'BCCR, tipo de cambio de venta';
 
-/**
- * @param {string} responseText
- * @returns {import('../../application/ports.js').ExchangeRate} El último valor de la respuesta.
- */
-export function parseLatestRate(responseText) {
-  const xml = responseText.replace(ESCAPED_LESS_THAN, '<').replace(ESCAPED_GREATER_THAN, '>');
-  const entries = [...xml.matchAll(DATE_AND_VALUE)];
-  if (!entries.length) throw new Error('BCCR sin datos');
+const hasValue = (entry) => typeof entry?.valorDatoPorPeriodo === 'number' && typeof entry.fecha === 'string';
+const mostRecent = (latest, entry) => (entry.fecha > latest.fecha ? entry : latest);
 
-  const [, date, value] = entries.at(-1);
+/**
+ * @param {unknown} body  Cuerpo de la respuesta, ya convertido de JSON.
+ * @returns {import('../../application/ports.js').ExchangeRate} El último valor publicado.
+ */
+export function parseLatestRate(body) {
+  if (body?.estado === false) throw new Error('BCCR: ' + (body.mensaje || 'consulta rechazada'));
+
+  const published = (body?.datos ?? []).flatMap((indicator) => indicator?.series ?? []).filter(hasValue);
+  if (!published.length) throw new Error('BCCR sin datos');
+
+  const latest = published.reduce(mostRecent);
   return {
-    rate: Math.round(Number(value) * 100) / 100,
-    date: date.slice(0, DATE_LENGTH),
+    rate: Math.round(latest.valorDatoPorPeriodo * 100) / 100,
+    date: latest.fecha.slice(0, DATE_LENGTH),
     source: SOURCE_TEXT,
   };
 }

@@ -18,10 +18,7 @@ const cache = createResilientCache({
   memory: createInMemoryCache(),
 });
 const backupStore = config.cloudSync && config.mongoUrl ? createMongoBackupStore(config.mongoUrl, log) : null;
-const exchangeRateSource =
-  config.bccrEmail && config.bccrToken
-    ? createBccrExchangeRateSource({ email: config.bccrEmail, token: config.bccrToken })
-    : null;
+const exchangeRateSource = config.bccrToken ? createBccrExchangeRateSource({ token: config.bccrToken }) : null;
 
 const useCases = createUseCases({
   settings: config,
