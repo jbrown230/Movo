@@ -121,7 +121,7 @@ function BankSimulatorCard() {
   return (
     <div className="sim">
       <div className="sim-t">
-        <b>Modo demo: simula a tu banco</b>
+        <b style={{ display: 'none' }}>Modo demo: simula a tu banco</b>
         <span>
           En la vida real esto lo haces en la app de tu banco, no aquí. Movo nunca mueve dinero: solo lee el correo que
           el banco te envía después.

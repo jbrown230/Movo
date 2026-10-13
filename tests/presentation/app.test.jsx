@@ -47,7 +47,7 @@ describe('modo demo', () => {
   test('muestra el gasto del mes, las categorías y los movimientos de ejemplo', async () => {
     await openDemo();
     expect(screen.getByText('Modo demo', { selector: '.live span' })).toBeInTheDocument();
-    expect(screen.getByText('Modo demo: simula a tu banco')).toBeInTheDocument();
+    expect(screen.getByText('Modo demo: simula a tu banco')).not.toBeVisible();
     expect(screen.getByText('Por categoría')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /Super La Amistad|Netflix/i }).length).toBeGreaterThan(0);
   });
