@@ -46,7 +46,7 @@ Todos los errores tienen la forma `{ "error": "Mensaje en español" }`.
 { "googleClientId": "123-abc.apps.googleusercontent.com", "cloudSync": true }
 ```
 
-`googleClientId` es `null` si el servidor no tiene inicio de sesión con Google. `cloudSync` dice si el respaldo está disponible.
+`googleClientId` es `null` si el servidor no tiene inicio de sesión con Google. `cloudSync` dice si el respaldo está disponible; la app oculta toda la sección de respaldo y no sincroniza cuando es `false`.
 
 ## `GET /api/fx`
 

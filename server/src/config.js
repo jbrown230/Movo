@@ -19,7 +19,7 @@ export const config = {
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
   mongoUrl: process.env.MONGO_URL || '',
   redisUrl: process.env.REDIS_URL || '',
-  cloudSync: readBoolean(process.env.CLOUD_SYNC, Boolean(process.env.MONGO_URL)),
+  cloudSync: readBoolean(process.env.CLOUD_SYNC, false), // apagado salvo que se active con CLOUD_SYNC=true
   bccrEmail: process.env.BCCR_EMAIL || '',
   bccrToken: process.env.BCCR_TOKEN || '',
   fallbackExchangeRate: Number(process.env.FX_FALLBACK || DEFAULT_FALLBACK_EXCHANGE_RATE),
