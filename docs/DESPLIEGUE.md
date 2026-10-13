@@ -6,21 +6,66 @@ Crea un registro DNS tipo A (por ejemplo `movo.tudominio.com`) que apunte a la I
 
 ## 2. Google Cloud (una sola vez)
 
-1. Entra a console.cloud.google.com y crea un proyecto.
-2. En "APIs y servicios", ve a "Biblioteca", busca **Gmail API** y habilítala.
-3. Configura la "Pantalla de consentimiento de OAuth":
-   - Tipo de usuario: **Externo**.
-   - Completa el nombre de la app y el correo de soporte.
-   - En **Alcances**, agrega `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile` y `https://www.googleapis.com/auth/gmail.readonly`.
-   - En **Usuarios de prueba**, agrega los Gmail de quienes van a probar (máximo 100).
-   - Deja el estado en **Prueba**.
-4. En "Credenciales", elige "Crear credenciales" y luego "ID de cliente de OAuth":
-   - Tipo: **Aplicación web**.
-   - Orígenes autorizados de JavaScript: `https://movo.tudominio.com`.
-   - URI de redireccionamiento autorizados: `https://movo.tudominio.com/` (con la barra final).
-5. Copia el **ID de cliente** al `.env`. No hace falta el secreto: la app no lo usa.
+Movo solo necesita un **ID de cliente OAuth**. No usa API key ni el secreto del cliente.
 
-Al conectar, Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "Configuración avanzada" y luego "Ir a Movo".
+### 2.1 Crear el proyecto
+
+1. Abre https://console.cloud.google.com/projectcreate, ponle de nombre `Movo` y crea el proyecto.
+2. Confirma que quedó seleccionado en el selector de proyecto, arriba a la izquierda.
+
+### 2.2 Habilitar la Gmail API
+
+1. Abre https://console.cloud.google.com/apis/library/gmail.googleapis.com.
+2. Toca **Habilitar**. El estado debe decir "Habilitada".
+
+### 2.3 Pantalla de consentimiento (Google Auth Platform)
+
+1. Abre https://console.cloud.google.com/auth/overview y toca **Comenzar**.
+2. Completa el nombre de la app (`Movo`), el correo de asistencia y el correo de contacto.
+3. Público: **Externo**. Acepta los términos y toca **Crear**.
+4. En **Acceso a los datos** (https://console.cloud.google.com/auth/scopes), toca **Agregar o quitar permisos** y marca estos cuatro:
+   - `openid`
+   - `.../auth/userinfo.email`
+   - `.../auth/userinfo.profile`
+   - `https://www.googleapis.com/auth/gmail.readonly`
+
+   `gmail.readonly` aparece al escribirlo en el filtro, o pegándolo en "Agregar permisos manualmente". Toca **Actualizar** y luego **Guardar**. Revisa que los cuatro hayan quedado en la lista.
+5. En **Público** (https://console.cloud.google.com/auth/audience), deja el estado en **Prueba**. En **Usuarios de prueba**, toca **Add users** y agrega el Gmail de cada persona que va a usar la app (máximo 100). Quien no esté en la lista no puede entrar.
+
+### 2.4 Crear el ID de cliente
+
+1. Abre https://console.cloud.google.com/auth/clients y toca **Crear cliente**.
+2. Tipo de aplicación: **Aplicación web**. Nombre: `Movo web`.
+3. **Orígenes autorizados de JavaScript**:
+   - `https://movo.tudominio.com`
+   - `http://localhost:5173` (para desarrollo local)
+4. **URIs de redireccionamiento autorizados** (con la barra final):
+   - `https://movo.tudominio.com/`
+   - `http://localhost:5173/`
+5. Toca **Crear** y copia el **ID de cliente**, que termina en `.apps.googleusercontent.com`. Pégalo en el `.env` como `GOOGLE_CLIENT_ID`.
+
+Google no acepta una IP pelada como origen. Si no tienes dominio, usa un nombre público con HTTPS que apunte a la IP, como `203-0-113-10.sslip.io` (la IP del VPS con guiones en vez de puntos). Ese nombre va en `DOMAIN` del `.env`, en el origen y en la URI de redireccionamiento.
+
+### 2.5 Secreto del cliente
+
+Al crear el cliente, Google muestra un secreto una sola vez. **No lo copies ni lo pegues en ningún lado**: la app no lo usa. Si se filtró (por ejemplo, se pegó en un chat o en el repositorio), hay que invalidarlo:
+
+1. Abre el cliente `Movo web` en https://console.cloud.google.com/auth/clients y baja hasta **Secretos del cliente**.
+2. Google solo deja desactivar un secreto cuando hay otro. Toca **Add secret** para crear uno nuevo y no lo copies.
+3. En la fila del secreto viejo, toca **Inhabilitar** y confirma. Luego toca la papelera para borrarlo.
+4. No toques **Borrar** arriba a la derecha: ese botón elimina el cliente completo y rompe el inicio de sesión.
+
+### 2.6 Al conectar
+
+Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "Configuración avanzada" y luego "Ir a Movo".
+
+### 2.7 Problemas comunes
+
+| Mensaje | Causa y solución |
+| --- | --- |
+| `redirect_uri_mismatch` | La URI de redireccionamiento no coincide exactamente. Revisa el dominio, `https` y la barra final. Los cambios pueden tardar unos minutos en aplicarse. |
+| `Error 403: access_denied` | El Gmail no está en **Usuarios de prueba** (paso 2.3.5). |
+| Sale el modo demo en vez de Google | `GOOGLE_CLIENT_ID` está vacío en el `.env` del servidor. Revisa `https://movo.tudominio.com/api/config`: `googleClientId` no debe ser `null`. Después de cambiar el `.env`, reinicia con `bash deploy/update.sh` o `docker compose up -d --build`. |
 
 ## 3. Tipo de cambio del BCCR (opcional)
 
