@@ -8,9 +8,9 @@ import { ModalHeader } from '../components/ModalHeader.jsx';
 import { buildBankMail } from '../../demo/mailBuilder.js';
 import { MERCHANTS, SIMULATOR_CONTACTS } from '../../demo/sampleData.js';
 import { normalizeKey, toTitleCase } from '../../domain/names.js';
-import { textToCents } from '../../domain/money.js';
+import { textToCents, toColonesCents } from '../../domain/money.js';
 import { Currency } from '../../domain/types.js';
-import { formatColonesShort, formatDollars } from '../format/money.js';
+import { formatColones, formatColonesShort, formatDollars } from '../format/money.js';
 import { useModal } from '../state/ModalProvider.jsx';
 import { useMailDelivery } from '../state/MailDeliveryProvider.jsx';
 import { Views, useNavigation } from '../state/NavigationProvider.jsx';
@@ -207,7 +207,7 @@ export function PurchaseSimulatorModal() {
   const formatAmount = (cents) => (isDollars ? formatDollars(cents) : formatColonesShort(cents));
   const hint =
     isDollars && amountCents > 0
-      ? `≈ ${formatColonesShort(amountCents * services.preferences.exchangeRate())} al tipo de cambio actual`
+      ? `≈ ${formatColones(toColonesCents(amountCents, currency, services.preferences.exchangeRate()))} al tipo de cambio actual`
       : '';
 
   const pay = () => {

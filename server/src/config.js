@@ -20,7 +20,6 @@ export const config = {
   mongoUrl: process.env.MONGO_URL || '',
   redisUrl: process.env.REDIS_URL || '',
   cloudSync: readBoolean(process.env.CLOUD_SYNC, false), // apagado salvo que se active con CLOUD_SYNC=true
-  bccrEmail: process.env.BCCR_EMAIL || '',
   bccrToken: process.env.BCCR_TOKEN || '',
   fallbackExchangeRate: Number(process.env.FX_FALLBACK || DEFAULT_FALLBACK_EXCHANGE_RATE),
   requestsPerMinute: Number(process.env.RATE_LIMIT_PER_MIN || DEFAULT_REQUESTS_PER_MINUTE),

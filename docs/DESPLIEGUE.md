@@ -69,7 +69,7 @@ Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "C
 
 ## 3. Tipo de cambio del BCCR (opcional)
 
-Suscríbete al servicio web de indicadores económicos del Banco Central de Costa Rica para obtener un token. Luego coloca `BCCR_EMAIL` y `BCCR_TOKEN` en el `.env`. Si no lo haces, se usa `FX_FALLBACK`.
+Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica. Regístrate en el sitio de Indicadores Económicos del BCCR y genera un token en Mi Perfil → Generar token. Luego coloca ese token en `BCCR_TOKEN` en el `.env`. Si no lo haces, o si el token vence, se usa `FX_FALLBACK`.
 
 ## 4. VPS con Docker
 

@@ -89,6 +89,8 @@ Para probar también la API (tipo de cambio y respaldo), en otra terminal:
 npm run dev --prefix server    # API en http://localhost:3000; la app la usa sola
 ```
 
+La API en desarrollo lee el `.env` de la raíz si existe (por ejemplo, `BCCR_TOKEN` para el tipo de cambio real). Al cambiarlo hay que reiniciarla.
+
 Para ver la versión compilada, tal como se publica: `npm start` (compila con Vite y la sirve desde la API en http://localhost:3000).
 
 Sin `GOOGLE_CLIENT_ID` la app abre en modo demo. Para probar con tu Gmail en local, define `GOOGLE_CLIENT_ID` y registra `http://localhost:5173` como origen y `http://localhost:5173/` como URI de redirección en Google Cloud.
