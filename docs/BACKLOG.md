@@ -36,7 +36,7 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 | 1 | PWA instalable con modo sin conexión, service worker y modo oscuro | 3 | `frontend` | v0.1.0 |
 | 2 | SQLite en el navegador (sql.js): una base por usuario e ingesta idempotente por Message-ID | 3 | `frontend` | v0.1.0 |
 | 3 | Lectura de Gmail de solo lectura, limitada a remitentes bancarios | 2 | `frontend` | v0.1.0 |
-| 4 | Lector de correos base: plantillas sintéticas BAC, BN y BCR, y lector genérico por etiquetas | 3 | `parser` | v0.1.0 |
+| 4 | Lector de correos base: plantillas sintéticas BAC, BN y BCR | 3 | `parser` | v0.1.0 |
 | 5 | Plantillas reales del BCR: SINPE Móvil enviado y recibido, tarjeta, y compras negadas | 3 | `parser` | v0.1.0 |
 | 6 | SINPE entre cuentas propias: detección del titular y control "¿Cómo contarlo?" | 2 | `parser`, `frontend` | v0.1.0 |
 | 7 | API Node mínima: configuración, validación de token de Google y tipo de cambio del BCCR | 3 | `backend` | v0.1.0 |

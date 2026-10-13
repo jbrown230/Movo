@@ -57,16 +57,23 @@ test('compra en dólares', () => {
   assert.equal(parsed.amountCents, 799);
 });
 
-test('el lector genérico entiende un formato desconocido', () => {
-  const parsed = parseFirstApproved({
+test('sin plantilla oficial el correo se ignora, aunque traiga monto y etiquetas', () => {
+  const result = parseMail({
     from: 'avisos@banco-x.example',
     subject: 'Aviso de compra',
     body: 'Estimado cliente, se registró una compra.\nEstablecimiento: PANADERIA LA ESQUINA\nImporte: ₡4.500,00\nFecha: 03/01/2026 08:15',
   });
-  assert.ok(parsed.ok);
-  assert.equal(parsed.amountCents, 450000);
-  assert.equal(parsed.counterparty, 'PANADERIA LA ESQUINA');
-  assert.equal(parsed.template, 'genérica');
+  assert.equal(result.ok, false);
+});
+
+test('un correo promocional con montos no se lee como gasto', () => {
+  const result = parseMail({
+    from: 'promos@billetera.example',
+    subject: 'Mandá tu SINPE desde la billetera.',
+    body: '¿Te toca pagar? Hacelo al instante con nosotros. Hasta ₡200.000 sin comisión. Enviá hasta ₡300.000 al día.\nPodés desinscribirte de nuestra comunicación haciendo click aquí.',
+    date: '2026-10-12T23:42:00.000Z',
+  });
+  assert.equal(result.ok, false);
 });
 
 test('un correo sin monto no genera movimiento', () => {

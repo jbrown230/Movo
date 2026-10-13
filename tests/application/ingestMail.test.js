@@ -56,7 +56,7 @@ test('un correo sin monto queda como "sin movimiento" y se puede ver en la bande
   assert.equal(result.status, 'sin_movimiento');
   assert.equal(queries.countTransactions(), 0);
   assert.equal(queries.getMail('estado').status, 'sin_movimiento');
-  assert.match(queries.getMail('estado').note, /No se encontró un monto/);
+  assert.match(queries.getMail('estado').note, /No hay una plantilla oficial/);
 });
 
 test('un texto vacío o inválido no rompe la lectura', () => {

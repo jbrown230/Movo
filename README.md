@@ -133,7 +133,7 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 
 ## Limitaciones conocidas
 
-- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada"). BAC y BN usan por ahora formatos sintéticos en la demo; para los demás bancos hay un lector genérico por etiquetas. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
+- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada"). BAC y BN usan por ahora formatos sintéticos en la demo; para los demás bancos hace falta una plantilla oficial: sin ella el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
 - Con la app de Google en modo "Prueba", solo pueden entrar hasta 100 cuentas invitadas, y Google muestra la advertencia de app no verificada.
 - La lectura ocurre al abrir la app (el token de Google dura una hora). No hay lectura en segundo plano.
 - En iPhone, el inicio de sesión dentro de la PWA instalada puede abrirse en una ventana aparte; en Android funciona dentro de la app.

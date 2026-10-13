@@ -4,18 +4,18 @@
 // Estrategia:
 //   1. Detectar el banco por el remitente o por el texto.
 //   2. Probar primero las plantillas de ese banco, luego las demás.
-//   3. Si ninguna sirve, usar el lector genérico por etiquetas.
+//   3. Si ninguna sirve, el correo se ignora: sin plantilla oficial no se adivina (así la
+//      publicidad con montos nunca se lee como gasto).
 // Un correo puede traer VARIAS transacciones (tabla de tarjeta del BCR), y una
 // transacción puede venir "Negada": esas no se registran como gasto.
 
 import { detectBank, detectBankBySender } from '../banks.js';
 import { Currency, Direction, TransactionType } from '../types.js';
 import { collapseSpaces } from './text.js';
-import { parseGeneric } from './templates/generic.js';
 import { TEMPLATES } from './templates/index.js';
 
 /** Súbelo cuando cambie el lector: la app vuelve a leer los correos no reconocidos. */
-export const PARSER_VERSION = 4;
+export const PARSER_VERSION = 6;
 
 const MAX_COUNTERPARTY_LENGTH = 80;
 
@@ -86,27 +86,18 @@ export function parseMail(mail) {
   const text = `${mail.subject || ''}\n${body}`;
   let bank = detectBank(mail.from, text);
 
-  let rawItems;
-  let templateName;
   const found = runTemplates(body, bank);
-  if (found) {
-    rawItems = found.rawItems;
-    templateName = found.template.name;
-    // Si el remitente identifica otro banco, se respeta; si no, manda la plantilla.
-    bank = detectBankBySender(mail.from) ?? found.template.bank;
-  } else {
-    rawItems = parseGeneric(text);
-    templateName = 'genérica';
-  }
+  if (!found) return { ok: false, bank, reason: 'No hay una plantilla oficial para este correo.' };
 
-  const withAmount = (rawItems || []).filter((item) => item.amount > 0);
-  if (!withAmount.length) return { ok: false, bank, reason: 'No se encontró un monto en el correo.' };
+  // Si el remitente identifica otro banco, se respeta; si no, manda la plantilla.
+  bank = detectBankBySender(mail.from) ?? found.template.bank;
 
+  const withAmount = found.rawItems.filter((item) => item.amount > 0);
   const defaults = guessDefaults(text);
   return {
     ok: true,
     bank,
-    template: templateName,
+    template: found.template.name,
     items: withAmount.map((item) => normalizeItem(item, defaults, mail)),
   };
 }
