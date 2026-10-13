@@ -11,7 +11,7 @@ Primera versión pública de Movo.
 - **Lectura de correos.** Gmail se lee desde el teléfono con permiso de solo lectura, limitado a remitentes bancarios. Los correos nunca se envían al servidor.
 - **Lector de notificaciones.**
   - Plantillas con el formato real del BCR: SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta (incluida la compra "Negada", que no se registra como gasto).
-  - Plantillas sintéticas para BAC y BN (hasta tener correos reales) y un lector genérico por etiquetas para formatos desconocidos.
+  - Plantillas sintéticas para BAC y BN (hasta tener correos reales).
   - Un correo puede generar varios movimientos. Las horas se interpretan en hora de Costa Rica (UTC−6).
   - SINPE entre cuentas propias: si el titular es la misma persona en origen y destino, no cuenta como gasto ni como ingreso. Cada movimiento tiene el control "¿Cómo contarlo?".
   - Si el lector mejora, la app vuelve a leer sola los correos que antes no reconocía.
