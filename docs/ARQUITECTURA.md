@@ -149,6 +149,49 @@ El id de un movimiento leído de un correo se deriva del Message-ID (`'m' + hash
 
 Una colección `backup_records` con documentos `{ userId, kind, id, updatedAt, serverSequence, isDeleted, data }`. Los detalles y el formato de red están en [API.md](API.md).
 
+- `kind` dice qué es el registro: `transaction`, `category_rule` o `setting`.
+- `data` trae el contenido del registro tal como lo envió el teléfono, ya validado contra una lista blanca.
+- Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización.
+
+### Decisión: un documento por registro, con el contenido embebido
+
+Cada movimiento, regla o ajuste es un documento propio. El contenido va embebido en `data` y la persona se identifica con el campo `userId`; no hay una colección de usuarios ni referencias entre documentos.
+
+Alternativas descartadas:
+
+| Alternativa | Por qué no |
+|---|---|
+| Un documento por persona, con todos sus movimientos embebidos en un arreglo | El documento crece sin límite y cada cambio obligaría a modificar el arreglo completo. Tampoco se podría pedir "solo lo que cambió después del cursor" con un índice. |
+| Colecciones separadas con referencias (movimientos, reglas, usuarios) y `$lookup` | El servidor nunca cruza datos: las consultas y los totales se hacen en el teléfono, con SQLite. Las referencias agregarían consultas sin dar nada a cambio. |
+
+Lo que se gana con un documento por registro:
+
+- **"Gana el más reciente" en una sola operación.** Cada registro se guarda con un `updateOne` condicionado a que `updatedAt` sea menor; al ser un solo documento, la operación es atómica y no necesita transacciones.
+- **Sincronización incremental.** Pedir los cambios de una persona es un recorrido del índice `{ userId, serverSequence }` a partir del cursor.
+- **Separación por usuario simple.** Toda consulta filtra por `userId`, y borrar los datos de una persona es un `deleteMany` con ese filtro.
+- **Esquema flexible donde conviene.** Los tres tipos de registro comparten la misma envoltura y solo cambia `data`, así que agregar un tipo no exige otra colección.
+
+El costo es que `userId` y `kind` se repiten en cada documento, y que MongoDB no valida la forma de `data`: esa validación la hace la capa HTTP antes de guardar.
+
+### Local o Atlas
+
+En desarrollo y en el despliegue con Docker se usa un MongoDB local (el servicio `mongo` del `docker-compose.yml`). La conexión sale únicamente de la variable `MONGO_URL`, así que apuntar a MongoDB Atlas no requiere cambios de código. El respaldo está apagado salvo que se active con `CLOUD_SYNC=true`.
+
+## Claves en Redis
+
+Redis guarda solo datos efímeros que se pueden reconstruir. Todas las claves son de tipo string y vencen solas; ninguna guarda datos de los movimientos.
+
+| Clave | Qué guarda | Vence en | Dónde se define |
+|---|---|---|---|
+| `fx:usd` | Tipo de cambio vigente del dólar, como JSON `{ rate, date, source }` | 6 horas; 30 minutos si es el valor de reserva, para reintentar pronto | `application/getExchangeRate.js` |
+| `fx:usd:last` | Último tipo de cambio obtenido del BCCR, por si la fuente falla | 30 días | `application/getExchangeRate.js` |
+| `tok:<sha256 del token>` | Id de la persona dueña de un token de Google ya validado. Se guarda un resumen del token, nunca el token completo | Lo que le quede de vida al token, máximo 1 hora | `application/authenticateUser.js` |
+| `rl:<quién>:<minuto>` | Contador de solicitudes de ese minuto. `<quién>` es el id de la persona, o `ip:<dirección>` en las rutas sin sesión | 70 segundos | `application/rateLimiter.js` |
+
+Las claves no llevan prefijo de grupo porque Movo usa su propio Redis (el del `docker-compose.yml`). Para usar un Redis compartido habría que anteponer un prefijo a todas.
+
+Si Redis no está configurado o deja de responder, las mismas claves se guardan en la memoria del proceso (`adapters/cache/ResilientCache.js`): la API sigue funcionando y solo se pierde la caché al reiniciar.
+
 ## Sincronización
 
 1. El teléfono envía lo marcado con `needs_backup` (máximo 500 registros por solicitud) junto con su cursor `since`.
