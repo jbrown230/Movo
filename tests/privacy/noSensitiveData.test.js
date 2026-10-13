@@ -59,13 +59,19 @@ const FIXTURES = filesIn('tests/fixtures');
 // ---- Valores ficticios o públicos que SÍ se permiten ----
 const ALLOWED_EMAIL_DOMAINS = [
   'bancobcr.com', // direcciones públicas del banco (remitente de las notificaciones)
+  'bncr.fi.cr', // remitente público de los vouchers del Banco Nacional
   'bancobcr.demo',
   'bac.demo',
   'bn.demo', // remitentes del modo demo
   'users.noreply.github.com',
 ];
 const ALLOWED_EMAIL_SUFFIXES = ['.example', '.invalid', '.test', 'tudominio.com'];
-const PUBLIC_BANK_NUMBERS = ['22111135', '50622111135']; // WhatsApp público del BCR
+const PUBLIC_BANK_NUMBERS = [
+  '22111135', // WhatsApp público del BCR
+  '50622111135',
+  '22078600', // centro de tarjetas del Banco Nacional
+  '22122000', // centro de llamadas del Banco Nacional
+];
 const FAKE_NAMES = new Set([
   'CLIENTE DE PRUEBA',
   'APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2',

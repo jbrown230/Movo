@@ -125,7 +125,7 @@ npm run dataset -- 50 > correos.json   # dataset sintético reproducible
 
 \* Las pruebas de Redis y MongoDB reales se ejecutan cuando existen `REDIS_URL` y `MONGO_URL` (GitHub Actions las levanta como servicios).
 
-Resultado de referencia del benchmark (2000 correos, semilla fija): precisión 100 % en monto, comercio, fecha, tipo y dirección; ingesta en SQLite de unos 0,5 ms por correo; resumen del mes en menos de 1 ms. Los correos del BCR del benchmark siguen la estructura real; los de BAC y BN son sintéticos. Las pruebas en `tests/fixtures/bcr-html/` usan la estructura exacta de notificaciones reales del BCR (descargadas con "Mostrar original" en Gmail), con **todos** los datos personales reemplazados por valores ficticios. Para agregar un banco nuevo se sigue el mismo camino: descargar el .eml, anonimizarlo y escribir la plantilla con su prueba (paso a paso en [docs/CONTRIBUIR.md](docs/CONTRIBUIR.md)). Una prueba automática (`tests/privacy`) revisa que no se cuele ningún correo, teléfono, tarjeta, referencia, secreto ni nombre real.
+Resultado de referencia del benchmark (2000 correos, semilla fija): precisión 100 % en monto, comercio, fecha, tipo y dirección; ingesta en SQLite de unos 0,5 ms por correo; resumen del mes en menos de 1 ms. Los correos del BCR y las compras con tarjeta del BN del benchmark siguen la estructura real; los de BAC y el SINPE del BN son sintéticos. Las pruebas en `tests/fixtures/bcr-html/` usan la estructura exacta de notificaciones reales del BCR (descargadas con "Mostrar original" en Gmail), con **todos** los datos personales reemplazados por valores ficticios. Para agregar un banco nuevo se sigue el mismo camino: descargar el .eml, anonimizarlo y escribir la plantilla con su prueba (paso a paso en [docs/CONTRIBUIR.md](docs/CONTRIBUIR.md)). Una prueba automática (`tests/privacy`) revisa que no se cuele ningún correo, teléfono, tarjeta, referencia, secreto ni nombre real.
 
 ## Privacidad
 
@@ -135,7 +135,7 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 
 ## Limitaciones conocidas
 
-- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada"). BAC y BN usan por ahora formatos sintéticos en la demo; para los demás bancos hace falta una plantilla oficial: sin ella el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
+- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada") y **BN** (comprobante de compra con tarjeta, "Voucher Digital"; el BN no notifica los SINPE Móvil por correo). BAC y el SINPE Móvil del BN usan por ahora formatos sintéticos en la demo; para los demás bancos hace falta una plantilla oficial: sin ella el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
 - Con la app de Google en modo "Prueba", solo pueden entrar hasta 100 cuentas invitadas, y Google muestra la advertencia de app no verificada.
 - La lectura ocurre al abrir la app (el token de Google dura una hora). No hay lectura en segundo plano.
 - En iPhone, el inicio de sesión dentro de la PWA instalada puede abrirse en una ventana aparte; en Android funciona dentro de la app.

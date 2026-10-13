@@ -7,6 +7,7 @@ import { categorize } from '../../web/src/domain/categories.js';
 import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
 import { BCR_SINPE_ENVIADO, BCR_SINPE_RECIBIDO, BCR_SINPE_PROPIO, BCR_TARJETA_NEGADA } from '../fixtures/bcrMails.js';
+import { BN_VOUCHER_COMPRA, BN_VOUCHER_COMPRA_TEXTO_PLANO } from '../fixtures/bnMails.js';
 
 test('parseAmount entiende formatos de Costa Rica y de EE. UU.', () => {
   assert.equal(parseAmount('15,000.00'), 15000);
@@ -144,6 +145,50 @@ test('BCR: SINPE a mí mismo desde otra entidad se lee como "entre mis cuentas"'
   assert.equal(parsed.date, costaRicaIso(2026, 1, 17, 14, 0));
   assert.match(parsed.note, /Entre tus cuentas/);
   assert.match(parsed.note, /COOPENAE/);
+});
+
+// ---- Formatos del Banco Nacional ----
+
+test('BN: el voucher de una compra con tarjeta se lee como gasto', () => {
+  const parsed = parseFirstApproved(BN_VOUCHER_COMPRA);
+  assert.equal(parsed.template, 'BN voucher');
+  assert.equal(parsed.bank, 'BN');
+  assert.equal(parsed.type, 'tarjeta');
+  assert.equal(parsed.direction, 'out');
+  assert.equal(parsed.currency, 'CRC');
+  assert.equal(parsed.amountCents, 350000);
+  assert.equal(parsed.counterparty, 'SUPERMERCADO DE PRUEBA SAN JOSE', 'sin el código de país del final');
+  assert.equal(parsed.date, costaRicaIso(2026, 10, 20, 14, 15));
+  assert.equal(parsed.note, 'Tarjeta ****0000');
+});
+
+test('BN: la versión en texto plano del voucher (sin algunos espacios) da el mismo resultado', () => {
+  const fromHtml = parseFirstApproved(BN_VOUCHER_COMPRA);
+  const fromPlainText = parseFirstApproved(BN_VOUCHER_COMPRA_TEXTO_PLANO);
+  assert.deepEqual(fromPlainText, fromHtml);
+});
+
+test('BN: un voucher en dólares y de madrugada', () => {
+  const body = BN_VOUCHER_COMPRA.body
+    .replace('CRC 3500,00', 'USD 7,99')
+    .replace('a las 2:15 p.m.', 'a las 12:05 a.m.')
+    .replace('20 de Octubre', '3 de Setiembre');
+  const parsed = parseFirstApproved({ ...BN_VOUCHER_COMPRA, body });
+  assert.equal(parsed.currency, 'USD');
+  assert.equal(parsed.amountCents, 799);
+  assert.equal(parsed.date, costaRicaIso(2026, 9, 3, 0, 5));
+});
+
+test('BN: se reconoce por el texto aunque el remitente no sea del banco', () => {
+  const parsed = parseFirstApproved({ ...BN_VOUCHER_COMPRA, from: 'Yo <yo@correo.example>' });
+  assert.equal(parsed.bank, 'BN');
+  assert.equal(parsed.amountCents, 350000);
+});
+
+test('BN: un correo del banco sin comprobante no genera movimiento', () => {
+  const body =
+    'Estimado señor(a): CLIENTE DE PRUEBA\nReciba un cordial saludo de parte del Banco Nacional.\nTOTAL: CRC 3500,00';
+  assert.equal(parseMail({ ...BN_VOUCHER_COMPRA, body }).ok, false);
 });
 
 test('el remitente manda sobre la plantilla para decidir el banco', () => {

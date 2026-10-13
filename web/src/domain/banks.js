@@ -21,7 +21,7 @@ export const BANKS = Object.freeze({
     name: 'Banco Nacional',
     color: '#0A6E3C',
     senderPattern: /(bncr|bn\.demo|bnmas)/i,
-    textPattern: /\bBN NOTIFICACIONES\b/i,
+    textPattern: /\bBN NOTIFICACIONES\b|saludo de parte del Banco Nacional/i,
   },
   DAVIVIENDA: { name: 'Davivienda', color: '#E30613', senderPattern: /davivienda/i, textPattern: /DAVIVIENDA/i },
   PROMERICA: { name: 'Promerica', color: '#00843D', senderPattern: /promerica/i, textPattern: /PROMERICA/i },
