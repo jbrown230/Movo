@@ -78,10 +78,13 @@ El `CHANGELOG.md` describe la v0.1.0 pero el repositorio no tiene tags ni releas
 
 ### 18. Plantilla real de Banco Nacional (BN) · 3 pts
 `parser` · Hito: Más bancos
-- [ ] Descargar con "Mostrar original" notificaciones reales de BN (tarjeta y SINPE).
-- [ ] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bn-html/`.
-- [ ] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
-- [ ] Reemplazar las plantillas sintéticas de BN en la demo y el benchmark.
+Estado: hecho, issue de GitHub #20 (rama `20-plantilla-real-de-banco-nacional-bn`).
+Nota: el Banco Nacional no notifica los SINPE Móvil por correo, así que no hay plantilla real de SINPE para este banco. Lo único que envía por correo es el comprobante de compra con tarjeta, con el asunto "Voucher Digital". El SINPE del BN que aparece en la demo es sintético.
+- [x] Descargar con "Mostrar original" notificaciones reales de BN: voucher de una compra con tarjeta (de SINPE no hay).
+- [x] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bn-html/`.
+- [x] Escribir la plantilla en `web/src/domain/emailParser/templates/` (`bnVoucher.js`) y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
+- [x] Reemplazar las plantillas sintéticas de BN en la demo y el benchmark: hecho para la compra con tarjeta.
+- [x] Traer de Gmail solo los correos del BN con asunto "Voucher Digital".
 
 ### 19. Cobertura de estados y casos raros del lector · 3 pts
 `parser`, `tests` · Hito: Más bancos

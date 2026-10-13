@@ -37,6 +37,33 @@ const hourMinuteAmPm = (date) => {
   return `${hour % 12 || 12}:${pad(clock.getUTCMinutes())} ${hour < 12 ? 'AM' : 'PM'}`;
 };
 
+// El voucher del Banco Nacional escribe "20 de Octubre de 2026", "2:15 p.m." y "3500,00".
+const SPANISH_MONTHS = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+];
+const BN_COUNTRY_CODE = 'CRI'; // país del comercio, al final del nombre
+const longSpanishDate = (date) => {
+  const clock = toCostaRicaClock(date);
+  return `${clock.getUTCDate()} de ${SPANISH_MONTHS[clock.getUTCMonth()]} de ${clock.getUTCFullYear()}`;
+};
+const hourMinuteDotted = (date) => {
+  const clock = toCostaRicaClock(date);
+  const hour = clock.getUTCHours();
+  return `${hour % 12 || 12}:${pad(clock.getUTCMinutes())} ${hour < 12 ? 'a.m.' : 'p.m.'}`;
+};
+const withBnFormat = (amount) => amount.toFixed(2).replace('.', ',');
+
 // ---- datos inventados ----
 const randomDigits = (count) => Array.from({ length: count }, () => Math.floor(Math.random() * 10)).join('');
 const fakeReference = () => randomDigits(16);
@@ -101,10 +128,21 @@ function bnMail({ type, direction, counterparty, amount, currency, date, phone, 
           body: `BN Notificaciones\n\nSe realizó un SINPE Móvil por ₡${withCrFormat(amount)} a ${counterparty} (${maskPhone(phone)}) ${when}.\n${detail}`,
         };
   }
-  const symbol = currency === 'USD' ? '$' : '₡';
+  // Compra con tarjeta: misma estructura que el "Voucher Digital" REAL, con datos ficticios.
+  const merchant = `${counterparty} ${BN_COUNTRY_CODE}`;
   return {
-    subject: 'BN Compra aprobada',
-    body: `BN Notificaciones\n\nCompra aprobada por ${symbol}${withCrFormat(amount)} en ${counterparty} el ${dayMonthYear(date)} a las ${hourMinute(date)} con su tarjeta terminada en ${FAKE_CARD_LAST_FOUR}.`,
+    subject: 'Voucher Digital',
+    body: [
+      `Estimado señor(a): ${CLIENT_NAME}`,
+      'Reciba un cordial saludo de parte del Banco Nacional.',
+      `Por este medio le hacemos llegar el comprobante de Compra realizada en ${merchant} el ${longSpanishDate(date)} a las ${hourMinuteDotted(date)}`,
+      merchant,
+      `MASTERCARD\t************${FAKE_CARD_LAST_FOUR}`,
+      `NRO. AUT:\t${randomDigits(6)}`,
+      `REF:\t${randomDigits(8)}`,
+      `TOTAL:\t${currency === 'USD' ? 'USD' : 'CRC'} ${withBnFormat(amount)}`,
+      'Estimado cliente, esta notificación es generada de forma automática, por lo que agradecemos no responder este correo.',
+    ].join('\n'),
   };
 }
 
