@@ -15,7 +15,7 @@ Los bancos se reparten uno por persona, para que nadie cargue con toda la lógic
 | Integrante | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|
 | Jordy Palacios | 34 pts (issues 1–14, cerrados) | **6 pts** | 15, 16, 17 |
-| Dylan Mejía Ruiz | — | **11 pts** | 18, 19, 20, 21 |
+| Dylan Mejía Ruiz | — | **19 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36 |
 | Jose Meza Álvarez | — | **11 pts** | 22, 23, 24, 25, 26 |
 | Yader Barahona Villarreal | — | **11 pts** | 27, 28, 29, 30, 31 |
 
@@ -74,7 +74,7 @@ El `CHANGELOG.md` describe la v0.1.0 pero el repositorio no tiene tags ni releas
 
 ---
 
-## Pendiente · Dylan Mejía Ruiz · 11 pts
+## Pendiente · Dylan Mejía Ruiz · 19 pts
 
 ### 18. Plantilla real de Banco Nacional (BN) · 3 pts
 `parser` · Hito: Más bancos
@@ -101,6 +101,36 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 - [ ] Botón en Ajustes que descarga los movimientos del rango elegido.
 - [ ] Columnas: fecha, comercio, monto, moneda, categoría, tipo, banco.
 - [ ] Compatible con Excel (UTF-8 con BOM, separador configurable) y prueba del formato (comillas, comas y tildes).
+
+### 32. Ocultar el aviso "Modo demo: simula a tu banco" · 1 pt
+`frontend` · Hito: Funciones de usuario
+- [ ] Aplicar `display: none` al aviso "Modo demo: simula a tu banco" del inicio (`web/src/presentation/screens/HomeScreen.jsx`).
+- [ ] Ajustar la prueba que hoy espera ese texto (`tests/presentation/app.test.jsx`).
+
+### 33. Diálogos de confirmación para las acciones de las cards · 2 pts
+`frontend` · Hito: Funciones de usuario
+- [ ] Listar las acciones de las cards que cambian o borran datos.
+- [ ] Mostrar un diálogo de confirmación antes de ejecutarlas, con opción de cancelar.
+- [ ] Prueba de que la acción no se ejecuta si se cancela.
+
+### 34. Revisar el tipo de cambio · 1 pt
+`backend`, `frontend`, `bug` · Hito: Funciones de usuario
+- [ ] Verificar que el valor que muestra la app coincide con el del BCCR para la fecha.
+- [ ] Revisar la conversión de montos en dólares y qué pasa si la API o la caché no responden.
+- [ ] Corregir lo que falle y dejarlo cubierto con una prueba.
+
+### 35. Vista propia para el filtrado de movimientos · 2 pts
+`frontend` · Hito: Funciones de usuario
+- [ ] Mover el filtrado de movimientos a una vista distinta a la del inicio.
+- [ ] Mantener los filtros elegidos al entrar y salir de la vista.
+- [ ] Prueba de la navegación y de los filtros.
+
+### 36. Script para crear los issues con `gh` · 2 pts
+`infra`, `docs` · Hito: Publicación
+- [ ] Script en `scripts/` que crea etiquetas, hitos e issues de este backlog con la CLI `gh`, en el mismo orden.
+- [ ] Crear los issues 1 a 14 asignados a Jordy y cerrarlos de inmediato.
+- [ ] Que se pueda volver a ejecutar sin duplicar issues.
+- [ ] Documentar su uso en la sección "Cómo crearlos en GitHub".
 
 ---
 
