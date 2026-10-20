@@ -56,7 +56,10 @@ function flattenTableCells(doc) {
  * porque el BCR escribe "Estimado\r\n(a):" y pone tabuladores entre las celdas.
  */
 export function htmlToText(html) {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
+  // Davivienda manda un fragmento suelto (empieza con <img>, sin <html> ni <body>). El navegador lo
+  // envuelve solo; linkedom (en las pruebas) no, y dejaría el <img> como raíz del documento.
+  const isFragment = !/<(html|body)[\s>]/i.test(html);
+  const doc = new DOMParser().parseFromString(isFragment ? `<html><body>${html}</body></html>` : html, 'text/html');
   doc.querySelectorAll('style,script,head,title').forEach((node) => node.remove());
 
   const root = contentRoot(doc);

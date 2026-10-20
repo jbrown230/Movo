@@ -62,6 +62,7 @@ const ALLOWED_EMAIL_DOMAINS = [
   'bncr.fi.cr', // remitente público de los vouchers del Banco Nacional
   'baccredomatic.cr', // remitente de notificaciones de BAC Credomatic
   'baccredomatic.com',
+  'davivienda.cr', // remitentes y correo de atención públicos de Davivienda
   'bancobcr.demo',
   'bac.demo',
   'bn.demo', // remitentes del modo demo
@@ -76,6 +77,8 @@ const PUBLIC_BANK_NUMBERS = [
   '87429595', // WhatsApp público del BAC
   '50687429595',
   '22959797', // teléfono público del BAC
+  '22871111', // "Teléfono Rojo" público de Davivienda
+  '50622871111',
 ];
 const FAKE_NAMES = new Set([
   'CLIENTE DE PRUEBA',
@@ -152,10 +155,13 @@ test('.env.example no trae valores secretos', () => {
 test('los correos de ejemplo solo usan nombres de personas ficticios', () => {
   const stripTags = (text) => text.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ');
   const nameLine = /(?:Estimado\s*\(a\)|Nombre cliente (?:origen|destino))\s*:\s*([^\n\r]*)/gi;
+  // Davivienda: "Estimado(a) Cliente NOMBRE" (sin dos puntos) o "Estimado cliente" con el nombre en la línea
+  // siguiente. Solo cuenta una línea en mayúsculas, para no tomar la frase que sigue al saludo del BCR.
+  const clientLine = /Estimado\s*(?:\(a\))?\s*[Cc]liente\s*:?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)[ \t]*(?:\r?\n|$)/g;
   const unexpected = [];
   for (const file of FIXTURES) {
     const text = stripTags(readText(file)).replace(/\s*\r?\n\s*\(a\)/g, ' (a)'); // "Estimado\n(a):" partido por el banco
-    for (const match of text.matchAll(nameLine)) {
+    for (const match of [...text.matchAll(nameLine), ...text.matchAll(clientLine)]) {
       const name = match[1]
         .replace(/\s+/g, ' ')
         .replace(/[<].*$/, '')

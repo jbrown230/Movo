@@ -15,7 +15,7 @@ import { collapseSpaces } from './text.js';
 import { TEMPLATES } from './templates/index.js';
 
 /** Súbelo cuando cambie el lector: la app vuelve a leer los correos no reconocidos. */
-export const PARSER_VERSION = 8;
+export const PARSER_VERSION = 9;
 
 const MAX_COUNTERPARTY_LENGTH = 80;
 

@@ -135,14 +135,14 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 
 ## Limitaciones conocidas
 
-- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada") y **BN** (comprobante de compra con tarjeta, "Voucher Digital"; el BN no notifica los SINPE Móvil por correo). BAC y el SINPE Móvil del BN usan por ahora formatos sintéticos en la demo; para los demás bancos hace falta una plantilla oficial: sin ella el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
+- Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada"), **BN** (comprobante de compra con tarjeta, "Voucher Digital"; el BN no notifica los SINPE Móvil por correo), **BAC** (compra con tarjeta, incluida la rechazada, y SINPE enviado y recibido) y **Davivienda** (débitos y créditos en la cuenta, compra con tarjeta y transferencia recibida). Los avisos de débito y crédito de Davivienda dicen el monto y el concepto, pero no a quién se envió el dinero: un SINPE desde Davivienda a otra cuenta propia se cuenta como gasto hasta que se marque como "Entre mis cuentas" en "¿Cómo contarlo?"; todavía no hemos visto una compra rechazada de Davivienda. **Promerica** aún no tiene plantilla. El SINPE Móvil del BN usa por ahora un formato sintético en la demo. Sin una plantilla oficial el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
 - Con la app de Google en modo "Prueba", solo pueden entrar hasta 100 cuentas invitadas, y Google muestra la advertencia de app no verificada.
 - La lectura ocurre al abrir la app (el token de Google dura una hora). No hay lectura en segundo plano.
 - En iPhone, el inicio de sesión dentro de la PWA instalada puede abrirse en una ventana aparte; en Android funciona dentro de la app.
 
 ## Roadmap
 
-En 1 mes: plantillas reales de BAC, BN, Davivienda y Promerica (BCR ya está; ver [docs/BACKLOG.md](docs/BACKLOG.md)); alertas de presupuesto; exportar CSV. En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph, metas de ahorro. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
+En 1 mes: plantilla real de Promerica (BCR, BN, BAC y Davivienda ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)); alertas de presupuesto; exportar CSV. En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph, metas de ahorro. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
 
 ## Equipo
 
