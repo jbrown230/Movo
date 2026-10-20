@@ -3,13 +3,21 @@ import { CategoryPicker, SegmentedControl } from '../components/formControls.jsx
 import { ModalHeader } from '../components/ModalHeader.jsx';
 import { getCategory } from '../../domain/categories.js';
 import { displayName } from '../../domain/names.js';
-import { Currency, Direction } from '../../domain/types.js';
-import { formatDollars, splitColonesDecimals } from '../format/money.js';
+import { isForeignCurrency } from '../../domain/money.js';
+import { Direction } from '../../domain/types.js';
+import { CURRENCY_UNIT_NAME, formatInCurrency, splitColonesDecimals } from '../format/money.js';
 import { longWhen } from '../format/dates.js';
 import { amountSign, describeTransaction } from '../format/transactionLabels.js';
 import { useModal } from '../state/ModalProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
+
+/** "US$7,99 a ₡455,60 por dólar", o que todavía falta el tipo de cambio para convertirlo. */
+function conversionText(transaction) {
+  const original = formatInCurrency(transaction.amountCents, transaction.currency);
+  if (!transaction.exchangeRate) return `${original}: todavía sin tipo de cambio, se convierte cuando llegue`;
+  return `${original} a ₡${transaction.exchangeRate.toFixed(2)} por ${CURRENCY_UNIT_NAME[transaction.currency]}`;
+}
 import { MailModal } from './MailModal.jsx';
 
 const DIRECTION_OPTIONS = [
@@ -37,9 +45,9 @@ function TransactionSummary({ transaction }) {
         {wholePart}
         <small>{decimalPart}</small>
       </div>
-      {transaction.currency === Currency.USD && (
+      {isForeignCurrency(transaction.currency) && (
         <div className="meta" style={{ marginTop: 6 }}>
-          {formatDollars(transaction.amountCents)} a ₡{(transaction.exchangeRate || 0).toFixed(2)} por dólar
+          {conversionText(transaction)}
         </div>
       )}
     </div>

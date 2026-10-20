@@ -3,8 +3,9 @@ import { AmountInput, CategoryPicker, Field } from '../components/formControls.j
 import { ModalHeader } from '../components/ModalHeader.jsx';
 import { displayName } from '../../domain/names.js';
 import { textToCents } from '../../domain/money.js';
-import { Currency, Direction, MailStatus, TransactionType } from '../../domain/types.js';
-import { formatColones, formatColonesShort, formatDollars } from '../format/money.js';
+import { Direction, MailStatus, TransactionType } from '../../domain/types.js';
+import { formatColones, formatColonesShort, formatInCurrency } from '../format/money.js';
+import { isForeignCurrency } from '../../domain/money.js';
 import { longWhen, shortWhen } from '../format/dates.js';
 import { describeTransaction } from '../format/transactionLabels.js';
 import { useModal } from '../state/ModalProvider.jsx';
@@ -29,10 +30,9 @@ const DIRECTION_PREFIX = {
 
 function MailTransaction({ transaction }) {
   const counterpartyLabel = counterpartyLabelOf(transaction);
-  const amountText =
-    transaction.currency === Currency.USD
-      ? `${formatDollars(transaction.amountCents)} (${formatColonesShort(transaction.crcCents)})`
-      : formatColones(transaction.amountCents);
+  const amountText = isForeignCurrency(transaction.currency)
+    ? `${formatInCurrency(transaction.amountCents, transaction.currency)} (${formatColonesShort(transaction.crcCents)})`
+    : formatColones(transaction.amountCents);
   const directionPrefix = DIRECTION_PREFIX[transaction.direction];
 
   return (

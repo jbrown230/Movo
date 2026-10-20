@@ -235,7 +235,7 @@ function InstallSettings() {
 export function SettingsScreen() {
   const { profile, config } = useSession();
   const { openModal } = useModal();
-  const { budgetCents, exchangeRate, exchangeRateInfo } = useAppData();
+  const { budgetCents, exchangeRate, euroExchangeRate, exchangeRateInfo } = useAppData();
 
   const exchangeRateSource = exchangeRateInfo?.source
     ? `Fuente: ${exchangeRateInfo.source}${exchangeRateInfo.date ? ', ' + exchangeRateInfo.date : ''}`
@@ -255,6 +255,10 @@ export function SettingsScreen() {
             onClick={() => openModal(<BudgetModal />)}
           />
           <Row label="Tipo de cambio del dólar" value={`₡${exchangeRate.toFixed(2)}`} />
+          <Row
+            label="Tipo de cambio del euro"
+            value={euroExchangeRate ? `₡${euroExchangeRate.toFixed(2)}` : 'Sin dato'}
+          />
           <p className="hint">{exchangeRateSource}</p>
         </div>
 

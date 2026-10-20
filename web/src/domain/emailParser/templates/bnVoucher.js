@@ -33,7 +33,7 @@ const monthNumber = (name) => MONTHS.indexOf(name.toLowerCase().replace('setiemb
 
 const VOUCHER_SENTENCE =
   /comprobante de\s*.+?\s*realizad[ao] en\s+(.+?)\s+el\s+(\d{1,2}) de ([A-Za-zÁ-ú]+) de (\d{4})\s*a las\s*(\d{1,2}):(\d{2})\s*([AaPp]\.?\s?[Mm]\.?)/;
-const TOTAL = new RegExp(`TOTAL:\\s*([A-Z]{3}|₡|\\$)\\s*${AMOUNT_PATTERN}`);
+const TOTAL = new RegExp(`TOTAL:\\s*([A-Z]{3}|₡|\\$|€)\\s*${AMOUNT_PATTERN}`);
 const CARD_LAST_FOUR = /\*{4,}(\d{4})/;
 // El comercio termina con el código del país de la red de tarjetas ("... SAN JOSE CRI"): no es parte del nombre.
 const COUNTRY_CODE_SUFFIX = /\s+[A-Z]{3}$/;

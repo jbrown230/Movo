@@ -123,11 +123,9 @@ export function createTransactionRepository(sql) {
       return selectMany('SELECT * FROM transactions WHERE is_deleted=0 AND direction=?', [direction]);
     },
 
-    /** Movimientos en dólares que se guardaron sin tipo de cambio. */
-    listUsdWithoutRate() {
-      return selectMany('SELECT * FROM transactions WHERE currency=? AND (exchange_rate IS NULL OR exchange_rate=0)', [
-        Currency.USD,
-      ]);
+    /** Movimientos activos en dólares o euros. */
+    listForeign() {
+      return selectMany('SELECT * FROM transactions WHERE is_deleted=0 AND currency<>?', [Currency.CRC]);
     },
 
     countActive() {

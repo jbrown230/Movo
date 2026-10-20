@@ -46,12 +46,15 @@
  */
 
 /**
- * Fuente del tipo de cambio del dólar.
+ * Fuente del tipo de cambio del dólar y del euro.
  *
  * @typedef {Object} ExchangeRate
  * @property {number} rate              Colones por dólar.
  * @property {string|null} date
  * @property {string} source            Texto que se le muestra a la persona.
+ * @property {{ rate: number, date: string }|null} euro  Colones por euro, o null si no se conoce.
+ * @property {Array<{ date: string, usd: number, eur: number|null }>} history
+ *           Colones por dólar y por euro de cada día reciente, del más viejo al más nuevo. Vacío si no hay fuente.
  *
  * @typedef {Object} ExchangeRateSource
  * @property {() => Promise<ExchangeRate>} fetchLatestRate

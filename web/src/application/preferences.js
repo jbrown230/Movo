@@ -3,6 +3,8 @@
 // Los ajustes (presupuesto, búsqueda de Gmail) se sincronizan con el respaldo.
 // El resto es estado de este teléfono: cuándo se leyó el correo, si el respaldo está activo, etc.
 
+import { Currency } from '../domain/types.js';
+import { exchangeRatesOn, latestRate } from './exchangeRates.js';
 import { LocalStateKey } from './localStateKeys.js';
 
 export const DEFAULT_MONTHLY_BUDGET_CENTS = 35_000_000; // ₡350 000
@@ -20,6 +22,8 @@ export const DEFAULT_GMAIL_QUERY =
 export const SettingName = Object.freeze({ BUDGET: 'budget', GMAIL_QUERY: 'gmail_query' });
 
 export function createPreferences({ settings, localState }) {
+  const exchangeRateInfo = () => localState.get(LocalStateKey.EXCHANGE_RATE_INFO);
+
   return {
     // ---- ajustes que se sincronizan ----
     budgetCents: () => settings.get(SettingName.BUDGET, DEFAULT_MONTHLY_BUDGET_CENTS),
@@ -33,9 +37,19 @@ export function createPreferences({ settings, localState }) {
     },
 
     // ---- tipo de cambio ----
-    /** Último tipo de cambio guardado ({ rate, source, date }) o null. */
-    exchangeRateInfo: () => localState.get(LocalStateKey.EXCHANGE_RATE_INFO),
-    exchangeRate: () => localState.get(LocalStateKey.EXCHANGE_RATE_INFO)?.rate || FALLBACK_EXCHANGE_RATE,
+    /** Último tipo de cambio guardado ({ rate, source, date, euro, history }) o null. */
+    exchangeRateInfo,
+    /**
+     * Colones por unidad de la moneda, hoy. El dólar tiene un valor de reserva; el euro no:
+     * sin dato del servidor es null, y sus compras se convierten cuando llegue.
+     */
+    exchangeRate: (currency = Currency.USD) =>
+      latestRate(exchangeRateInfo(), currency) ?? (currency === Currency.USD ? FALLBACK_EXCHANGE_RATE : null),
+    /** Colones por dólar y por euro para un movimiento de esa fecha: los de su día, si se conocen. */
+    exchangeRatesOn(dateIso) {
+      const rates = exchangeRatesOn(exchangeRateInfo(), dateIso);
+      return { ...rates, [Currency.USD]: rates[Currency.USD] ?? FALLBACK_EXCHANGE_RATE };
+    },
 
     // ---- estado de este teléfono ----
     lastScanAt: () => localState.get(LocalStateKey.LAST_SCAN_AT),

@@ -8,9 +8,9 @@ import { ModalHeader } from '../components/ModalHeader.jsx';
 import { buildBankMail } from '../../demo/mailBuilder.js';
 import { MERCHANTS, SIMULATOR_CONTACTS } from '../../demo/sampleData.js';
 import { normalizeKey, toTitleCase } from '../../domain/names.js';
-import { textToCents, toColonesCents } from '../../domain/money.js';
+import { CURRENCY_SYMBOL, isForeignCurrency, textToCents, toColonesCents } from '../../domain/money.js';
 import { Currency } from '../../domain/types.js';
-import { formatColones, formatColonesShort, formatDollars } from '../format/money.js';
+import { formatColones, formatColonesShort, formatInCurrency } from '../format/money.js';
 import { useModal } from '../state/ModalProvider.jsx';
 import { useMailDelivery } from '../state/MailDeliveryProvider.jsx';
 import { Views, useNavigation } from '../state/NavigationProvider.jsx';
@@ -21,6 +21,7 @@ const BANK_OPTIONS = SIMULATED_BANKS.map((bank) => ({ value: bank, label: bank }
 const CURRENCY_OPTIONS = [
   { value: Currency.CRC, label: 'Colones' },
   { value: Currency.USD, label: 'Dólares' },
+  { value: Currency.EUR, label: 'Euros' },
 ];
 
 const CLOSE_SUCCESS_AFTER_MS = 1600;
@@ -193,6 +194,13 @@ export function SinpeSimulatorModal() {
 }
 
 /** Simula una compra con tarjeta en un comercio. */
+/** Cuánto sería en colones lo que se está digitando, o por qué todavía no se sabe. */
+function conversionHint(amountCents, currency, preferences) {
+  const rate = preferences.exchangeRate(currency);
+  if (!rate) return 'Todavía no hay tipo de cambio del euro: se convierte a colones cuando llegue.';
+  return `≈ ${formatColones(toColonesCents(amountCents, currency, rate))} al tipo de cambio actual`;
+}
+
 export function PurchaseSimulatorModal() {
   const { services } = useSession();
   const showSuccess = useSimulatorSuccess();
@@ -202,13 +210,10 @@ export function PurchaseSimulatorModal() {
   const [merchant, setMerchant] = useState('');
 
   const amountCents = textToCents(amountText);
-  const isDollars = currency === Currency.USD;
+  const isForeign = isForeignCurrency(currency);
   const canPay = amountCents > 0 && merchant.trim().length > 1;
-  const formatAmount = (cents) => (isDollars ? formatDollars(cents) : formatColonesShort(cents));
-  const hint =
-    isDollars && amountCents > 0
-      ? `≈ ${formatColones(toColonesCents(amountCents, currency, services.preferences.exchangeRate()))} al tipo de cambio actual`
-      : '';
+  const formatAmount = (cents) => (isForeign ? formatInCurrency(cents, currency) : formatColonesShort(cents));
+  const hint = isForeign && amountCents > 0 ? conversionHint(amountCents, currency, services.preferences) : '';
 
   const pay = () => {
     const counterparty = normalizeKey(merchant);
@@ -225,7 +230,12 @@ export function PurchaseSimulatorModal() {
     <>
       <ModalHeader title="Simulador: compra con tarjeta" />
       <p className="meta">Imagina que pagas en un comercio. Tu banco te notifica por correo y Movo lo registra.</p>
-      <AmountInput value={amountText} onChange={setAmountText} currencySymbol={isDollars ? '$' : '₡'} hint={hint} />
+      <AmountInput
+        value={amountText}
+        onChange={setAmountText}
+        currencySymbol={currency === Currency.USD ? '$' : CURRENCY_SYMBOL[currency]}
+        hint={hint}
+      />
       <SegmentedControl label="Moneda" options={CURRENCY_OPTIONS} value={currency} onChange={setCurrency} />
       <Field htmlFor="simulatorMerchant" label="Comercio">
         <input
