@@ -199,6 +199,8 @@ Si Redis no está configurado o deja de responder, las mismas claves se guardan 
 3. El servidor responde con lo que cambió para esa persona después del cursor, y un cursor nuevo. Si hay más de 1000 cambios, `hasMore` es `true` y se pide otra vez.
 4. El teléfono aplica esos cambios con la misma regla y guarda el cursor.
 
+Borrar el respaldo (`DELETE /api/me`) vacía lo del servidor, apaga la sincronización y reinicia el cursor en 0. Lo del teléfono no se borra: todos sus movimientos, reglas y ajustes vuelven a quedar con `needs_backup=1`, sin cambiar su `updated_at`. Así, si la persona enciende el respaldo otra vez, la siguiente sincronización sube todo de nuevo y otro teléfono puede recuperarlo.
+
 ### Conflictos entre teléfonos
 
 Si dos teléfonos de la misma persona cambian lo mismo antes de sincronizar, la regla es **gana la última escritura, registro por registro**. Cada movimiento, regla de categoría y ajuste se decide por separado, según la marca de tiempo `updatedAt` que pone el teléfono al hacer el cambio. No importa quién sincronice primero.
