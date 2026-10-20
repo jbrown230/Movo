@@ -10,9 +10,9 @@
 import { costaRicaToIso } from '../dateTime.js';
 import { parseAmount } from '../amount.js';
 
-/** BAC: "Monto: CRC 4,500.00 / Comercio: ... / Fecha: 15/01/2026 10:30". */
+/** BAC: "Monto: CRC 4,500.00 (o USD, EUR) / Comercio: ... / Fecha: 15/01/2026 10:30". */
 export function parseBacSynthetic(text) {
-  const amountMatch = text.match(/Monto:\s*(CRC|USD)\s*([\d.,]+)/i);
+  const amountMatch = text.match(/Monto:\s*(CRC|USD|EUR)\s*([\d.,]+)/i);
   if (!amountMatch) return null;
 
   const counterparty = text.match(/(?:Comercio|Destinatario|Remitente):\s*(.+)/i)?.[1];

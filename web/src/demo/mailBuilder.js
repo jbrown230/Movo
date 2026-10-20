@@ -64,6 +64,10 @@ const hourMinuteDotted = (date) => {
 };
 const withBnFormat = (amount) => amount.toFixed(2).replace('.', ',');
 
+// Código de la moneda tal como lo escriben BAC y el BN; el BCR la escribe con nombre.
+const currencyCode = (currency) => (currency === 'USD' || currency === 'EUR' ? currency : 'CRC');
+const BCR_CURRENCY_NAME = { CRC: 'COLONES', USD: 'US DOLLAR', EUR: 'EURO' };
+
 // ---- datos inventados ----
 const randomDigits = (count) => Array.from({ length: count }, () => Math.floor(Math.random() * 10)).join('');
 const fakeReference = () => randomDigits(16);
@@ -74,7 +78,7 @@ const maskPhone = (phone) => `${String(phone).slice(0, 1)}***-**${String(phone).
 // ---- una plantilla por banco ----
 function bacMail({ type, direction, counterparty, amount, currency, date, phone, description }) {
   const isInbound = direction === 'in';
-  const code = currency === 'USD' ? 'USD' : 'CRC';
+  const code = currencyCode(currency);
 
   if (type === 'sinpe') {
     const intro = isInbound
@@ -140,7 +144,7 @@ function bnMail({ type, direction, counterparty, amount, currency, date, phone, 
       `MASTERCARD\t************${FAKE_CARD_LAST_FOUR}`,
       `NRO. AUT:\t${randomDigits(6)}`,
       `REF:\t${randomDigits(8)}`,
-      `TOTAL:\t${currency === 'USD' ? 'USD' : 'CRC'} ${withBnFormat(amount)}`,
+      `TOTAL:\t${currencyCode(currency)} ${withBnFormat(amount)}`,
       'Estimado cliente, esta notificación es generada de forma automática, por lo que agradecemos no responder este correo.',
     ].join('\n'),
   };
@@ -177,7 +181,7 @@ function bcrMail({ type, direction, counterparty, amount, currency, date, phone,
     authorization,
     fakeReference().slice(0, 12),
     withUsFormat(amount),
-    currency === 'USD' ? 'US DOLLAR' : 'COLONES',
+    BCR_CURRENCY_NAME[currencyCode(currency)],
     counterparty,
     status || 'Aprobada',
   ];
@@ -207,7 +211,7 @@ const MAIL_BY_BANK = { BAC: bacMail, BN: bnMail, BCR: bcrMail };
  * @param {'out'|'in'} [options.direction]   Gasto (por defecto) o ingreso.
  * @param {string} options.counterparty      Comercio o persona.
  * @param {number} options.amount            En unidades (no céntimos).
- * @param {'CRC'|'USD'} [options.currency]
+ * @param {'CRC'|'USD'|'EUR'} [options.currency]
  * @param {string} [options.date]            ISO; por defecto, ahora.
  * @param {string} [options.phone]
  * @param {string} [options.description]

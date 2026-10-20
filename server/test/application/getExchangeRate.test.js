@@ -2,7 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestUseCases } from '../helpers/fakes.js';
 
-const BCCR_RATE = { rate: 505.5, date: '2026-01-15', source: 'BCCR, tipo de cambio de venta' };
+const BCCR_RATE = {
+  rate: 505.5,
+  date: '2026-01-15',
+  source: 'BCCR, tipo de cambio de venta',
+  euro: { rate: 556.05, date: '2026-01-15' },
+  history: [{ date: '2026-01-15', usd: 505.5, eur: 556.05 }],
+};
 const sourceReturning = (rate) => ({ fetchLatestRate: async () => rate });
 const failingSource = {
   fetchLatestRate: async () => {
@@ -16,6 +22,8 @@ test('sin fuente configurada se usa el valor de referencia', async () => {
     rate: 510,
     date: null,
     source: 'valor de referencia del servidor',
+    euro: null,
+    history: [],
   });
 });
 

@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Currency } from '../../domain/types.js';
 import { useSession } from '../state/SessionProvider.jsx';
 
 /**
@@ -16,6 +17,7 @@ export function useAppData() {
       transactions: queries.listTransactions(),
       mails: queries.listMails(),
       exchangeRate: preferences.exchangeRate(),
+      euroExchangeRate: preferences.exchangeRate(Currency.EUR),
       exchangeRateInfo: preferences.exchangeRateInfo(),
       isCloudBackupEnabled: preferences.isCloudBackupEnabled(),
       lastSyncAt: preferences.lastSyncAt(),

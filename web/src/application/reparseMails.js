@@ -4,6 +4,7 @@ import { parseMail, PARSER_VERSION } from '../domain/emailParser/parseMail.js';
 import { categorize } from '../domain/categories.js';
 import { transactionIdForMail } from '../domain/ids.js';
 import { CategoryOrigin, MailStatus } from '../domain/types.js';
+import { exchangeRatesOn } from './exchangeRates.js';
 import { DUPLICATE_MAIL } from './ingestMail.js';
 import { LocalStateKey } from './localStateKeys.js';
 
@@ -30,9 +31,8 @@ export function createReparseMails({ mails, transactions, rules, localState, ing
 
     return atomically(() => {
       mails.remove(mailId);
-      return ingestMail(toIncomingMail(mail), {
-        exchangeRate: localState.get(LocalStateKey.EXCHANGE_RATE_INFO)?.rate || null,
-      });
+      const info = localState.get(LocalStateKey.EXCHANGE_RATE_INFO);
+      return ingestMail(toIncomingMail(mail), { exchangeRatesOn: (date) => exchangeRatesOn(info, date) });
     });
   }
 

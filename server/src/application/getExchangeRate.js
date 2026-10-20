@@ -1,4 +1,4 @@
-// Caso de uso: tipo de cambio del dólar.
+// Caso de uso: tipo de cambio del dólar (y del euro, si la fuente lo da).
 //
 // Se consulta a la fuente (el BCCR) como máximo cada 6 horas y se guarda en la caché. Si la fuente
 // no está configurada o falla, se usa el último valor conocido y, si no hay, un valor de referencia.
@@ -31,7 +31,9 @@ export function createGetExchangeRate({ cache, exchangeRateSource, fallbackRate,
 
   async function lastKnownOrFallback() {
     const lastKnown = await cache.get(LAST_KNOWN_RATE_KEY);
-    return lastKnown ? JSON.parse(lastKnown) : { rate: fallbackRate, date: null, source: FALLBACK_SOURCE_TEXT };
+    return lastKnown
+      ? JSON.parse(lastKnown)
+      : { rate: fallbackRate, date: null, source: FALLBACK_SOURCE_TEXT, euro: null, history: [] };
   }
 
   /** @returns {Promise<import('./ports.js').ExchangeRate>} */

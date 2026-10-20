@@ -1,15 +1,30 @@
-// Caso de uso: traer el tipo de cambio del servidor y corregir movimientos en dólares sin convertir.
+// Caso de uso: traer el tipo de cambio del servidor y dejar cada movimiento en dólares o euros
+// convertido con el tipo de cambio del día en que se hizo.
 
 import { toColonesCents } from '../domain/money.js';
+import { latestRate, rateOfTheDay } from './exchangeRates.js';
 import { LocalStateKey } from './localStateKeys.js';
 
 export function createRefreshExchangeRate({ backend, localState, transactions, atomically }) {
-  /** Corrige movimientos en USD que se guardaron cuando todavía no había tipo de cambio. */
-  function backfillMissingRates(rate) {
-    const pending = transactions.listUsdWithoutRate();
-    if (!pending.length) return;
+  /**
+   * El tipo de cambio que le corresponde a un movimiento ya guardado, o null si se queda como está.
+   * Si el historial llega hasta su día, el de ese día. Si no, solo se convierte el que no tenía tipo de cambio.
+   */
+  function rateFor(transaction, info) {
+    const ofItsDay = rateOfTheDay(info, transaction.currency, transaction.date);
+    if (ofItsDay) return ofItsDay;
+    return transaction.exchangeRate ? null : latestRate(info, transaction.currency);
+  }
+
+  function applyRatesOfTheirDay(info) {
+    const changes = transactions
+      .listForeign()
+      .map((transaction) => ({ transaction, rate: rateFor(transaction, info) }))
+      .filter(({ transaction, rate }) => rate && rate !== transaction.exchangeRate);
+    if (!changes.length) return;
+
     atomically(() => {
-      for (const transaction of pending) {
+      for (const { transaction, rate } of changes) {
         transactions.update(transaction.id, {
           exchangeRate: rate,
           crcCents: toColonesCents(transaction.amountCents, transaction.currency, rate),
@@ -26,7 +41,7 @@ export function createRefreshExchangeRate({ backend, localState, transactions, a
     const info = await backend.getExchangeRate();
     if (!info.rate) return false;
     localState.set(LocalStateKey.EXCHANGE_RATE_INFO, info);
-    backfillMissingRates(info.rate);
+    applyRatesOfTheirDay(info);
     return true;
   };
 }

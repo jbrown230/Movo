@@ -119,8 +119,8 @@ Cinco tablas, con nombres completos (el esquema está documentado también al in
 | Columna | Significado |
 |---|---|
 | `occurred_at` | Fecha y hora del movimiento |
-| `amount_cents`, `currency` | Monto original en céntimos y su moneda (`CRC` o `USD`) |
-| `amount_crc_cents`, `exchange_rate` | Monto convertido a colones y el tipo de cambio usado (si fue en dólares) |
+| `amount_cents`, `currency` | Monto original en céntimos y su moneda (`CRC`, `USD` o `EUR`) |
+| `amount_crc_cents`, `exchange_rate` | Monto convertido a colones y el tipo de cambio usado (si fue en dólares o euros). Se usa el tipo de cambio del día de la compra (en hora de Costa Rica), no el del día en que se leyó el correo; cada vez que llega el tipo de cambio del servidor se corrigen las compras de los últimos 60 días. Una compra en euros leída sin tipo de cambio queda con `exchange_rate` 0 hasta que llega uno |
 | `counterparty` | Comercio o persona con quien fue el movimiento |
 | `category`, `category_origin` | Categoría y quién la decidió (regla automática, tu regla, elegida por ti) |
 | `type` | `sinpe`, `tarjeta`, `transferencia` o `efectivo` |
@@ -183,7 +183,7 @@ Redis guarda solo datos efímeros que se pueden reconstruir. Todas las claves so
 
 | Clave | Qué guarda | Vence en | Dónde se define |
 |---|---|---|---|
-| `fx:usd` | Tipo de cambio vigente del dólar, como JSON `{ rate, date, source }` | 6 horas; 30 minutos si es el valor de reserva, para reintentar pronto | `application/getExchangeRate.js` |
+| `fx:usd` | Tipo de cambio vigente del dólar y del euro, con el de cada uno de los últimos 60 días, como JSON `{ rate, date, source, euro, history }` | 6 horas; 30 minutos si es el valor de reserva, para reintentar pronto | `application/getExchangeRate.js` |
 | `fx:usd:last` | Último tipo de cambio obtenido del BCCR, por si la fuente falla | 30 días | `application/getExchangeRate.js` |
 | `tok:<sha256 del token>` | Id de la persona dueña de un token de Google ya validado. Se guarda un resumen del token, nunca el token completo | Lo que le quede de vida al token, máximo 1 hora | `application/authenticateUser.js` |
 | `rl:<quién>:<minuto>` | Contador de solicitudes de ese minuto. `<quién>` es el id de la persona, o `ip:<dirección>` en las rutas sin sesión | 70 segundos | `application/rateLimiter.js` |

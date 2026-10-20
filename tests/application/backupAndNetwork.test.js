@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestApp } from '../helpers/createTestApp.js';
 import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
+import { costaRicaIso } from '../helpers/costaRica.js';
 
 const NO_CHANGES = { transactions: [], categoryRules: [], settings: [] };
 
@@ -165,4 +166,101 @@ test('si el token de Gmail venció, la búsqueda falla con un error de autentica
   await assert.rejects(services.scanInbox({ token: 'vencido' }), (error) => error.auth === true);
   assert.equal(queries.countTransactions(), 0);
   assert.equal(services.preferences.lastScanAt(), null, 'no se marca como leído');
+});
+
+test('una compra en euros se convierte con los colones por euro del servidor', async () => {
+  const backend = { getExchangeRate: async () => ({ rate: 455.6, source: 'BCCR', euro: { rate: 512.3 } }) };
+  const { services } = createTestApp({ backend });
+  await services.refreshExchangeRate();
+
+  const { transaction } = services.readMail(cardMail({ amount: 10, currency: 'EUR' }));
+  assert.equal(transaction.currency, 'EUR');
+  assert.equal(transaction.exchangeRate, 512.3);
+  assert.equal(transaction.crcCents, 512300);
+});
+
+test('sin tipo de cambio del euro, la compra queda sin convertir y se convierte cuando llega', async () => {
+  let euro = null;
+  const backend = { getExchangeRate: async () => ({ rate: 455.6, source: 'BCCR', euro }) };
+  const { services, queries } = createTestApp({ backend });
+  assert.equal(services.preferences.exchangeRate('EUR'), null, 'el euro no tiene valor de reserva');
+
+  const { transaction } = services.readMail(cardMail({ amount: 10, currency: 'EUR' }));
+  assert.equal(transaction.exchangeRate, 0);
+  assert.equal(transaction.crcCents, 0);
+
+  await services.refreshExchangeRate(); // el servidor todavía no tiene el euro
+  assert.equal(queries.getTransaction(transaction.id).crcCents, 0);
+
+  euro = { rate: 512.3 };
+  await services.refreshExchangeRate();
+  const converted = queries.getTransaction(transaction.id);
+  assert.equal(converted.exchangeRate, 512.3);
+  assert.equal(converted.crcCents, 512300);
+});
+
+// ---------------------------------------------------------------- tipo de cambio del día de la compra
+
+// Lo que responde el servidor: el tipo de cambio de hoy y el de cada día reciente.
+const RATES_WITH_HISTORY = {
+  rate: 460,
+  source: 'BCCR',
+  euro: { rate: 520 },
+  history: [
+    { date: '2026-01-14', usd: 450, eur: 500 },
+    { date: '2026-01-15', usd: 455, eur: 505 },
+    { date: '2026-01-16', usd: 460, eur: 520 },
+  ],
+};
+
+test('una compra se convierte con el tipo de cambio del día en que se hizo, no con el de hoy', async () => {
+  const { services } = createTestApp({ backend: { getExchangeRate: async () => RATES_WITH_HISTORY } });
+  await services.refreshExchangeRate();
+
+  const dollars = services.readMail(cardMail({ amount: 10, currency: 'USD', date: costaRicaIso(2026, 1, 15, 10, 0) }));
+  assert.equal(dollars.transaction.exchangeRate, 455);
+  assert.equal(dollars.transaction.crcCents, 455000);
+
+  const euros = services.readMail(cardMail({ amount: 10, currency: 'EUR', date: costaRicaIso(2026, 1, 14, 23, 30) }));
+  assert.equal(euros.transaction.exchangeRate, 500, 'el día se cuenta en hora de Costa Rica');
+
+  const afterLastDay = services.readMail(
+    cardMail({ amount: 10, currency: 'USD', date: costaRicaIso(2026, 1, 17, 9, 0) }),
+  );
+  assert.equal(afterLastDay.transaction.exchangeRate, 460, 'sin el valor de ese día, el más reciente');
+});
+
+test('al llegar el tipo de cambio, las compras ya guardadas quedan con el de su día', async () => {
+  let response = null;
+  const backend = {
+    getExchangeRate: async () => {
+      if (!response) throw new Error('sin conexión');
+      return response;
+    },
+  };
+  const { services, queries } = createTestApp({ backend });
+  const { transaction } = services.readMail(
+    cardMail({ amount: 10, currency: 'USD', date: costaRicaIso(2026, 1, 15, 10, 0) }),
+  );
+  assert.equal(transaction.exchangeRate, 510, 'sin servidor se usa el valor de reserva');
+
+  response = RATES_WITH_HISTORY;
+  await services.refreshExchangeRate();
+  const corrected = queries.getTransaction(transaction.id);
+  assert.equal(corrected.exchangeRate, 455);
+  assert.equal(corrected.crcCents, 455000);
+});
+
+test('una compra más vieja que el historial conserva el tipo de cambio con que se guardó', async () => {
+  let response = RATES_WITH_HISTORY;
+  const { services, queries } = createTestApp({ backend: { getExchangeRate: async () => response } });
+  await services.refreshExchangeRate();
+  const { transaction } = services.readMail(
+    cardMail({ amount: 10, currency: 'USD', date: costaRicaIso(2026, 1, 2, 10, 0) }),
+  );
+  assert.equal(transaction.exchangeRate, 460);
+
+  response = { ...RATES_WITH_HISTORY, rate: 470 };
+  await services.refreshExchangeRate();
+  assert.equal(queries.getTransaction(transaction.id).exchangeRate, 460);
 });

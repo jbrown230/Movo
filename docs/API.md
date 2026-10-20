@@ -51,10 +51,23 @@ Todos los errores tienen la forma `{ "error": "Mensaje en español" }`.
 ## `GET /api/fx`
 
 ```json
-{ "rate": 505.55, "date": "2026-01-15", "source": "BCCR, tipo de cambio de venta" }
+{
+  "rate": 505.55,
+  "date": "2026-01-15",
+  "source": "BCCR, tipo de cambio de venta",
+  "euro": { "rate": 556.11, "date": "2026-01-15" },
+  "history": [
+    { "date": "2026-01-14", "usd": 505.1, "eur": 555.6 },
+    { "date": "2026-01-15", "usd": 505.55, "eur": 556.11 }
+  ]
+}
 ```
 
-Se consulta al BCCR como máximo cada 6 horas. Si el BCCR no está configurado o falla, se devuelve el último valor conocido o el valor de referencia (`FX_FALLBACK`), con `"date": null`.
+- `rate` son los colones por dólar (venta, indicador 318 del BCCR).
+- `history` trae los colones por dólar y por euro de cada uno de los últimos 60 días, del más viejo al más nuevo. La app lo usa para convertir cada compra con el tipo de cambio del día en que se hizo. El BCCR no publica el euro los fines de semana: esos días se usa el último euro publicado. Es una lista vacía si no hay BCCR.
+- `euro.rate` son los colones por euro: el dólar de venta multiplicado por los dólares por euro (indicador 333). Es `null` si el BCCR no está configurado o no respondió el euro; el dólar se devuelve igual.
+
+Se consulta al BCCR como máximo cada 6 horas. Si el BCCR no está configurado o falla, se devuelve el último valor conocido o el valor de referencia (`FX_FALLBACK`, solo para el dólar), con `"date": null`, `"euro": null` y `"history": []`.
 
 ## `POST /api/sync`
 

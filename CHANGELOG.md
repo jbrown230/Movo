@@ -1,5 +1,10 @@
 # Cambios
 
+## Sin publicar
+
+- **Tipo de cambio del día de la compra.** Cada compra en dólares o euros se convierte con el tipo de cambio del día en que se hizo, no con el del día en que se leyó el correo. El servidor devuelve el tipo de cambio de cada uno de los últimos 60 días (`history` en `/api/fx`) y, cada vez que llega, la app corrige las compras de esos días; también las que se guardaron con el valor de reserva por no tener conexión. Las compras más viejas conservan el tipo de cambio con que se guardaron. (#21)
+- **Compras en euros.** El lector reconoce montos en euros (`EUR`, `EURO`, `€`) en las plantillas del BCR y del BN, y la demo puede simularlas. El servidor responde también los colones por euro, calculados con el dólar de venta (indicador 318 del BCCR) y los dólares por euro (indicador 333). Una compra en euros leída antes de tener tipo de cambio queda sin convertir y se convierte sola cuando llega; el euro no tiene valor de reserva inventado. Ajustes muestra el tipo de cambio del euro. (#21)
+
 ## v0.1.0
 
 Primera versión pública de Movo.

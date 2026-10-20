@@ -25,8 +25,8 @@ export function createServices({ storage, mailSource, backend, buildDemoMails })
   const queries = createQueries({ transactions, mails });
   const ingestMail = createIngestMail({ transactions, mails, rules, atomically });
 
-  /** Lee un correo usando el tipo de cambio actual para las compras en dólares. */
-  const readMail = (mail) => ingestMail(mail, { exchangeRate: preferences.exchangeRate() });
+  /** Lee un correo convirtiendo las compras en dólares y euros con el tipo de cambio de su día. */
+  const readMail = (mail) => ingestMail(mail, { exchangeRatesOn: preferences.exchangeRatesOn });
 
   const { reparseMail, reparseIfParserChanged } = createReparseMails({
     mails,

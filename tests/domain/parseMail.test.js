@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseMail, parseFirstApproved } from '../../web/src/domain/emailParser/parseMail.js';
 import { parseAmount } from '../../web/src/domain/emailParser/amount.js';
+import { detectCurrency } from '../../web/src/domain/emailParser/currency.js';
 import { categorize } from '../../web/src/domain/categories.js';
 import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
@@ -194,4 +195,55 @@ test('BN: un correo del banco sin comprobante no genera movimiento', () => {
 test('el remitente manda sobre la plantilla para decidir el banco', () => {
   const mail = { ...BCR_SINPE_ENVIADO, from: 'Avisos <avisos@davivienda.example>' };
   assert.equal(parseMail(mail).bank, 'DAVIVIENDA');
+});
+
+// ---- Monedas: colones, dólares y euros ----
+
+test('detectCurrency reconoce colones, dólares y euros', () => {
+  const cases = [
+    ['COLONES', 'CRC'],
+    ['CRC', 'CRC'],
+    ['₡', 'CRC'],
+    ['US DOLLAR', 'USD'],
+    ['USD', 'USD'],
+    ['$', 'USD'],
+    ['EURO', 'EUR'],
+    ['EUROS', 'EUR'],
+    ['EUR', 'EUR'],
+    ['€', 'EUR'],
+    ['', 'CRC'],
+  ];
+  for (const [text, expected] of cases) assert.equal(detectCurrency(text), expected, text);
+});
+
+test('BCR: una compra con tarjeta en euros', () => {
+  const body = BCR_TARJETA_NEGADA.body.replace('US DOLLAR', 'EURO').replace('Negada', 'Aprobada');
+  const parsed = parseFirstApproved({ ...BCR_TARJETA_NEGADA, body });
+  assert.equal(parsed.currency, 'EUR');
+  assert.equal(parsed.amountCents, 2000);
+
+  const copiedWithSpaces = parseFirstApproved({ ...BCR_TARJETA_NEGADA, body: body.replace(/\t/g, ' ') });
+  assert.equal(copiedWithSpaces.currency, 'EUR', 'también si la tabla se copió sin tabuladores');
+});
+
+test('BN: un voucher en euros', () => {
+  const body = BN_VOUCHER_COMPRA.body.replace('CRC 3500,00', 'EUR 12,50');
+  const parsed = parseFirstApproved({ ...BN_VOUCHER_COMPRA, body });
+  assert.equal(parsed.currency, 'EUR');
+  assert.equal(parsed.amountCents, 1250);
+});
+
+test('las compras en euros de la demo se leen en euros en los tres bancos', () => {
+  for (const bank of ['BAC', 'BN', 'BCR']) {
+    const mail = buildBankMail({
+      bank,
+      type: 'tarjeta',
+      counterparty: 'TIENDA EN MADRID',
+      amount: 49.9,
+      currency: 'EUR',
+    });
+    const parsed = parseFirstApproved(mail);
+    assert.equal(parsed.currency, 'EUR', bank);
+    assert.equal(parsed.amountCents, 4990, bank);
+  }
 });

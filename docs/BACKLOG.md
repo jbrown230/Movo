@@ -88,9 +88,11 @@ Nota: el Banco Nacional no notifica los SINPE Móvil por correo, así que no hay
 
 ### 19. Cobertura de estados y casos raros del lector · 3 pts
 `parser`, `tests` · Hito: Más bancos
-- [ ] Reversiones y reembolsos, cuotas, y comercios internacionales con otras monedas.
-- [ ] Correos con varias transacciones y estados mixtos.
-- [ ] Todo correo no reconocido debe quedar como "Sin movimiento", nunca perderse.
+Estado: hecho, issue de GitHub #21 (rama `21-cobertura-de-estados-y-casos-raros-del-lector`).
+- [x] Reversiones y reembolsos, cuotas, y comercios internacionales con otras monedas. Reversiones, reembolsos y cuotas no aplican (decisión del equipo). Para comercios internacionales, además del dólar se lee, convierte y muestra el **euro**.
+- [x] Correos con varias transacciones y estados mixtos. Ya cubierto: tabla del BCR con varias filas aprobadas y negadas (`tests/infrastructure/bcrHtml.test.js`).
+- [x] Todo correo no reconocido debe quedar como "Sin movimiento", nunca perderse. Ya cubierto desde el PR #41.
+- [x] Convertir cada compra en dólares o euros con el tipo de cambio del día en que se hizo, no con el del día en que se leyó el correo. Se detectó durante esta tarea; el servidor devuelve el tipo de cambio de los últimos 60 días y la app corrige las compras de esos días.
 
 ### 20. Sincronización entre varios teléfonos con conflictos · 3 pts
 `backend`, `frontend` · Hito: Más bancos
@@ -120,7 +122,7 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 `backend`, `frontend`, `bug` · Hito: Funciones de usuario
 Estado: hecho, issue de GitHub #36 (rama `36-revisar-el-tipo-de-cambio`).
 - [x] Verificar que el valor que muestra la app coincide con el del BCCR para la fecha. El servidor consultaba un servicio web anterior; se migró a la API nueva del BCCR (SDDE, JSON con token en el encabezado) y se comprobó con un token real (₡455,60 el 2026-10-12).
-- [x] Revisar la conversión de montos en dólares y qué pasa si la API o la caché no responden. La conversión es correcta y cada movimiento conserva el tipo de cambio con que se leyó; si la API no responde, la app usa el último valor conocido o el de reserva (510).
+- [x] Revisar la conversión de montos en dólares y qué pasa si la API o la caché no responden. La conversión es correcta y, desde la tarea 19, cada movimiento usa el tipo de cambio del día de la compra; si la API no responde, la app usa el último valor conocido o el de reserva (510).
 - [x] Corregir lo que falle y dejarlo cubierto con una prueba.
 
 ### 35. Vista propia para el filtrado de movimientos · 2 pts

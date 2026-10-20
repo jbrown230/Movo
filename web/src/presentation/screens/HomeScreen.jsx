@@ -2,12 +2,13 @@ import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
 import { getCategory } from '../../domain/categories.js';
 import { displayName } from '../../domain/names.js';
-import { Currency } from '../../domain/types.js';
+import { isForeignCurrency } from '../../domain/money.js';
+
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
 import { useAppData } from '../hooks/useAppData.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { dayLabel, monthName, timeLabel } from '../format/dates.js';
-import { formatColones, formatColonesShort, formatDollars, splitColonesDecimals } from '../format/money.js';
+import { formatColones, formatColonesShort, formatInCurrency, splitColonesDecimals } from '../format/money.js';
 import { amountClass, amountSign, describeTransaction } from '../format/transactionLabels.js';
 import { CashModal, PasteModal } from '../modals/SimpleModals.jsx';
 import { PurchaseSimulatorModal, SinpeSimulatorModal } from '../modals/SimulatorModals.jsx';
@@ -181,9 +182,9 @@ function groupByDay(transactions) {
 
 function TransactionRow({ transaction, isHighlighted }) {
   const { openModal } = useModal();
-  const isDollars = transaction.currency === Currency.USD;
-  // Un monto convertido desde dólares casi nunca es redondo: se muestra con sus céntimos.
-  const formatAmount = isDollars ? formatColones : formatColonesShort;
+  const isForeign = isForeignCurrency(transaction.currency);
+  // Un monto convertido desde dólares o euros casi nunca es redondo: se muestra con sus céntimos.
+  const formatAmount = isForeign ? formatColones : formatColonesShort;
   return (
     <button
       type="button"
@@ -200,7 +201,9 @@ function TransactionRow({ transaction, isHighlighted }) {
           {amountSign(transaction)}
           {formatAmount(transaction.crcCents)}
         </div>
-        <div className="a2">{isDollars ? formatDollars(transaction.amountCents) : timeLabel(transaction.date)}</div>
+        <div className="a2">
+          {isForeign ? formatInCurrency(transaction.amountCents, transaction.currency) : timeLabel(transaction.date)}
+        </div>
       </span>
     </button>
   );

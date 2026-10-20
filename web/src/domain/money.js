@@ -8,8 +8,20 @@ export function textToCents(text) {
   return Math.round(parseAmount(text) * 100);
 }
 
-/** Monto en colones, en céntimos. Los dólares se convierten con el tipo de cambio dado. */
+/** Símbolo con el que se muestra cada moneda. */
+export const CURRENCY_SYMBOL = Object.freeze({
+  [Currency.CRC]: '₡',
+  [Currency.USD]: 'US$',
+  [Currency.EUR]: '€',
+});
+
+export const isForeignCurrency = (currency) => currency !== Currency.CRC;
+
+/**
+ * Monto en colones, en céntimos. Los dólares y los euros se convierten con el tipo de cambio dado
+ * (colones por unidad de la moneda); sin tipo de cambio quedan en 0 hasta que llegue uno.
+ */
 export function toColonesCents(amountCents, currency, exchangeRate) {
-  if (currency !== Currency.USD) return amountCents;
+  if (!isForeignCurrency(currency)) return amountCents;
   return Math.round(amountCents * (exchangeRate || 0));
 }
