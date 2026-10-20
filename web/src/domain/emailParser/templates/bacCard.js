@@ -26,26 +26,31 @@ import { costaRicaToIso, to24Hour } from '../dateTime.js';
 import { collapseSpaces, isDeclinedStatus } from '../text.js';
 
 const MONTH_MAP = Object.freeze({
-  ene: 1, jan: 1,
+  ene: 1,
+  jan: 1,
   feb: 2,
   mar: 3,
-  abr: 4, apr: 4,
+  abr: 4,
+  apr: 4,
   may: 5,
   jun: 6,
   jul: 7,
-  ago: 8, aug: 8,
-  set: 9, sep: 9, sept: 9,
+  ago: 8,
+  aug: 8,
+  set: 9,
+  sep: 9,
+  sept: 9,
   oct: 10,
   nov: 11,
-  dic: 12, dec: 12,
+  dic: 12,
+  dec: 12,
 });
 
 const CARD_LAST_FOUR = /[*•]{4,}\s*(\d{4})/;
 
 const MONTH_FIRST_DATE =
   /([A-Za-zÁ-ú]{3,})\.?\s+(\d{1,2}),?\s+(\d{4})(?:,?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp]\.?\s?[Mm]\.?)?)?/i;
-const DAY_FIRST_DATE =
-  /(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp]\.?\s?[Mm]\.?)?)?/;
+const DAY_FIRST_DATE = /(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*([AaPp]\.?\s?[Mm]\.?)?)?/;
 
 // Etiquetas conocidas del correo. Sirven como "frontera" para saber dónde termina cada valor.
 const FIELD_LABELS = [
@@ -124,11 +129,7 @@ function readAmount(text) {
 }
 
 function looksLikeBacCard(text) {
-  return (
-    /Comercio\s*:/i.test(text) &&
-    /Tipo de Transacci[oó]n\s*:/i.test(text) &&
-    /Monto\s*:/i.test(text)
-  );
+  return /Comercio\s*:/i.test(text) && /Tipo de Transacci[oó]n\s*:/i.test(text) && /Monto\s*:/i.test(text);
 }
 
 /** @returns {Array|null} La compra con tarjeta de BAC, o null si el texto no es de esta plantilla. */
