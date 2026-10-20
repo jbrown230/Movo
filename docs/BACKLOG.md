@@ -207,9 +207,11 @@ El PDF del curso pide responder qué cambia al escalar.
 
 ### 31. Detección de cargos anómalos (prototipo) · 2 pts
 `investigación` · Hito: TFG
-- [ ] Definir qué es una anomalía (monto fuera de rango por comercio o categoría).
-- [ ] Prototipo sobre el dataset sintético de `scripts/dataset.mjs`.
-- [ ] Medir falsos positivos y documentar límites.
+- [x] Definir qué es una anomalía (monto fuera de rango por comercio o categoría).
+- [x] Prototipo sobre el dataset sintético de `scripts/dataset.mjs`.
+- [x] Medir falsos positivos y documentar límites.
+
+Resultado en `docs/ANOMALIAS.md`.
 
 ---
 
