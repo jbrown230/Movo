@@ -56,6 +56,34 @@ test('si el servidor no responde, la app local sigue funcionando y no pierde cam
   assert.equal(queries.countTransactions(), 1);
 });
 
+test('si MongoDB no responde, el respaldo falla con el mensaje del servidor y la app sigue igual', async () => {
+  // Lo que hace la API cuando MongoDB no responde: 503 con un mensaje claro (ver server/test/adapters/outages.test.js).
+  let mongoIsDown = true;
+  const backend = {
+    getExchangeRate: async () => ({}),
+    syncBackup: async () => {
+      if (mongoIsDown) throw Object.assign(new Error('Respaldo no disponible por ahora.'), { status: 503 });
+      return { cursor: 1, hasMore: false, changes: NO_CHANGES };
+    },
+    deleteMyData: async () => ({ deleted: 0 }),
+  };
+  const { services, queries } = createTestApp({ backend });
+  services.readMail(cardMail());
+
+  await assert.rejects(services.backup.syncNow('token-de-prueba-0123456789'), {
+    message: 'Respaldo no disponible por ahora.',
+  });
+  assert.equal(queries.countTransactions(), 1, 'lo local sigue ahí');
+  assert.equal(services.backup.pendingCount(), 1, 'y el cambio queda pendiente');
+  services.readMail(cardMail({ counterparty: 'SODA LA PRUEBA' }));
+  assert.equal(queries.countTransactions(), 2, 'la app sigue leyendo correos sin el respaldo');
+
+  mongoIsDown = false; // MongoDB vuelve
+  const { pushed } = await services.backup.syncNow('token-de-prueba-0123456789');
+  assert.equal(pushed, 2);
+  assert.equal(services.backup.pendingCount(), 0);
+});
+
 test('un cambio hecho mientras se sincronizaba no se marca como subido', async () => {
   const { services, storage } = createTestApp();
   const { transaction } = services.readMail(cardMail());
