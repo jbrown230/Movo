@@ -53,7 +53,7 @@ function insertTransaction(sql, transaction) {
       transaction.bank ?? null,
       transaction.mailKey ?? null,
       transaction.note ?? null,
-      Date.now(),
+      transaction.updatedAt ?? Date.now(),
     ],
   );
 }
