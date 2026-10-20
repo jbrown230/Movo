@@ -60,6 +60,7 @@ describe('modo demo', () => {
     await user.type(within(dialog).getByLabelText('Monto'), '2500');
     await user.type(within(dialog).getByLabelText('¿En qué fue?'), 'Parqueo prueba');
     await user.click(within(dialog).getByRole('button', { name: 'Guardar gasto' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar gasto' }));
 
     expect(await screen.findByRole('button', { name: /Parqueo Prueba/ })).toBeInTheDocument();
   });
@@ -78,6 +79,7 @@ describe('modo demo', () => {
     await user.click(within(dialog).getByLabelText('Texto'));
     await user.paste('Monto: CRC 4,500.00\nComercio: PANADERIA PRUEBA\nFecha: 15/01/2026 13:22');
     await user.click(within(dialog).getByRole('button', { name: 'Leer' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leer' }));
 
     expect(await screen.findByRole('button', { name: /Panaderia Prueba/ })).toBeInTheDocument();
   });
@@ -102,7 +104,86 @@ describe('modo demo', () => {
     expect(screen.getByText('Reiniciar datos de ejemplo')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Salir del modo demo' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Salir' }));
     expect(await screen.findByRole('button', { name: 'Ver el modo demo' })).toBeInTheDocument();
+  });
+});
+
+describe('confirmaciones', () => {
+  beforeEach(() => localStorage.clear());
+
+  async function openFirstNetflix() {
+    const user = await openDemo();
+    await user.click(screen.getAllByRole('button', { name: /Netflix/i })[0]);
+    await screen.findByText('¿Cómo contarlo?');
+    return user;
+  }
+
+  test('eliminar un movimiento pide confirmación, y al cancelar se vuelve al detalle sin borrar', async () => {
+    const user = await openFirstNetflix();
+    const before = screen.getAllByRole('button', { name: /Netflix/i }).length;
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar movimiento' }));
+    expect(within(screen.getByRole('dialog')).getByText(/Se elimina Netflix/i)).toBeInTheDocument();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+
+    expect(await screen.findByText('¿Cómo contarlo?')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /Netflix/i })).toHaveLength(before);
+  });
+
+  test('al confirmar, el movimiento se elimina', async () => {
+    const user = await openFirstNetflix();
+    const before = screen.getAllByRole('button', { name: /Netflix/i }).length;
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar movimiento' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar' }));
+
+    expect(await screen.findByText('Movimiento eliminado')).toBeInTheDocument();
+    expect(screen.queryAllByRole('button', { name: /Netflix/i })).toHaveLength(before - 1);
+  });
+
+  test('cambiar la categoría pide confirmación y no cambia nada si se cancela', async () => {
+    const user = await openFirstNetflix();
+    const categories = within(screen.getByRole('group', { name: 'Categoría' }));
+    await user.click(categories.getByRole('button', { name: /Comida/ }));
+
+    expect(within(screen.getByRole('dialog')).getByText(/pasa a Comida/)).toBeInTheDocument();
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+
+    const pickerAgain = within(await screen.findByRole('group', { name: 'Categoría' }));
+    expect(pickerAgain.getByRole('button', { name: /Comida/ })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  test('al cancelar la confirmación de un gasto en efectivo, el formulario conserva lo escrito', async () => {
+    const user = await openDemo();
+    await user.click(screen.getByRole('button', { name: /Efectivo/ }));
+    const form = within(screen.getByRole('dialog'));
+    await user.type(form.getByLabelText('Monto'), '1800');
+    await user.type(form.getByLabelText('¿En qué fue?'), 'Pan dulce');
+    await user.click(form.getByRole('button', { name: 'Guardar gasto' }));
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+
+    const formAgain = within(screen.getByRole('dialog'));
+    expect(formAgain.getByLabelText('¿En qué fue?')).toHaveValue('Pan dulce');
+    expect(screen.queryByRole('button', { name: /Pan Dulce/ })).not.toBeInTheDocument();
+  });
+
+  test('cambiar el presupuesto pide confirmación', async () => {
+    const user = await openDemo();
+    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
+    await user.click(within(navigation).getByRole('button', { name: /Ajustes/ }));
+    await user.click(screen.getByRole('button', { name: /Presupuesto mensual/ }));
+
+    const amount = within(screen.getByRole('dialog')).getByLabelText('Monto');
+    await user.clear(amount);
+    await user.type(amount, '400000');
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar' }));
+
+    const confirmation = within(screen.getByRole('dialog'));
+    expect(confirmation.getByText(/pasa de ₡350\s000 a ₡400\s000/)).toBeInTheDocument();
+    await user.click(confirmation.getByRole('button', { name: 'Cambiar presupuesto' }));
+    expect(await screen.findByRole('button', { name: /Presupuesto mensual\s*₡400\s000/ })).toBeInTheDocument();
   });
 });
 
