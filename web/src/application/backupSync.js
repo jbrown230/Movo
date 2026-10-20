@@ -36,9 +36,13 @@ export function createBackupSync({ backup, localState, backend }) {
     return { pushed, pulled };
   }
 
-  /** Borra todo lo que el servidor guarda de esta persona. Lo del teléfono no se toca. */
+  /**
+   * Borra todo lo que el servidor guarda de esta persona. Lo del teléfono no se borra: queda
+   * marcado para subirse otra vez si se vuelve a encender el respaldo.
+   */
   async function deleteCloudBackup(token) {
     await backend.deleteMyData({ token });
+    backup.markAllForBackup();
     localState.set(LocalStateKey.CLOUD_BACKUP_ENABLED, false);
     localState.set(LocalStateKey.SYNC_CURSOR, 0);
   }

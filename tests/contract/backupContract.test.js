@@ -10,6 +10,7 @@ import { createInMemoryBackupStore } from '../../server/src/adapters/memory/InMe
 import { parseSyncRequest } from '../../server/src/adapters/http/parseSyncRequest.js';
 import { toSyncResponse } from '../../server/src/adapters/http/toSyncResponse.js';
 import { createSyncBackup } from '../../server/src/application/syncBackup.js';
+import { createDeleteUserBackup } from '../../server/src/application/deleteUserBackup.js';
 import { SettingName } from '../../web/src/application/preferences.js';
 import { Currency, Direction, TransactionType } from '../../web/src/domain/types.js';
 import { fromWireChanges, toWireChanges } from '../../web/src/infrastructure/backend/backupWireFormat.js';
@@ -31,7 +32,9 @@ test('el límite de cambios por petición del cliente cabe en lo que acepta el s
 
 /** Un "servidor" en proceso: el mismo código del servidor real, sin red ni Express. */
 function createInProcessServer(userId) {
-  const syncBackup = createSyncBackup({ backupStore: createInMemoryBackupStore() });
+  const backupStore = createInMemoryBackupStore();
+  const syncBackup = createSyncBackup({ backupStore });
+  const deleteUserBackup = createDeleteUserBackup({ backupStore });
   return {
     /** Un teléfono que sincroniza con este servidor. Todo pasa por JSON, como en la red. */
     backendForPhone: () => ({
@@ -46,11 +49,16 @@ function createInProcessServer(userId) {
           changes: fromWireChanges(responseBody.changes),
         };
       },
+      async deleteMyData() {
+        return { deleted: await deleteUserBackup(userId) };
+      },
     }),
   };
 }
 
 const TOKEN = 'token-de-prueba-0123456789';
+const NO_CHANGES = { transactions: [], categoryRules: [], settings: [] };
+const countOf = (changes) => changes.transactions.length + changes.categoryRules.length + changes.settings.length;
 
 test('dos teléfonos de la misma persona se sincronizan a través del contrato', async () => {
   const server = createInProcessServer('ana');
@@ -98,6 +106,38 @@ test('eliminar en un teléfono se refleja en el otro', async () => {
   await phoneA.services.backup.syncNow(TOKEN);
 
   assert.equal(phoneA.queries.countTransactions(), 0);
+});
+
+test('reactivar el respaldo después de borrarlo vuelve a subir todo lo del teléfono', async () => {
+  const server = createInProcessServer('ana');
+  const phone = createTestApp({ backend: server.backendForPhone() });
+
+  const { transaction } = phone.services.readMail(
+    buildBankMail({ bank: 'BAC', type: 'tarjeta', counterparty: 'SUPER LA AMISTAD', amount: 23450 }),
+  );
+  phone.services.recategorize(transaction.id, 'comida');
+  phone.services.preferences.setBudgetCents(40_000_000);
+  phone.services.preferences.setCloudBackupEnabled(true);
+  await phone.services.backup.syncNow(TOKEN);
+  const before = phone.queries.getTransaction(transaction.id);
+
+  await phone.services.backup.deleteCloudBackup(TOKEN);
+  const empty = await server.backendForPhone().syncBackup({ since: 0, changes: NO_CHANGES });
+  assert.equal(countOf(empty.changes), 0, 'el servidor quedó vacío');
+  assert.equal(phone.services.backup.pendingCount(), 3, 'un movimiento, una regla y un ajuste por subir');
+  assert.deepEqual(phone.queries.getTransaction(transaction.id), before, 'sin cambiar su fecha de modificación');
+
+  phone.services.preferences.setCloudBackupEnabled(true);
+  const { pushed } = await phone.services.backup.syncNow(TOKEN);
+  assert.equal(pushed, 3);
+  assert.equal(phone.services.backup.pendingCount(), 0);
+
+  const cleanPhone = createTestApp({ backend: server.backendForPhone() });
+  const { pulled } = await cleanPhone.services.backup.syncNow(TOKEN);
+  assert.equal(pulled, 3, 'otro teléfono limpio recupera todo');
+  assert.deepEqual(cleanPhone.queries.getTransaction(transaction.id), before);
+  assert.equal(cleanPhone.services.preferences.budgetCents(), 40_000_000);
+  assert.deepEqual(cleanPhone.storage.rules.list(), phone.storage.rules.list());
 });
 
 test('un valor fuera de lo permitido se corrige en el servidor y la app lo acepta', async () => {

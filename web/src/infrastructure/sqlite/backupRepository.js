@@ -177,6 +177,14 @@ export function createBackupRepository(sql) {
       return appliedCount;
     },
 
+    /** Vuelve a marcar todo lo local para subirlo (tras borrar el respaldo). No cambia `updated_at`. */
+    markAllForBackup() {
+      sql.inTransaction(() => {
+        for (const table of ['transactions', 'category_rules', 'settings'])
+          sql.execute(`UPDATE ${table} SET needs_backup=1 WHERE needs_backup=0`);
+      });
+    },
+
     pendingCount() {
       return sql.queryOne(
         `SELECT (SELECT COUNT(*) FROM transactions WHERE needs_backup=1)
