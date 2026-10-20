@@ -14,11 +14,14 @@ vi.mock('../../web/src/composition/openSession.js', async () => {
     },
   };
 });
+// La descarga de archivos se reemplaza por una función que solo recuerda qué se descargó.
+const { downloadTextFile } = vi.hoisted(() => ({ downloadTextFile: vi.fn() }));
 vi.mock('../../web/src/composition/platform.js', async (importOriginal) => {
   const original = await importOriginal();
   return {
     ...original,
     backendApi: { ...original.backendApi, getConfig: async () => null, getExchangeRate: async () => ({}) },
+    downloadTextFile,
   };
 });
 
@@ -297,6 +300,43 @@ describe('movimientos y filtros en el inicio', () => {
     expect(movementRows().length).toBeGreaterThan(0);
   });
 });
+describe('exportar a CSV', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    downloadTextFile.mockClear();
+  });
+
+  test('desde Ajustes se descargan los movimientos del rango elegido', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Ajustes');
+    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+
+    const dialog = within(screen.getByRole('dialog'));
+    expect(dialog.getByLabelText('Desde').value).toMatch(/^\d{4}-\d{2}-01$/); // por defecto, lo que va del mes
+    await user.clear(dialog.getByLabelText('Desde')); // sin límite al inicio
+    const download = dialog.getByRole('button', { name: /^Descargar \d+ movimiento/ });
+    await user.click(download);
+
+    expect(downloadTextFile).toHaveBeenCalledTimes(1);
+    const [fileName, content] = downloadTextFile.mock.calls[0];
+    expect(fileName).toMatch(/^movo-movimientos-inicio-a-\d{4}-\d{2}-\d{2}\.csv$/);
+    expect(content.startsWith('\uFEFFFecha;Comercio;Monto;Moneda')).toBe(true);
+    expect(await screen.findByText(/Se exportaron \d+ movimiento/)).toBeInTheDocument();
+  });
+
+  test('un rango al revés no deja descargar', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Ajustes');
+    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+    const dialog = within(screen.getByRole('dialog'));
+    await user.clear(dialog.getByLabelText('Hasta'));
+    await user.type(dialog.getByLabelText('Hasta'), '2020-01-01');
+    expect(dialog.getByText('La fecha de inicio es posterior a la fecha final.')).toBeInTheDocument();
+    expect(dialog.getByRole('button', { name: /Descargar|No hay movimientos/ })).toBeDisabled();
+    expect(downloadTextFile).not.toHaveBeenCalled();
+  });
+});
+
 describe('barra de abajo', () => {
   beforeEach(() => localStorage.clear());
 

@@ -1,6 +1,7 @@
 // Arma todos los casos de uso con sus dependencias.
 // La interfaz solo habla con el objeto que devuelve esta función.
 
+import { createExportTransactions } from './exportTransactions.js';
 import { createIngestMail } from './ingestMail.js';
 import { createReparseMails } from './reparseMails.js';
 import { createTransactionActions } from './transactionActions.js';
@@ -48,5 +49,6 @@ export function createServices({ storage, mailSource, backend, buildDemoMails })
     refreshExchangeRate: createRefreshExchangeRate({ backend, localState, transactions, atomically }),
     backup: createBackupSync({ backup, localState, backend }),
     seedDemoData: createSeedDemoData({ readMail, preferences, buildDemoMails }),
+    exportTransactions: createExportTransactions({ transactions }),
   };
 }
