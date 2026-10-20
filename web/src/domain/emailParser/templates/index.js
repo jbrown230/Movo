@@ -6,6 +6,9 @@ import { parseBcrCard } from './bcrCard.js';
 import { parseBacCard } from './bacCard.js';
 import { parseBacSinpe } from './bacSinpe.js';
 import { parseBnVoucher } from './bnVoucher.js';
+import { parseDaviviendaAccount } from './daviviendaAccount.js';
+import { parseDaviviendaCard } from './daviviendaCard.js';
+import { parseDaviviendaTransfer } from './daviviendaTransfer.js';
 import { parseBacSynthetic, parseBnSynthetic } from './syntheticBanks.js';
 
 /**
@@ -24,4 +27,7 @@ export const TEMPLATES = [
   { bank: 'BAC', name: 'BAC (demo)', parse: parseBacSynthetic },
   { bank: 'BN', name: 'BN voucher', parse: parseBnVoucher },
   { bank: 'BN', name: 'BN SINPE (demo)', parse: parseBnSynthetic },
+  { bank: 'DAVIVIENDA', name: 'Davivienda cuenta', parse: parseDaviviendaAccount },
+  { bank: 'DAVIVIENDA', name: 'Davivienda tarjeta', parse: parseDaviviendaCard },
+  { bank: 'DAVIVIENDA', name: 'Davivienda transferencia', parse: parseDaviviendaTransfer },
 ];

@@ -183,9 +183,9 @@ Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh
 
 ### 27. Plantilla real de Davivienda · 2 pts
 `parser` · Hito: Más bancos
-- [ ] Notificaciones reales de Davivienda (tarjeta y transferencias) anonimizadas en `tests/fixtures/davivienda-html/`.
-- [ ] Plantilla en `web/src/domain/emailParser/templates/` con sus pruebas, siguiendo el modelo del BCR.
-- [ ] Agregar el remitente en la búsqueda de Gmail (`web/src/domain/banks.js` y `web/src/application/preferences.js`).
+- [x] Notificaciones reales de Davivienda (tarjeta y transferencias) anonimizadas en `tests/fixtures/davivienda-html/`.
+- [x] Plantilla en `web/src/domain/emailParser/templates/` con sus pruebas, siguiendo el modelo del BCR.
+- [x] Agregar el remitente en la búsqueda de Gmail (`web/src/domain/banks.js` y `web/src/application/preferences.js`).
 
 ### 28. Plantilla real de Promerica · 2 pts
 `parser` · Hito: Más bancos
