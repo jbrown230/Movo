@@ -68,9 +68,10 @@ El `CHANGELOG.md` describe la v0.1.0 pero el repositorio no tiene tags ni releas
 
 ### 17. Medir el efecto de Redis en el tipo de cambio · 2 pts
 `tests`, `investigación` · Hito: Mediciones
-- [ ] Comparar latencia de la API con Redis y sin Redis (consulta directa al BCCR).
-- [ ] Reportar mediana y p95 con al menos 200 solicitudes.
-- [ ] Conclusión escrita en `docs/MEDICIONES.md`: ¿justifica Redis el costo operativo?
+Estado: hecho, issue de GitHub #19 (rama `19-medir-el-efecto-de-redis-en-el-tipo-de-cambio`). Tomada por Dylan.
+- [x] Comparar latencia de la API con Redis y sin Redis (consulta directa al BCCR). También con la caché en memoria que la API usa cuando no hay Redis (`scripts/bench-fx.mjs`, `npm run bench:fx`).
+- [x] Reportar mediana y p95 con al menos 200 solicitudes. Sin caché: 694 / 846 ms; memoria: 0,8 / 1,5 ms; Redis: 2,0 / 2,8 ms. Sin pausas, el BCCR rechazó 181 de 200 consultas (límite de unas 40 por minuto).
+- [x] Conclusión escrita en `docs/MEDICIONES.md`: por latencia no hace falta Redis (basta cualquier caché); se mantiene por robustez a bajo costo (sobrevive reinicios, se comparte entre procesos, cuenta el límite en un solo lugar).
 
 ---
 
