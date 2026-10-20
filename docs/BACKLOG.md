@@ -15,7 +15,7 @@ Los bancos se reparten uno por persona, para que nadie cargue con toda la lógic
 | Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|---|
 | Jordy Palacios | @jbrown230 | 34 pts (issues 1–14, cerrados) | **6 pts** | 15, 16, 17 |
-| Dylan Mejía Ruiz | @DylanMR08 | — | **19 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36 |
+| Dylan Mejía Ruiz | @DylanMR08 | — | **21 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36, 37, 38 |
 | Jose Meza Álvarez | @devJosemeza | — | **11 pts** | 22, 23, 24, 25, 26 |
 | Yader Barahona Villarreal | @YaderBarahona | — | **11 pts** | 27, 28, 29, 30, 31 |
 
@@ -76,7 +76,7 @@ Estado: hecho, issue de GitHub #19 (rama `19-medir-el-efecto-de-redis-en-el-tipo
 
 ---
 
-## Pendiente · Dylan Mejía Ruiz · 19 pts
+## Pendiente · Dylan Mejía Ruiz · 21 pts
 
 ### 18. Plantilla real de Banco Nacional (BN) · 3 pts
 `parser` · Hito: Más bancos
@@ -144,6 +144,22 @@ Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh
 - [x] Crear los issues 1 a 14 asignados a Jordy y cerrarlos de inmediato.
 - [x] Que se pueda volver a ejecutar sin duplicar issues.
 - [x] Documentar su uso en la sección "Cómo crearlos en GitHub".
+
+### 37. Reactivar el respaldo después de borrarlo no vuelve a subir nada · 1 pt
+`bug`, `frontend` · Hito: Más bancos
+Al borrar el respaldo y encenderlo otra vez, la sincronización no subía nada (los registros locales seguían con `needs_backup=0`) y el servidor quedaba vacío aunque el teléfono tuviera datos.
+Estado: hecho, issue de GitHub #60 (rama `60-reactivar-el-respaldo-despues-de-borrarlo`).
+- [x] Al borrar el respaldo, marcar para subir todos los movimientos, reglas y ajustes locales, sin cambiar su `updatedAt`.
+- [x] Prueba automática: borrar, reactivar y sincronizar; un teléfono limpio recupera todo.
+- [x] Documentarlo en `docs/ARQUITECTURA.md`.
+
+### 38. Releer Gmail en un teléfono limpio pisa las ediciones del respaldo · 1 pt
+`bug`, `frontend` · Hito: Más bancos
+Al restaurar en un teléfono limpio, la app relee Gmail antes de encender el respaldo. Esos movimientos llevaban la hora de lectura como marca, le ganaban a la versión del respaldo y la pisaban también en el servidor (se perdían las categorías cambiadas).
+Estado: hecho, issue de GitHub #59 (rama `59-releer-gmail-en-un-telefono-limpio-pisa-las-ediciones-del-respaldo`).
+- [x] Un movimiento leído de un correo lleva como `updatedAt` la fecha de la compra (nunca más que la hora actual): releer el mismo correo da la misma marca y lo editado gana.
+- [x] Prueba automática: teléfono limpio que relee los correos y luego sincroniza (`tests/contract/syncConflicts.test.js`).
+- [x] Documentarlo en `docs/ARQUITECTURA.md` ("Conflictos entre teléfonos").
 
 ---
 

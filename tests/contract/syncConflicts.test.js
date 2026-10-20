@@ -167,6 +167,31 @@ test('empate exacto de hora: los dos terminan con la versión que llegó primero
   assert.equal(categoryIn(phoneB, id), 'super', 'sin esto, los teléfonos quedarían distintos para siempre');
 });
 
+test('un teléfono limpio que vuelve a leer los correos no pisa lo que se editó en el respaldo', async () => {
+  const { phoneA, phoneB, sync } = twoPhones();
+  const HOUR = 3600e3;
+  const purchase = Date.parse('2026-10-15T15:00:00Z');
+  const mail = buildBankMail({
+    bank: 'BAC',
+    type: 'tarjeta',
+    counterparty: 'CAFE CORDILLERA',
+    amount: 2900,
+    date: purchase,
+  });
+
+  const { id } = at(purchase + HOUR, () => phoneA.services.readMail(mail)).transaction;
+  at(purchase + 2 * HOUR, () => phoneA.services.recategorize(id, 'super'));
+  await sync(phoneA);
+
+  // B es el navegador recién limpiado: la app relee Gmail antes de que se encienda el respaldo.
+  at(purchase + 3 * HOUR, () => phoneB.services.readMail(mail));
+  await sync(phoneB);
+  await sync(phoneA);
+
+  assert.equal(categoryIn(phoneB, id), 'super', 'B recupera la categoría del respaldo');
+  assert.equal(categoryIn(phoneA, id), 'super', 'y no la sube encima: A tampoco la pierde');
+});
+
 test('recibir de vuelta lo que uno mismo subió no cuenta como recibido', async () => {
   const { phoneA, sync } = twoPhones();
   at(1_000, () =>
