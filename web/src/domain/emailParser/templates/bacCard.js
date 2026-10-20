@@ -20,7 +20,7 @@
 //   Monto:                CRC 126,267.00
 
 import { Direction, TransactionType } from '../../types.js';
-import { parseAmount } from '../amount.js';
+import { AMOUNT_PATTERN, parseAmount } from '../amount.js';
 import { detectCurrency } from '../currency.js';
 import { costaRicaToIso, to24Hour } from '../dateTime.js';
 import { collapseSpaces, isDeclinedStatus } from '../text.js';
@@ -122,10 +122,15 @@ function readField(text, labelPattern) {
   return value ? collapseSpaces(value) || null : null;
 }
 
-/** El monto vive fuera de la tabla gris; se lee con un patrón propio y estricto. */
-function readAmount(text) {
-  const match = text.match(/Monto\s*:\s*((?:CRC|USD|¢|₡|\$)?\s*[\d.,]+)/i);
-  return match ? match[1].trim() : null;
+/** El monto va con moneda delante: "CRC 15,000.00". parseAmount solo entiende el número. */
+const AMOUNT_LINE = new RegExp(`Monto\\s*:\\s*((?:CRC|USD|¢|₡|\\$)?)\\s*${AMOUNT_PATTERN}`, 'i');
+
+function readMoney(text) {
+  const match = text.match(AMOUNT_LINE);
+  if (!match) return null;
+  const amount = parseAmount(match[2]);
+  if (!amount || Number.isNaN(amount)) return null;
+  return { amount, currency: detectCurrency(match[1] || match[2]) };
 }
 
 function looksLikeBacCard(text) {
@@ -138,11 +143,8 @@ export function parseBacCard(rawText) {
   if (!looksLikeBacCard(text)) return null;
 
   const merchant = readField(text, 'Comercio');
-  const amountRaw = readAmount(text);
-  if (!merchant || !amountRaw) return null;
-
-  const amount = parseAmount(amountRaw);
-  if (!amount || Number.isNaN(amount)) return null;
+  const money = readMoney(text);
+  if (!merchant || !money) return null;
 
   const txType = readField(text, 'Tipo de Transacci[oó]n') || 'COMPRA';
   const cardLastFour = text.match(CARD_LAST_FOUR)?.[1];
@@ -151,8 +153,8 @@ export function parseBacCard(rawText) {
     {
       type: TransactionType.CARD,
       direction: Direction.EXPENSE,
-      currency: detectCurrency(amountRaw),
-      amount,
+      currency: money.currency,
+      amount: money.amount,
       counterparty: merchant,
       date: parseDate(readField(text, 'Fecha')),
       declined: isDeclinedStatus(txType),

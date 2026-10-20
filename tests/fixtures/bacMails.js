@@ -112,7 +112,7 @@ export const BAC_SINPE_RECIBIDO = {
   subject: 'Notificación de Transferencia SINPE',
   body: `Notificación de Transferencia SINPE
 Hola CLIENTE DE PRUEBA :
-BAC le comunica que la transferencia SINPE en tiempo real con el número de referencia 0000000000000000000000001, se acreditó en la cuenta IBAN CR13010000000000000000 por un monto de 10,000.00 Colones, por concepto de prueba SINPE.Día y hora 15/01/2026 02:31:22 p.m. 
+BAC le comunica que la transferencia SINPE en tiempo real con el número de referencia 0000000000000000000000001, se acreditó en la cuenta IBAN CR00000000000000000000 por un monto de 10,000.00 Colones, por concepto de prueba SINPE.Día y hora 15/01/2026 02:31:22 p.m. 
 Muchas gracias.
 Notas Importantes:
 La información mostrada en este comprobante no constituye un documento con validez legal.
@@ -127,7 +127,7 @@ export const BAC_SINPE_ENVIADO = {
   subject: 'Notificación de Transferencia SINPE',
   body: `Notificación de Transferencia SINPE
 Hola CLIENTE DE PRUEBA :
-BAC le comunica que la transferencia SINPE en tiempo real con el número de referencia 0000000000000000000000002, se debitó de la cuenta IBAN CR13010000000000000000 por un monto de 5,000.00 Colones, por concepto de pago almuerzo.Día y hora 16/01/2026 12:45:10 p.m. 
+BAC le comunica que la transferencia SINPE en tiempo real con el número de referencia 0000000000000000000000002, se debitó de la cuenta IBAN CR00000000000000000000 por un monto de 5,000.00 Colones, por concepto de pago almuerzo.Día y hora 16/01/2026 12:45:10 p.m. 
 Muchas gracias.
 Notas Importantes:
 La información mostrada en este comprobante no constituye un documento con validez legal.

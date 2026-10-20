@@ -4,7 +4,7 @@
 //   Notificación de Transferencia SINPE
 //   Hola CLIENTE DE PRUEBA :
 //   BAC le comunica que la transferencia SINPE en tiempo real con el número de referencia 0000000000000000000000001,
-//   se acreditó en la cuenta IBAN CR13010000000000000000 por un monto de 10,000.00 Colones, por concepto de prueba SINPE.
+//   se acreditó en la cuenta IBAN CR00000000000000000000 por un monto de 10,000.00 Colones, por concepto de prueba SINPE.
 //   Día y hora 15/01/2026 02:31:22 p.m.
 
 import { Direction, TransactionType } from '../../types.js';
