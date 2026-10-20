@@ -89,7 +89,18 @@ function DemoSettings() {
           })
         }
       />
-      <Row label="Salir del modo demo" danger onClick={exitDemo} />
+      <Row
+        label="Salir del modo demo"
+        danger
+        onClick={() =>
+          confirm({
+            title: 'Salir del modo demo',
+            text: 'Vuelves a la pantalla de inicio. Los datos de ejemplo quedan en este teléfono.',
+            confirmLabel: 'Salir',
+            onConfirm: exitDemo,
+          })
+        }
+      />
     </div>
   );
 }
@@ -113,18 +124,44 @@ function GmailSettings() {
   );
 }
 
-function CloudBackupSettings() {
+/** Acciones del respaldo en la nube. Todas piden confirmación antes de cambiar algo. */
+function useCloudBackupActions(pendingBackupCount) {
   const { services, refresh } = useSession();
   const { syncBackup } = useGmail();
-  const { isCloudBackupEnabled, lastSyncAt, pendingBackupCount } = useAppData();
   const confirm = useConfirm();
   const showToast = useToast();
 
-  const toggle = (event) => {
-    services.preferences.setCloudBackupEnabled(event.target.checked);
+  const setEnabled = (enabled) => {
+    services.preferences.setCloudBackupEnabled(enabled);
     refresh();
-    if (event.target.checked) syncBackup();
+    if (enabled) syncBackup();
   };
+
+  // El interruptor no cambia hasta confirmar: su valor sale de lo guardado.
+  const toggle = (event) =>
+    event.target.checked
+      ? confirm({
+          title: 'Activar respaldo',
+          text: 'Tus movimientos, reglas y presupuesto se suben al servidor para usarlos en otros teléfonos. Tus correos nunca se suben.',
+          confirmLabel: 'Activar respaldo',
+          danger: false,
+          onConfirm: () => setEnabled(true),
+        })
+      : confirm({
+          title: 'Desactivar respaldo',
+          text: 'Este teléfono deja de respaldar. Lo que ya está en el servidor se queda; para borrarlo usa "Borrar mi respaldo del servidor".',
+          confirmLabel: 'Desactivar',
+          onConfirm: () => setEnabled(false),
+        });
+
+  const syncNow = () =>
+    confirm({
+      title: 'Sincronizar ahora',
+      text: `Se suben ${pendingBackupCount} cambio(s) pendiente(s) y se bajan los de tus otros teléfonos.`,
+      confirmLabel: 'Sincronizar',
+      danger: false,
+      onConfirm: () => syncBackup(),
+    });
 
   const deleteBackup = () =>
     confirm({
@@ -147,6 +184,13 @@ function CloudBackupSettings() {
       },
     });
 
+  return { toggle, syncNow, deleteBackup };
+}
+
+function CloudBackupSettings() {
+  const { isCloudBackupEnabled, lastSyncAt, pendingBackupCount } = useAppData();
+  const { toggle, syncNow, deleteBackup } = useCloudBackupActions(pendingBackupCount);
+
   return (
     <>
       <h2 className="sh">Respaldo en la nube</h2>
@@ -160,7 +204,7 @@ function CloudBackupSettings() {
             <Row
               label="Sincronizar ahora"
               value={lastSyncAt ? shortWhen(new Date(lastSyncAt).toISOString()) : 'Nunca'}
-              onClick={() => syncBackup()}
+              onClick={syncNow}
             />
             <Row label="Cambios pendientes" value={pendingBackupCount} />
           </>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AmountInput, CategoryPicker, Field } from '../components/formControls.jsx';
 import { ModalHeader } from '../components/ModalHeader.jsx';
+import { getCategory } from '../../domain/categories.js';
 import { displayName } from '../../domain/names.js';
 import { textToCents } from '../../domain/money.js';
 import { Direction, MailStatus, TransactionType } from '../../domain/types.js';
@@ -8,6 +9,7 @@ import { formatColones, formatColonesShort, formatInCurrency } from '../format/m
 import { isForeignCurrency } from '../../domain/money.js';
 import { longWhen, shortWhen } from '../format/dates.js';
 import { describeTransaction } from '../format/transactionLabels.js';
+import { useConfirm } from './ConfirmModal.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
 import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
@@ -66,15 +68,16 @@ function MailTransaction({ transaction }) {
   );
 }
 
-/** Formulario para registrar a mano un correo que Movo no entendió. */
-function ManualRegistration({ mail }) {
+/** Formulario para registrar a mano un correo que Movo no entendió. `draft` lo vuelve a llenar al cancelar. */
+function ManualRegistration({ mail, draft = {} }) {
   const { services, refresh } = useSession();
-  const { closeModal } = useModal();
+  const { closeModal, openModal } = useModal();
   const { goTo, flashTransaction } = useNavigation();
+  const confirm = useConfirm();
   const showToast = useToast();
-  const [amountText, setAmountText] = useState('');
-  const [counterparty, setCounterparty] = useState('');
-  const [category, setCategory] = useState('otros');
+  const [amountText, setAmountText] = useState(draft.amountText ?? '');
+  const [counterparty, setCounterparty] = useState(draft.counterparty ?? '');
+  const [category, setCategory] = useState(draft.category ?? 'otros');
 
   const canSave = textToCents(amountText) > 0 && counterparty.trim() !== '';
 
@@ -94,6 +97,16 @@ function ManualRegistration({ mail }) {
     showToast('Movimiento guardado');
   };
 
+  const askToSave = () =>
+    confirm({
+      title: 'Guardar movimiento',
+      text: `Se registra ${formatColonesShort(textToCents(amountText))} con ${counterparty.trim()} (${getCategory(category).name}), con la fecha del correo.`,
+      confirmLabel: 'Guardar movimiento',
+      danger: false,
+      onCancel: () => openModal(<MailModal mailId={mail.id} manualDraft={{ amountText, counterparty, category }} />),
+      onConfirm: save,
+    });
+
   return (
     <>
       <div className="subh">Registrar a mano</div>
@@ -107,7 +120,7 @@ function ManualRegistration({ mail }) {
         />
       </Field>
       <CategoryPicker selected={category} onSelect={setCategory} />
-      <button type="button" className="cta" disabled={!canSave} onClick={save}>
+      <button type="button" className="cta" disabled={!canSave} onClick={askToSave}>
         Guardar movimiento
       </button>
     </>
@@ -115,9 +128,10 @@ function ManualRegistration({ mail }) {
 }
 
 /** Un correo del banco: lo que dice, lo que Movo entendió, y cómo corregirlo. */
-export function MailModal({ mailId }) {
+export function MailModal({ mailId, manualDraft }) {
   const { services, refresh } = useSession();
-  const { closeModal } = useModal();
+  const { closeModal, openModal } = useModal();
+  const confirm = useConfirm();
   const { goTo, flashTransaction } = useNavigation();
   const showToast = useToast();
 
@@ -129,6 +143,16 @@ export function MailModal({ mailId }) {
   const canRegisterByHand = transactions.length === 0 && !wasDeclined;
   const canReadAgain = mail.status !== MailStatus.REGISTERED && mail.status !== MailStatus.DISCARDED;
   const address = emailAddressOf(mail.fromAddress);
+
+  const askToReadAgain = () =>
+    confirm({
+      title: 'Leer de nuevo',
+      text: 'Movo vuelve a leer este correo y, si ahora encuentra un monto, lo registra como movimiento.',
+      confirmLabel: 'Leer de nuevo',
+      danger: false,
+      onCancel: () => openModal(<MailModal mailId={mail.id} />),
+      onConfirm: readAgain,
+    });
 
   const readAgain = () => {
     const result = services.reparseMail(mail.id);
@@ -166,9 +190,9 @@ export function MailModal({ mailId }) {
       ))}
       {mail.note && <div className={`notebox${wasDeclined ? ' neg' : ''}`}>{mail.note}</div>}
 
-      {canRegisterByHand && <ManualRegistration mail={mail} />}
+      {canRegisterByHand && <ManualRegistration mail={mail} draft={manualDraft} />}
       {canReadAgain && (
-        <button type="button" className="ghost" onClick={readAgain}>
+        <button type="button" className="ghost" onClick={askToReadAgain}>
           Leer de nuevo
         </button>
       )}

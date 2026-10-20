@@ -114,9 +114,10 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 
 ### 33. Diálogos de confirmación para las acciones de las cards · 2 pts
 `frontend` · Hito: Funciones de usuario
-- [ ] Listar las acciones de las cards que cambian o borran datos.
-- [ ] Mostrar un diálogo de confirmación antes de ejecutarlas, con opción de cancelar.
-- [ ] Prueba de que la acción no se ejecuta si se cancela.
+Estado: hecho, issue de GitHub #35 (rama `35-dialogos-de-confirmacion-para-las-acciones-de-las-cards`).
+- [x] Listar las acciones de las cards que cambian o borran datos: en el detalle del movimiento, cambiar cómo se cuenta, cambiar la categoría y eliminar. Se sumaron las de Ajustes: presupuesto, bancos que se leen, activar, desactivar y sincronizar el respaldo, y salir del modo demo; y las que crean movimientos: gasto en efectivo, pegar un aviso, registrar a mano un correo y leerlo de nuevo.
+- [x] Mostrar un diálogo de confirmación antes de ejecutarlas, con opción de cancelar. Al cancelar se vuelve a la hoja de donde se vino, con lo escrito.
+- [x] Prueba de que la acción no se ejecuta si se cancela (`tests/presentation/app.test.jsx`).
 
 ### 34. Revisar el tipo de cambio · 1 pt
 `backend`, `frontend`, `bug` · Hito: Funciones de usuario

@@ -8,6 +8,7 @@ import { Direction } from '../../domain/types.js';
 import { CURRENCY_UNIT_NAME, formatInCurrency, splitColonesDecimals } from '../format/money.js';
 import { longWhen } from '../format/dates.js';
 import { amountSign, describeTransaction } from '../format/transactionLabels.js';
+import { useConfirm } from './ConfirmModal.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
@@ -25,6 +26,7 @@ const DIRECTION_OPTIONS = [
   { value: Direction.INCOME, label: 'Ingreso' },
   { value: Direction.OWN_TRANSFER, label: 'Entre mis cuentas' },
 ];
+const DIRECTION_LABEL = Object.fromEntries(DIRECTION_OPTIONS.map(({ value, label }) => [value, label]));
 
 const DIRECTION_CHANGED_MESSAGE = {
   [Direction.OWN_TRANSFER]: 'Listo: no cuenta como gasto ni ingreso.',
@@ -93,35 +95,66 @@ function TransactionFacts({ transaction, mail }) {
   );
 }
 
-/** Lo que se puede hacer con un movimiento. Cada acción guarda, cierra la hoja y avisa. */
+/**
+ * Lo que se puede hacer con un movimiento. Cada acción pide confirmación; al confirmar guarda,
+ * cierra la hoja y avisa. Al cancelar se vuelve al detalle del movimiento.
+ */
 function useTransactionActions(transaction) {
   const { services, refresh } = useSession();
-  const { closeModal } = useModal();
+  const { openModal } = useModal();
+  const confirm = useConfirm();
   const showToast = useToast();
 
+  const name = displayName(transaction.counterparty);
+  const backToDetail = () => openModal(<TransactionModal transactionId={transaction.id} />);
   const finish = (message) => {
     refresh();
-    closeModal();
     showToast(message);
   };
 
   return {
     changeDirection(direction) {
       if (direction === transaction.direction) return;
-      services.setDirection(transaction.id, direction);
-      finish(DIRECTION_CHANGED_MESSAGE[direction]);
+      confirm({
+        title: 'Cambiar cómo se cuenta',
+        text: `${name} se va a contar como "${DIRECTION_LABEL[direction]}".`,
+        confirmLabel: 'Cambiar',
+        danger: false,
+        onCancel: backToDetail,
+        onConfirm: () => {
+          services.setDirection(transaction.id, direction);
+          finish(DIRECTION_CHANGED_MESSAGE[direction]);
+        },
+      });
     },
 
     changeCategory(category) {
       if (category === transaction.category) return;
-      const changedCount = services.recategorize(transaction.id, category);
-      const several = changedCount > 1 ? ` (${changedCount} movimientos)` : '';
-      finish(`${displayName(transaction.counterparty)} ahora va a ${getCategory(category).name}${several}`);
+      confirm({
+        title: 'Cambiar categoría',
+        text: `${name} pasa a ${getCategory(category).name}. También cambian los demás movimientos de este comercio, y los próximos se categorizan igual.`,
+        confirmLabel: 'Cambiar categoría',
+        danger: false,
+        onCancel: backToDetail,
+        onConfirm: () => {
+          const changedCount = services.recategorize(transaction.id, category);
+          const several = changedCount > 1 ? ` (${changedCount} movimientos)` : '';
+          finish(`${name} ahora va a ${getCategory(category).name}${several}`);
+        },
+      });
     },
 
     remove() {
-      services.deleteTransaction(transaction.id);
-      finish('Movimiento eliminado');
+      confirm({
+        title: 'Eliminar movimiento',
+        text: `Se elimina ${name}. Si salió de un correo, ese correo no se vuelve a leer.`,
+        confirmLabel: 'Eliminar',
+        onCancel: backToDetail,
+        onConfirm: () => {
+          services.deleteTransaction(transaction.id);
+          finish('Movimiento eliminado');
+        },
+      });
     },
   };
 }

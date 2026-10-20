@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { AmountInput, CategoryPicker, Field } from '../components/formControls.jsx';
 import { ModalHeader } from '../components/ModalHeader.jsx';
+import { getCategory } from '../../domain/categories.js';
 import { displayName } from '../../domain/names.js';
 import { textToCents } from '../../domain/money.js';
 import { MailStatus } from '../../domain/types.js';
 import { DEFAULT_GMAIL_QUERY } from '../../application/preferences.js';
 import { formatColonesShort } from '../format/money.js';
+import { useConfirm } from './ConfirmModal.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
 import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
@@ -18,10 +20,21 @@ const MIN_PASTED_TEXT_LENGTH = 8;
 /** Pegar el texto de un correo o SMS del banco para que Movo lo lea. */
 export function PasteModal({ prefill = '' }) {
   const { services, refresh } = useSession();
-  const { closeModal } = useModal();
+  const { closeModal, openModal } = useModal();
   const { goTo, flashTransaction } = useNavigation();
+  const confirm = useConfirm();
   const showToast = useToast();
   const [text, setText] = useState(prefill);
+
+  const askToRead = () =>
+    confirm({
+      title: 'Leer la notificación',
+      text: 'Movo lee el texto pegado y, si encuentra un monto, lo registra como movimiento.',
+      confirmLabel: 'Leer',
+      danger: false,
+      onCancel: () => openModal(<PasteModal prefill={text} />),
+      onConfirm: read,
+    });
 
   const read = () => {
     const result = services.readMail({
@@ -70,22 +83,23 @@ export function PasteModal({ prefill = '' }) {
           placeholder={'Monto: CRC 12,500.00\nComercio: …\nFecha: 15/01/2026 13:22'}
         />
       </Field>
-      <button type="button" className="cta" disabled={text.trim().length < MIN_PASTED_TEXT_LENGTH} onClick={read}>
+      <button type="button" className="cta" disabled={text.trim().length < MIN_PASTED_TEXT_LENGTH} onClick={askToRead}>
         Leer
       </button>
     </>
   );
 }
 
-/** Registrar un gasto en efectivo. */
-export function CashModal() {
+/** Registrar un gasto en efectivo. `draft` vuelve a llenar el formulario si se canceló la confirmación. */
+export function CashModal({ draft = {} }) {
   const { services, refresh } = useSession();
-  const { closeModal } = useModal();
+  const { closeModal, openModal } = useModal();
   const { goTo, flashTransaction } = useNavigation();
+  const confirm = useConfirm();
   const showToast = useToast();
-  const [amountText, setAmountText] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('comida');
+  const [amountText, setAmountText] = useState(draft.amountText ?? '');
+  const [description, setDescription] = useState(draft.description ?? '');
+  const [category, setCategory] = useState(draft.category ?? 'comida');
 
   const canSave = textToCents(amountText) > 0 && description.trim() !== '';
 
@@ -102,6 +116,16 @@ export function CashModal() {
     showToast(navigator.onLine ? 'Gasto guardado' : 'Guardado sin conexión');
   };
 
+  const askToSave = () =>
+    confirm({
+      title: 'Guardar gasto',
+      text: `Se registra un gasto en efectivo de ${formatColonesShort(textToCents(amountText))} en "${description.trim()}" (${getCategory(category).name}).`,
+      confirmLabel: 'Guardar gasto',
+      danger: false,
+      onCancel: () => openModal(<CashModal draft={{ amountText, description, category }} />),
+      onConfirm: save,
+    });
+
   return (
     <>
       <ModalHeader title="Gasto en efectivo" />
@@ -117,7 +141,7 @@ export function CashModal() {
       </Field>
       <div className="subh">Categoría</div>
       <CategoryPicker selected={category} onSelect={setCategory} hidden={['transfer']} />
-      <button type="button" className="cta" disabled={!canSave} onClick={save}>
+      <button type="button" className="cta" disabled={!canSave} onClick={askToSave}>
         Guardar gasto
       </button>
     </>
@@ -128,15 +152,28 @@ export function CashModal() {
 export function BudgetModal() {
   const { services, refresh } = useSession();
   const { closeModal } = useModal();
-  const [amountText, setAmountText] = useState(String(Math.round(services.preferences.budgetCents() / 100)));
+  const confirm = useConfirm();
+  const showToast = useToast();
+  const currentCents = services.preferences.budgetCents();
+  const [amountText, setAmountText] = useState(String(Math.round(currentCents / 100)));
 
   const save = () => {
     const cents = textToCents(amountText);
-    if (cents > 0) {
-      services.preferences.setBudgetCents(cents);
-      refresh();
+    if (!(cents > 0) || cents === currentCents) {
+      closeModal();
+      return;
     }
-    closeModal();
+    confirm({
+      title: 'Cambiar presupuesto',
+      text: `Tu presupuesto mensual pasa de ${formatColonesShort(currentCents)} a ${formatColonesShort(cents)}.`,
+      confirmLabel: 'Cambiar presupuesto',
+      danger: false,
+      onConfirm: () => {
+        services.preferences.setBudgetCents(cents);
+        refresh();
+        showToast('Presupuesto actualizado');
+      },
+    });
   };
 
   return (
@@ -154,13 +191,26 @@ export function BudgetModal() {
 export function GmailQueryModal() {
   const { services } = useSession();
   const { closeModal } = useModal();
+  const confirm = useConfirm();
   const showToast = useToast();
-  const [query, setQuery] = useState(services.preferences.gmailQuery());
+  const currentQuery = services.preferences.gmailQuery();
+  const [query, setQuery] = useState(currentQuery);
 
   const save = () => {
-    services.preferences.setGmailQuery(query);
-    closeModal();
-    showToast('Guardado. La próxima búsqueda revisa los últimos 45 días.');
+    if (query.trim() === currentQuery) {
+      closeModal();
+      return;
+    }
+    confirm({
+      title: 'Cambiar los bancos que se leen',
+      text: 'La próxima búsqueda usa la búsqueda nueva y vuelve a revisar los últimos 45 días.',
+      confirmLabel: 'Guardar búsqueda',
+      danger: false,
+      onConfirm: () => {
+        services.preferences.setGmailQuery(query);
+        showToast('Guardado. La próxima búsqueda revisa los últimos 45 días.');
+      },
+    });
   };
 
   return (
