@@ -146,7 +146,7 @@ Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh
 - [x] Descargar con "Mostrar original" notificaciones reales de BAC (tarjeta y SINPE).
 - [x] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bac-html/`.
 - [x] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
-- [ ] Reemplazar las plantillas sintéticas de BAC en la demo y el benchmark.
+- [x] Reemplazar las plantillas sintéticas de BAC en la demo y el benchmark.
 
 ### 23. Alertas de presupuesto · 2 pts
 `frontend` · Hito: Funciones de usuario
