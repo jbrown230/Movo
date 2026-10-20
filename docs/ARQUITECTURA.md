@@ -219,4 +219,6 @@ En el servidor, el usuario sale únicamente del token de Google, validado contra
 
 ## Qué medimos
 
+`npm run bench:fx` mide la latencia de `/api/fx` sin caché, con caché en memoria y con Redis; los resultados y la conclusión están en [MEDICIONES.md](MEDICIONES.md).
+
 `npm run bench` mide la precisión del lector por campo, el tiempo de lectura por correo, el tiempo de ingesta en SQLite, el tiempo del resumen mensual y el costo de descartar duplicados. Con `node scripts/bench-parser.mjs 10000` se ve el comportamiento al escalar.
