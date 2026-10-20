@@ -3,6 +3,7 @@
 // Una sola colección, "backup_records". Cada documento es:
 //   { userId, kind, id, updatedAt, serverSequence, isDeleted, data }
 // y TODA consulta lleva `userId` en el filtro, así los datos de cada persona quedan separados.
+// La colección tiene un validador $jsonSchema (backupRecordSchema.js): MongoDB rechaza un documento mal formado.
 //
 // Si MongoDB no responde, cada operación falla con ServiceUnavailableError (503 y un mensaje claro), nunca
 // con un error interno. Si estaba caído al arrancar, se vuelve a intentar la conexión en el siguiente pedido.
@@ -10,10 +11,12 @@
 import { MongoClient, MongoNetworkError, MongoServerSelectionError } from 'mongodb';
 import { ServiceUnavailableError } from '../../application/errors.js';
 import { nextServerSequence } from '../../domain/backupRecord.js';
+import { backupRecordSchema } from './backupRecordSchema.js';
 
 const COLLECTION_NAME = 'backup_records';
 const CONNECTION_TIMEOUT_MS = 4000;
 const DUPLICATE_KEY_ERROR_CODE = 11000;
+const NAMESPACE_EXISTS_ERROR_CODE = 48;
 const BACKUP_UNAVAILABLE_MESSAGE = 'Respaldo no disponible por ahora.';
 
 /** Errores del controlador que significan "MongoDB no responde", a diferencia de un error en los datos. */
@@ -48,10 +51,25 @@ const toUpsertOperation = (userId, record) => ({
   },
 });
 
-/** Conecta y prepara los índices. Devuelve la colección, o null si no se pudo conectar. */
+/** Crea la colección con su validador $jsonSchema, o se lo pone si ya existía (ver backupRecordSchema.js). */
+async function applySchemaValidator(db) {
+  const validation = { validator: { $jsonSchema: backupRecordSchema }, validationLevel: 'strict' };
+  const updateExisting = () => db.command({ collMod: COLLECTION_NAME, ...validation });
+  const [existing] = await db.listCollections({ name: COLLECTION_NAME }, { nameOnly: true }).toArray();
+  if (existing) return updateExisting();
+  try {
+    return await db.createCollection(COLLECTION_NAME, validation);
+  } catch (error) {
+    if (error.code !== NAMESPACE_EXISTS_ERROR_CODE) throw error;
+    return updateExisting(); // otro proceso la creó justo antes
+  }
+}
+
+/** Conecta y prepara el validador y los índices. Devuelve la colección, o null si no se pudo conectar. */
 async function connectToCollection(client, log) {
   try {
     await client.connect();
+    await applySchemaValidator(client.db());
     const collection = client.db().collection(COLLECTION_NAME);
     await collection.createIndex({ userId: 1, kind: 1, id: 1 }, { unique: true });
     await collection.createIndex({ userId: 1, serverSequence: 1 });

@@ -33,6 +33,22 @@ export const MAX_CHANGES_PER_REQUEST = 500;
 /** Máximo de registros que el servidor devuelve en una respuesta. Si hay más, `hasMore` es true. */
 export const MAX_RECORDS_PER_RESPONSE = 1000;
 
+/** Forma de un id de registro (id del movimiento o de la regla, o nombre del ajuste). */
+export const RECORD_ID_PATTERN = '^[A-Za-z0-9_\\- .*:@]{1,120}$';
+
+/** Largo máximo de cada texto de un registro. La API recorta a estos largos y MongoDB los valida. */
+export const MAX_TEXT_LENGTH = Object.freeze({
+  DEFAULT: 200,
+  DATE: 40,
+  COUNTERPARTY: 120,
+  CATEGORY: 30,
+  CATEGORY_ORIGIN: 40,
+  BANK: 20,
+  MAIL_KEY: 300,
+  NOTE: 300,
+  SETTING_TEXT: 2000,
+});
+
 /**
  * Un registro tal como viaja por la red.
  *

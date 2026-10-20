@@ -20,6 +20,7 @@
     "bench": "node scripts/bench-parser.mjs",
     "bench:fx": "node --env-file-if-exists=.env scripts/bench-fx.mjs",
     "dataset": "node scripts/dataset.mjs",
+    "seed:mongo": "node --env-file-if-exists=.env scripts/seed-mongo.mjs",
     "anomalias": "node scripts/anomalies.mjs",
     "issues": "node scripts/create-issues.mjs"
   },
