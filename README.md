@@ -121,6 +121,7 @@ npm test             # lector, SQLite local, casos de uso, interfaz React, contr
 npm run check        # lint, formato, pruebas y compilación (lo mismo que corre el CI)
 npm run bench        # precisión del lector y tiempos de SQLite con 2000 correos sintéticos
 npm run dataset -- 50 > correos.json   # dataset sintético reproducible
+npm run seed:mongo -- 200 7            # carga ese dataset en el respaldo de MongoDB (usa MONGO_URL del .env)
 ```
 
 \* Las pruebas de Redis y MongoDB reales se ejecutan cuando existen `REDIS_URL` y `MONGO_URL` (GitHub Actions las levanta como servicios).

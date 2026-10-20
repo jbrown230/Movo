@@ -27,6 +27,9 @@ Núcleo funcional: más bancos reales, funciones para revisar y exportar los mov
 
 ### Servidor y mediciones
 
+- **Validación con JSON Schema en MongoDB.** La colección `backup_records` tiene un validador `$jsonSchema` que se aplica al conectar: exige la envoltura completa y la forma de `data` según el tipo, con los mismos valores permitidos y largos máximos que la API (`shared/backupContract.js`). Un documento mal formado se rechaza aunque no pase por la API.
+- **Script de carga en MongoDB.** `npm run seed:mongo -- <cantidad> <semilla> [usuario]` carga correos sintéticos por el mismo camino que los reales: lector, sincronización, validación y caso de uso del servidor. Borra antes lo de esa persona, así la misma semilla deja siempre los mismos movimientos.
+- **`.env.example` completo.** Agrega `MONGO_URL`, `REDIS_URL`, `PORT`, `SERVE_STATIC` y `API_URL`, con qué valor usar en Docker, en desarrollo y con Atlas.
 - **Servidor más resistente a caídas de MongoDB.** Si MongoDB se cae con la API andando, el respaldo responde 503 "Respaldo no disponible por ahora." en vez de 500 "Error interno.", y la app lo muestra tal cual. Si MongoDB estaba caído al arrancar, el respaldo se reconecta solo cuando vuelve, sin reiniciar la API. Pruebas con caídas reales de Redis y MongoDB a mitad de ejecución (`server/test/adapters/outages.test.js`). (#18)
 - **Medición del efecto de Redis en el tipo de cambio.** `npm run bench:fx` (`scripts/bench-fx.mjs`) mide 200 solicitudes a `/api/fx` sin caché, con caché en memoria y con Redis. Resultados y conclusión en `docs/MEDICIONES.md`: la caché baja la mediana de 694 ms a menos de 3 ms, Redis y la memoria rinden casi igual, y sin caché el BCCR rechaza las ráfagas por su límite de unas 40 consultas por minuto. (#19)
 

@@ -10,24 +10,14 @@ import {
   ALLOWED_TRANSACTION_TYPES,
   CHANGE_LIST_NAMES,
   MAX_CHANGES_PER_REQUEST,
+  MAX_TEXT_LENGTH as MaxLength,
+  RECORD_ID_PATTERN as RECORD_ID_SOURCE,
   RECORD_KIND_BY_LIST,
   SYNCED_SETTING_NAMES,
 } from '../../../../shared/backupContract.js';
 import { InvalidRequestError } from '../../application/errors.js';
 
-const RECORD_ID_PATTERN = /^[A-Za-z0-9_\- .*:@]{1,120}$/;
-
-const MaxLength = Object.freeze({
-  DEFAULT: 200,
-  DATE: 40,
-  COUNTERPARTY: 120,
-  CATEGORY: 30,
-  CATEGORY_ORIGIN: 40,
-  BANK: 20,
-  MAIL_KEY: 300,
-  NOTE: 300,
-  SETTING_TEXT: 2000,
-});
+const RECORD_ID_PATTERN = new RegExp(RECORD_ID_SOURCE);
 
 const DEFAULT_CATEGORY = 'otros';
 const DEFAULT_TRANSACTION_TYPE = 'transferencia';

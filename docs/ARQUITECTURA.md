@@ -152,6 +152,8 @@ Una colección `backup_records` con documentos `{ userId, kind, id, updatedAt, s
 - `kind` dice qué es el registro: `transaction`, `category_rule` o `setting`.
 - `data` trae el contenido del registro tal como lo envió el teléfono, ya validado contra una lista blanca.
 - Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización.
+- **Validador `$jsonSchema`** (`server/src/adapters/mongo/backupRecordSchema.js`), que se aplica al conectar: exige la envoltura completa y sin campos de más, y la forma de `data` según `kind` (monedas, tipos y direcciones permitidos, largos máximos, y solo los ajustes que se sincronizan). Se arma con los mismos valores de `shared/backupContract.js` que usa la API, así las dos validaciones no pueden contradecirse. MongoDB rechaza un documento que no cumple (error 121) aunque llegue sin pasar por la API.
+- **Carga de datos de prueba:** `npm run seed:mongo -- <cantidad> <semilla> [usuario]` carga correos sintéticos reproducibles por el mismo camino que los reales (lector, sincronización, validación de la API y caso de uso del servidor). La URI sale solo de `MONGO_URL` en el `.env`.
 
 ### Decisión: un documento por registro, con el contenido embebido
 
@@ -171,7 +173,7 @@ Lo que se gana con un documento por registro:
 - **Separación por usuario simple.** Toda consulta filtra por `userId`, y borrar los datos de una persona es un `deleteMany` con ese filtro.
 - **Esquema flexible donde conviene.** Los tres tipos de registro comparten la misma envoltura y solo cambia `data`, así que agregar un tipo no exige otra colección.
 
-El costo es que `userId` y `kind` se repiten en cada documento, y que MongoDB no valida la forma de `data`: esa validación la hace la capa HTTP antes de guardar.
+El costo es que `userId` y `kind` se repiten en cada documento, y que la forma de `data` cambia según el tipo. Por eso se valida dos veces: la capa HTTP limpia lo que llega, y el validador `$jsonSchema` de la colección rechaza lo que no cumple.
 
 ### Local o Atlas
 

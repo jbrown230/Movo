@@ -4,22 +4,43 @@
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createInMemoryBackupStore } from '../../src/adapters/memory/InMemoryBackupStore.js';
+import { MongoClient } from 'mongodb';
 import { createMongoBackupStore } from '../../src/adapters/mongo/MongoBackupStore.js';
 
 const mongoUrl = process.env.MONGO_URL;
 
-function freshMongoStore() {
+let testDatabaseCount = 0;
+/** Una base de datos de prueba distinta en cada llamada. */
+function freshMongoUrl() {
   const url = new URL(mongoUrl);
-  url.pathname = '/movo_test_' + Date.now(); // una base de datos de prueba distinta en cada corrida
-  return createMongoBackupStore(url.toString(), {});
+  url.pathname = `/movo_test_${Date.now()}_${++testDatabaseCount}`;
+  return url.toString();
 }
+const freshMongoStore = () => createMongoBackupStore(freshMongoUrl(), {});
+
+/** Un movimiento completo, tal como lo deja la API después de validarlo. */
+const transactionData = (category) => ({
+  date: '2026-10-15T15:00:00.000Z',
+  amountCents: 290000,
+  currency: 'CRC',
+  crcCents: 290000,
+  exchangeRate: null,
+  counterparty: 'CAFE CORDILLERA',
+  category,
+  categoryOrigin: null,
+  type: 'tarjeta',
+  direction: 'out',
+  bank: 'BAC',
+  mailKey: null,
+  note: null,
+});
 
 const record = (id, updatedAt, category) => ({
   kind: 'transaction',
   id,
   updatedAt,
   isDeleted: false,
-  data: { category },
+  data: transactionData(category),
 });
 
 function runContract(createStore) {
@@ -86,3 +107,67 @@ function runContract(createStore) {
 
 describe('almacén en memoria', () => runContract(createInMemoryBackupStore));
 describe('almacén MongoDB', { skip: !mongoUrl && 'MONGO_URL no definido' }, () => runContract(freshMongoStore));
+
+describe('validador $jsonSchema de MongoDB', { skip: !mongoUrl && 'MONGO_URL no definido' }, () => {
+  /** Conecta el almacén (que pone el validador) y devuelve la colección cruda, sin pasar por la API. */
+  async function rawCollection(url = freshMongoUrl()) {
+    const store = createMongoBackupStore(url, {});
+    assert.equal(await store.ping(), true);
+    const client = await new MongoClient(url).connect();
+    const close = async () => {
+      await client.db().dropDatabase();
+      await Promise.all([client.close(), store.close()]);
+    };
+    return { collection: client.db().collection('backup_records'), close };
+  }
+  const document = (overrides) => ({
+    userId: 'ana',
+    kind: 'transaction',
+    id: 'm1',
+    updatedAt: 1,
+    serverSequence: 1,
+    isDeleted: false,
+    data: transactionData('super'),
+    ...overrides,
+  });
+  const rejected = { code: 121 }; // Document failed validation
+
+  test('acepta un registro bien formado', async () => {
+    const { collection, close } = await rawCollection();
+    await collection.insertOne(document({}));
+    await collection.insertOne(document({ kind: 'setting', id: 'budget', data: { value: 40000000 } }));
+    await collection.insertOne(
+      document({ kind: 'category_rule', id: 'CAFE', data: { counterpartyKey: 'CAFE', category: 'comida' } }),
+    );
+    assert.equal(await collection.countDocuments(), 3);
+    await close();
+  });
+
+  test('rechaza lo mal formado aunque no pase por la API', async () => {
+    const { collection, close } = await rawCollection();
+    const invalidDocuments = [
+      document({ data: { category: 'super' } }), // faltan campos del movimiento
+      document({ data: { ...transactionData('super'), currency: 'BTC' } }), // moneda no permitida
+      document({ data: { ...transactionData('super'), $where: 'x' } }), // campo de más
+      document({ kind: 'cualquiera' }),
+      document({ id: 'id/con/barras' }),
+      document({ updatedAt: 'ayer' }),
+      document({ kind: 'setting', id: 'clave_secreta', data: { value: 1 } }), // ajuste que no se sincroniza
+      { ...document({}), extra: true },
+    ];
+    for (const invalid of invalidDocuments) await assert.rejects(collection.insertOne(invalid), rejected);
+    assert.equal(await collection.countDocuments(), 0);
+    await close();
+  });
+
+  test('también se aplica a una colección que ya existía sin validador', async () => {
+    const url = freshMongoUrl();
+    const setup = await new MongoClient(url).connect();
+    await setup.db().createCollection('backup_records');
+    await setup.close();
+
+    const { collection, close } = await rawCollection(url);
+    await assert.rejects(collection.insertOne(document({ data: {} })), rejected);
+    await close();
+  });
+});

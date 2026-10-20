@@ -119,7 +119,8 @@ const SERVER = {
     application: { mayImport: ['domain', 'shared'], packages: ['node:crypto'] },
     // Cada adaptador conoce lo que implementa y nada más: ninguno importa a otro adaptador.
     'adapters/http': { mayImport: ['domain', 'application', 'shared'], packages: ['express'] },
-    'adapters/mongo': { mayImport: ['domain', 'application'], packages: ['mongodb'] },
+    // Lee el contrato para armar el validador $jsonSchema con los mismos valores permitidos que la API.
+    'adapters/mongo': { mayImport: ['domain', 'application', 'shared'], packages: ['mongodb'] },
     'adapters/memory': { mayImport: ['domain'], packages: [] },
     'adapters/cache': { mayImport: [], packages: ['redis'] },
     'adapters/bccr': { mayImport: [], packages: [] },
