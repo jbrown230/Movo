@@ -62,9 +62,10 @@ El `CHANGELOG.md` describe la v0.1.0 pero el repositorio no tiene tags ni releas
 
 ### 16. Endurecer el servidor ante caídas de Redis y Mongo · 2 pts
 `backend`, `tests` · Hito: Publicación
-- [ ] Prueba de que la API responde (sin caché) si Redis se cae a mitad de ejecución.
-- [ ] Prueba de que el respaldo falla con mensaje claro y la app local sigue funcionando si Mongo no responde.
-- [ ] Registrar los resultados en la tabla de fallas de `docs/ARQUITECTURA.md`.
+Estado: hecho, issue de GitHub #18 (rama `18-endurecer-el-servidor-ante-caidas-de-redis-y-mongo`). Tomada por Dylan.
+- [x] Prueba de que la API responde (sin caché) si Redis se cae a mitad de ejecución (`server/test/adapters/outages.test.js`, con un intermediario TCP que corta la conexión real).
+- [x] Prueba de que el respaldo falla con mensaje claro y la app local sigue funcionando si Mongo no responde. La prueba encontró dos fallas que se corrigieron: con Mongo caído a mitad de ejecución el respaldo respondía 500 "Error interno." (ahora 503 "Respaldo no disponible por ahora."), y si Mongo estaba caído al arrancar no se recuperaba sin reiniciar la API (ahora se reconecta solo).
+- [x] Registrar los resultados en la tabla de fallas de `docs/ARQUITECTURA.md`.
 
 ### 17. Medir el efecto de Redis en el tipo de cambio · 2 pts
 `tests`, `investigación` · Hito: Mediciones

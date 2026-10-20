@@ -3,14 +3,24 @@
 // Una sola colección, "backup_records". Cada documento es:
 //   { userId, kind, id, updatedAt, serverSequence, isDeleted, data }
 // y TODA consulta lleva `userId` en el filtro, así los datos de cada persona quedan separados.
+//
+// Si MongoDB no responde, cada operación falla con ServiceUnavailableError (503 y un mensaje claro), nunca
+// con un error interno. Si estaba caído al arrancar, se vuelve a intentar la conexión en el siguiente pedido.
 
-import { MongoClient } from 'mongodb';
+import { MongoClient, MongoNetworkError, MongoServerSelectionError } from 'mongodb';
 import { ServiceUnavailableError } from '../../application/errors.js';
 import { nextServerSequence } from '../../domain/backupRecord.js';
 
 const COLLECTION_NAME = 'backup_records';
 const CONNECTION_TIMEOUT_MS = 4000;
 const DUPLICATE_KEY_ERROR_CODE = 11000;
+const BACKUP_UNAVAILABLE_MESSAGE = 'Respaldo no disponible por ahora.';
+
+/** Errores del controlador que significan "MongoDB no responde", a diferencia de un error en los datos. */
+const isConnectionError = (error) =>
+  error instanceof MongoNetworkError ||
+  error instanceof MongoServerSelectionError ||
+  ['MongoNotConnectedError', 'MongoTopologyClosedError'].includes(error?.name);
 
 /** E11000 = ya existe una versión más nueva de ese registro: se ignora a propósito. */
 function isOnlyDuplicateKeyErrors(error) {
@@ -60,37 +70,55 @@ async function connectToCollection(client, log) {
  */
 export function createMongoBackupStore(url, log = console) {
   const client = new MongoClient(url, { serverSelectionTimeoutMS: CONNECTION_TIMEOUT_MS });
-  const connection = connectToCollection(client, log);
+  let connection = connectToCollection(client, log); // se intenta al arrancar, para avisar pronto si falla
 
   async function collection() {
+    connection ??= connectToCollection(client, log);
     const connected = await connection;
-    if (!connected) throw new ServiceUnavailableError('Respaldo no disponible por ahora.');
+    if (!connected) {
+      connection = null; // el próximo pedido vuelve a intentar: MongoDB puede haber vuelto
+      throw new ServiceUnavailableError(BACKUP_UNAVAILABLE_MESSAGE);
+    }
     return connected;
+  }
+
+  /** Corre una operación sobre la colección; si MongoDB no responde, falla con 503 y un mensaje claro. */
+  async function withCollection(operation) {
+    try {
+      return await operation(await collection());
+    } catch (error) {
+      if (isConnectionError(error)) throw new ServiceUnavailableError(BACKUP_UNAVAILABLE_MESSAGE);
+      throw error;
+    }
   }
 
   return {
     async saveChanges(userId, changes) {
       if (!changes.length) return 0;
       const operations = changes.map((record) => toUpsertOperation(userId, record));
-      try {
-        const result = await (await collection()).bulkWrite(operations, { ordered: false });
-        return result.upsertedCount + result.modifiedCount;
-      } catch (error) {
-        if (!isOnlyDuplicateKeyErrors(error)) throw error;
-        return (error.result?.upsertedCount || 0) + (error.result?.modifiedCount || 0);
-      }
+      return withCollection(async (records) => {
+        try {
+          const result = await records.bulkWrite(operations, { ordered: false });
+          return result.upsertedCount + result.modifiedCount;
+        } catch (error) {
+          if (!isOnlyDuplicateKeyErrors(error)) throw error;
+          return (error.result?.upsertedCount || 0) + (error.result?.modifiedCount || 0);
+        }
+      });
     },
 
-    async findChangesAfter(userId, cursor, limit) {
-      return (await collection())
-        .find({ userId, serverSequence: { $gt: cursor } }, { projection: { _id: 0, userId: 0 } })
-        .sort({ serverSequence: 1 })
-        .limit(limit)
-        .toArray();
+    findChangesAfter(userId, cursor, limit) {
+      return withCollection((records) =>
+        records
+          .find({ userId, serverSequence: { $gt: cursor } }, { projection: { _id: 0, userId: 0 } })
+          .sort({ serverSequence: 1 })
+          .limit(limit)
+          .toArray(),
+      );
     },
 
-    async deleteAll(userId) {
-      return (await (await collection()).deleteMany({ userId })).deletedCount;
+    deleteAll(userId) {
+      return withCollection(async (records) => (await records.deleteMany({ userId })).deletedCount);
     },
 
     async ping() {

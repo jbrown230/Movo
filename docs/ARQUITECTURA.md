@@ -209,13 +209,16 @@ En el servidor, el usuario sale únicamente del token de Google, validado contra
 
 | Escenario | Qué pasa |
 |---|---|
-| Redis se cae | La caché pasa a memoria del proceso; todo sigue funcionando, con más consultas a Google y al BCCR |
-| MongoDB no responde | `/api/sync` responde 503; la app sigue con SQLite y reintenta después |
+| Redis se cae a mitad de ejecución | La caché pasa a la memoria del proceso y la API sigue respondiendo sin esperas: en la prueba, cinco solicitudes seguidas al tipo de cambio respondieron bien en menos de 1 s cada una, consultando la fuente una sola vez más. `/api/health` pasa a decir `redis: false`. Se pierden la caché compartida y el conteo del límite por minuto entre procesos hasta que Redis vuelve |
+| MongoDB se cae a mitad de ejecución | `/api/sync` y `DELETE /api/me` responden 503 con "Respaldo no disponible por ahora." después de unos 4 s (el tiempo de espera del controlador); antes respondían 500 "Error interno." `/api/health` dice `mongo: false` y el resto de la API sigue funcionando. La app muestra "No se pudo sincronizar: Respaldo no disponible por ahora.", sigue con SQLite y deja los cambios pendientes para el próximo intento |
+| MongoDB caído al arrancar la API | El respaldo responde 503 mientras no esté, y se reconecta solo cuando vuelve, sin reiniciar la API. Antes quedaba sin respaldo hasta reiniciarla |
 | Sin Internet | La PWA abre desde el service worker; se puede registrar efectivo y ver todo lo leído |
 | Correo con formato desconocido | Queda como "Sin movimiento", visible en la bandeja, y se puede registrar a mano; se relee solo cuando sube `PARSER_VERSION` |
 | Transacción negada por el banco | No se registra; el correo queda como "Negada por el banco" con el detalle |
 | Vence el token de Google | La app muestra "Reconectar Gmail"; la reconexión es silenciosa si la sesión de Google sigue activa |
 | BCCR no responde | Se usa el último valor conocido o `FX_FALLBACK` |
+
+Las caídas de Redis y MongoDB se prueban de verdad, no con dobles: `server/test/adapters/outages.test.js` pone un intermediario TCP entre la API y el servicio real y lo corta a mitad de la prueba (corre en el CI, que tiene Redis y MongoDB). Lo que pasa en la app está en `tests/application/backupAndNetwork.test.js`.
 
 ## Qué medimos
 
