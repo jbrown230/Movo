@@ -60,6 +60,8 @@ const FIXTURES = filesIn('tests/fixtures');
 const ALLOWED_EMAIL_DOMAINS = [
   'bancobcr.com', // direcciones públicas del banco (remitente de las notificaciones)
   'bncr.fi.cr', // remitente público de los vouchers del Banco Nacional
+  'baccredomatic.cr', // remitente de notificaciones de BAC Credomatic
+  'baccredomatic.com',
   'bancobcr.demo',
   'bac.demo',
   'bn.demo', // remitentes del modo demo
@@ -71,6 +73,9 @@ const PUBLIC_BANK_NUMBERS = [
   '50622111135',
   '22078600', // centro de tarjetas del Banco Nacional
   '22122000', // centro de llamadas del Banco Nacional
+  '87429595', // WhatsApp público del BAC
+  '50687429595',
+  '22959797', // teléfono público del BAC
 ];
 const FAKE_NAMES = new Set([
   'CLIENTE DE PRUEBA',

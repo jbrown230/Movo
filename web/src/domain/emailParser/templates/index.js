@@ -3,6 +3,8 @@
 
 import { parseBcrSinpe } from './bcrSinpe.js';
 import { parseBcrCard } from './bcrCard.js';
+import { parseBacCard } from './bacCard.js';
+import { parseBacSinpe } from './bacSinpe.js';
 import { parseBnVoucher } from './bnVoucher.js';
 import { parseBacSynthetic, parseBnSynthetic } from './syntheticBanks.js';
 
@@ -17,6 +19,8 @@ import { parseBacSynthetic, parseBnSynthetic } from './syntheticBanks.js';
 export const TEMPLATES = [
   { bank: 'BCR', name: 'BCR SINPE', parse: parseBcrSinpe },
   { bank: 'BCR', name: 'BCR tarjeta', parse: parseBcrCard },
+  { bank: 'BAC', name: 'BAC tarjeta', parse: parseBacCard },
+  { bank: 'BAC', name: 'BAC SINPE', parse: parseBacSinpe },
   { bank: 'BAC', name: 'BAC (demo)', parse: parseBacSynthetic },
   { bank: 'BN', name: 'BN voucher', parse: parseBnVoucher },
   { bank: 'BN', name: 'BN SINPE (demo)', parse: parseBnSynthetic },

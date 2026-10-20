@@ -8,6 +8,14 @@ import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
 import { BCR_SINPE_ENVIADO, BCR_SINPE_RECIBIDO, BCR_SINPE_PROPIO, BCR_TARJETA_NEGADA } from '../fixtures/bcrMails.js';
 import { BN_VOUCHER_COMPRA, BN_VOUCHER_COMPRA_TEXTO_PLANO } from '../fixtures/bnMails.js';
+import {
+  BAC_COMPRA_APROBADA,
+  BAC_COMPRA_TEXTO_PLANO,
+  BAC_COMPRA_DOLARES,
+  BAC_TARJETA_NEGADA,
+  BAC_SINPE_RECIBIDO,
+  BAC_SINPE_ENVIADO,
+} from '../fixtures/bacMails.js';
 
 test('parseAmount entiende formatos de Costa Rica y de EE. UU.', () => {
   assert.equal(parseAmount('15,000.00'), 15000);
@@ -189,6 +197,100 @@ test('BN: un correo del banco sin comprobante no genera movimiento', () => {
   const body =
     'Estimado señor(a): CLIENTE DE PRUEBA\nReciba un cordial saludo de parte del Banco Nacional.\nTOTAL: CRC 3500,00';
   assert.equal(parseMail({ ...BN_VOUCHER_COMPRA, body }).ok, false);
+});
+
+// ---- Formatos de BAC Credomatic ----
+
+test('BAC: compra con tarjeta aprobada', () => {
+  const parsed = parseFirstApproved(BAC_COMPRA_APROBADA);
+  assert.equal(parsed.template, 'BAC tarjeta');
+  assert.equal(parsed.bank, 'BAC');
+  assert.equal(parsed.type, 'tarjeta');
+  assert.equal(parsed.direction, 'out');
+  assert.equal(parsed.currency, 'CRC');
+  assert.equal(parsed.amountCents, 1500000);
+  assert.equal(parsed.counterparty, 'SUPERMERCADO DE PRUEBA');
+  assert.equal(parsed.date, costaRicaIso(2026, 10, 18, 19, 15));
+  assert.equal(parsed.note, 'Tarjeta ****0000');
+  assert.equal(
+    categorize({ counterparty: parsed.counterparty, type: parsed.type, direction: parsed.direction }).category,
+    'super',
+  );
+});
+
+test('BAC: la versión en texto plano de la compra con tarjeta da el mismo resultado', () => {
+  const fromTabs = parseFirstApproved(BAC_COMPRA_APROBADA);
+  const fromPlainText = parseFirstApproved(BAC_COMPRA_TEXTO_PLANO);
+  assert.deepEqual(fromPlainText, fromTabs);
+});
+
+test('BAC: compra con tarjeta en dólares', () => {
+  const parsed = parseFirstApproved(BAC_COMPRA_DOLARES);
+  assert.equal(parsed.currency, 'USD');
+  assert.equal(parsed.amountCents, 2000);
+  assert.equal(parsed.counterparty, 'SERVICIO DIGITAL SUB 00000000000 US');
+  assert.equal(parsed.date, costaRicaIso(2026, 1, 15, 9, 0));
+  assert.equal(parsed.note, 'Tarjeta ****0000');
+});
+
+test('BAC: una compra con tarjeta rechazada queda marcada como negada', () => {
+  const result = parseMail(BAC_TARJETA_NEGADA);
+  assert.equal(result.template, 'BAC tarjeta');
+  assert.equal(result.items.length, 1);
+
+  const [item] = result.items;
+  assert.equal(item.declined, true);
+  assert.equal(item.status, 'COMPRA RECHAZADA');
+  assert.equal(item.currency, 'CRC');
+  assert.equal(item.amountCents, 1500000);
+  assert.equal(item.counterparty, 'SUPERMERCADO DE PRUEBA');
+  assert.equal(item.date, costaRicaIso(2026, 10, 18, 19, 15));
+  assert.equal(item.note, 'Tarjeta ****0000');
+});
+
+test('BAC: SINPE recibido se lee como ingreso', () => {
+  const parsed = parseFirstApproved(BAC_SINPE_RECIBIDO);
+  assert.equal(parsed.template, 'BAC SINPE');
+  assert.equal(parsed.bank, 'BAC');
+  assert.equal(parsed.type, 'sinpe');
+  assert.equal(parsed.direction, 'in');
+  assert.equal(parsed.currency, 'CRC');
+  assert.equal(parsed.amountCents, 1000000);
+  assert.equal(parsed.date, costaRicaIso(2026, 1, 15, 14, 31, 22));
+  assert.match(parsed.note, /Motivo: prueba SINPE/);
+  assert.match(parsed.note, /Cuenta \*\*\*\*0000/);
+  assert.equal(
+    categorize({ counterparty: parsed.counterparty, type: parsed.type, direction: parsed.direction }).category,
+    'ingreso',
+  );
+});
+
+test('BAC: SINPE enviado se lee como gasto', () => {
+  const parsed = parseFirstApproved(BAC_SINPE_ENVIADO);
+  assert.equal(parsed.template, 'BAC SINPE');
+  assert.equal(parsed.bank, 'BAC');
+  assert.equal(parsed.type, 'sinpe');
+  assert.equal(parsed.direction, 'out');
+  assert.equal(parsed.currency, 'CRC');
+  assert.equal(parsed.amountCents, 500000);
+  assert.equal(parsed.date, costaRicaIso(2026, 1, 16, 12, 45, 10));
+  assert.match(parsed.note, /Motivo: pago almuerzo/);
+  assert.match(parsed.note, /Cuenta \*\*\*\*0000/);
+  assert.equal(
+    categorize({ counterparty: parsed.counterparty, type: parsed.type, direction: parsed.direction }).category,
+    'transfer',
+  );
+});
+
+test('BAC: se reconoce por el texto aunque el remitente no sea del banco', () => {
+  const parsed = parseFirstApproved({ ...BAC_COMPRA_APROBADA, from: 'Yo <yo@correo.example>' });
+  assert.equal(parsed.bank, 'BAC');
+  assert.equal(parsed.amountCents, 1500000);
+});
+
+test('BAC: un correo del banco sin comprobante ni movimiento no genera movimiento', () => {
+  const body = 'Hola CLIENTE DE PRUEBA\nConozca más de nuestras promociones ingresando a https://www.baccredomatic.com';
+  assert.equal(parseMail({ from: 'BAC Credomatic <notificaciones@baccredomatic.cr>', body }).ok, false);
 });
 
 test('el remitente manda sobre la plantilla para decidir el banco', () => {

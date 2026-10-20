@@ -143,9 +143,9 @@ Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh
 
 ### 22. Plantilla real de BAC · 3 pts
 `parser` · Hito: Más bancos
-- [ ] Descargar con "Mostrar original" notificaciones reales de BAC (tarjeta y SINPE).
-- [ ] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bac-html/`.
-- [ ] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
+- [x] Descargar con "Mostrar original" notificaciones reales de BAC (tarjeta y SINPE).
+- [x] Anonimizar (ver `docs/CONTRIBUIR.md`) y guardar en `tests/fixtures/bac-html/`.
+- [x] Escribir la plantilla en `web/src/domain/emailParser/templates/` y sus pruebas en `tests/domain`, siguiendo el modelo del BCR.
 - [ ] Reemplazar las plantillas sintéticas de BAC en la demo y el benchmark.
 
 ### 23. Alertas de presupuesto · 2 pts
@@ -162,15 +162,15 @@ Estado: hecho, issue de GitHub #38 (rama `38-script-para-crear-los-issues-con-gh
 
 ### 25. Accesibilidad y revisión en iPhone · 2 pts
 `frontend`, `bug` · Hito: Funciones de usuario
-- [ ] Revisar contraste, tamaños táctiles y etiquetas en modo claro y oscuro.
-- [ ] Documentar o resolver el inicio de sesión en la PWA instalada en iPhone.
-- [ ] Actualizar capturas en `docs/capturas/` si cambia la interfaz.
+- [x] Revisar contraste, tamaños táctiles y etiquetas en modo claro y oscuro.
+- [x] Documentar o resolver el inicio de sesión en la PWA instalada en iPhone.
+- [x] Actualizar capturas en `docs/capturas/` si cambia la interfaz.
 
 ### 26. Probar la instalación desde cero · 1 pt
 `docs`, `tests` · Hito: Publicación
-- [ ] Clonar en una máquina limpia y seguir solo el README (`npm install`, `npm run dev`).
-- [ ] Levantar con `docker compose up` usando `.env.example`.
-- [ ] Corregir cualquier paso del README o de `docs/DESPLIEGUE.md` que falle.
+- [x] Clonar en una máquina limpia y seguir solo el README (`npm install`, `npm run dev`).
+- [x] Levantar con `docker compose up` usando `.env.example`.
+- [x] Corregir cualquier paso del README o de `docs/DESPLIEGUE.md` que falle.
 
 ---
 
