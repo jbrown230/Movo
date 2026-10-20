@@ -16,3 +16,4 @@ export {
   ThemePreference,
 } from '../infrastructure/browser/themePreference.js';
 export { DEMO_PROFILE, loadProfile, saveProfile } from '../infrastructure/browser/profileStorage.js';
+export { downloadTextFile } from '../infrastructure/browser/downloadFile.js';

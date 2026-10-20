@@ -6,6 +6,7 @@ import { useThemePreference } from '../hooks/useThemePreference.js';
 import { shortWhen } from '../format/dates.js';
 import { formatColonesShort } from '../format/money.js';
 import { useConfirm } from '../modals/ConfirmModal.jsx';
+import { ExportSettings } from '../modals/ExportModal.jsx';
 import { BudgetModal, GmailQueryModal } from '../modals/SimpleModals.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
@@ -281,6 +282,7 @@ export function SettingsScreen() {
   const { openModal } = useModal();
   const { budgetCents, exchangeRate, euroExchangeRate, exchangeRateInfo } = useAppData();
 
+  const euroRateText = euroExchangeRate ? `₡${euroExchangeRate.toFixed(2)}` : 'Sin dato';
   const exchangeRateSource = exchangeRateInfo?.source
     ? `Fuente: ${exchangeRateInfo.source}${exchangeRateInfo.date ? ', ' + exchangeRateInfo.date : ''}`
     : 'Valor de referencia hasta conectar con el servidor.';
@@ -299,13 +301,11 @@ export function SettingsScreen() {
             onClick={() => openModal(<BudgetModal />)}
           />
           <Row label="Tipo de cambio del dólar" value={`₡${exchangeRate.toFixed(2)}`} />
-          <Row
-            label="Tipo de cambio del euro"
-            value={euroExchangeRate ? `₡${euroExchangeRate.toFixed(2)}` : 'Sin dato'}
-          />
+          <Row label="Tipo de cambio del euro" value={euroRateText} />
           <p className="hint">{exchangeRateSource}</p>
         </div>
 
+        <ExportSettings />
         <AppearanceSettings />
 
         {profile.demo ? (

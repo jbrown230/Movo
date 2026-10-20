@@ -103,9 +103,10 @@ Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos t
 
 ### 21. Exportar movimientos a CSV · 2 pts
 `frontend` · Hito: Funciones de usuario
-- [ ] Botón en Ajustes que descarga los movimientos del rango elegido.
-- [ ] Columnas: fecha, comercio, monto, moneda, categoría, tipo, banco.
-- [ ] Compatible con Excel (UTF-8 con BOM, separador configurable) y prueba del formato (comillas, comas y tildes).
+Estado: hecho, issue de GitHub #23 (rama `23-exportar-movimientos-a-csv`).
+- [x] Botón en Ajustes que descarga los movimientos del rango elegido (por defecto, lo que va del mes; una fecha vacía no pone límite). El archivo se arma en el teléfono.
+- [x] Columnas: fecha, comercio, monto, moneda, categoría, tipo, banco. Se agregaron "Monto en colones" (para compras en dólares o euros) y "Medio" (SINPE, tarjeta, transferencia o efectivo).
+- [x] Compatible con Excel (UTF-8 con BOM, separador configurable) y prueba del formato (comillas, comas y tildes): punto y coma con coma decimal o coma con punto decimal; un comercio que parece fórmula se escribe con un apóstrofo delante (`tests/domain/csv.test.js` y `tests/application/exportTransactions.test.js`).
 
 ### 32. Ocultar el aviso "Modo demo: simula a tu banco" · 1 pt
 `frontend` · Hito: Funciones de usuario
