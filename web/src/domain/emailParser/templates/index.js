@@ -25,4 +25,3 @@ export const TEMPLATES = [
   { bank: 'BN', name: 'BN voucher', parse: parseBnVoucher },
   { bank: 'BN', name: 'BN SINPE (demo)', parse: parseBnSynthetic },
 ];
-  
