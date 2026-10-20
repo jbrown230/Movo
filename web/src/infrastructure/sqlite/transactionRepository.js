@@ -79,6 +79,21 @@ function sumByDirection(sql, direction, range) {
   ).total;
 }
 
+/**
+ * Filtros de la lista de movimientos y la condición SQL de cada uno.
+ * Un filtro vacío (null, undefined o '') no se aplica.
+ */
+const FILTER_CONDITIONS = [
+  ['from', 'occurred_at>=?'],
+  ['to', 'occurred_at<?'],
+  ['category', 'category=?'],
+  ['direction', 'direction=?'],
+  ['bank', 'bank=?'],
+  ['minCrcCents', 'amount_crc_cents>=?'],
+  ['maxCrcCents', 'amount_crc_cents<=?'],
+];
+const isActiveFilter = (value) => value !== null && value !== undefined && value !== '';
+
 /** Gastos por categoría, ingresos y dinero movido entre cuentas propias, dentro de un periodo. */
 function summarizeMonth(sql, range) {
   const byCategory = sql
@@ -110,9 +125,20 @@ export function createTransactionRepository(sql) {
       return sql.queryOne('SELECT id FROM transactions WHERE id=?', [id]) !== null;
     },
 
-    /** Los movimientos no eliminados, del más reciente al más antiguo. */
-    list(limit = 400) {
-      return selectMany('SELECT * FROM transactions WHERE is_deleted=0 ORDER BY occurred_at DESC LIMIT ?', [limit]);
+    /**
+     * Los movimientos no eliminados que cumplen los filtros, del más reciente al más antiguo.
+     *
+     * @param {{ from?: string, to?: string, category?: string, direction?: string, bank?: string,
+     *           minCrcCents?: number, maxCrcCents?: number }} [filters]  Fechas ISO (desde incluida, hasta
+     *           excluida) y montos en céntimos de colones, ya convertidos si fueron en otra moneda.
+     */
+    list(filters = {}, limit = 400) {
+      const active = FILTER_CONDITIONS.filter(([name]) => isActiveFilter(filters[name]));
+      const where = ['is_deleted=0', ...active.map(([, condition]) => condition)].join(' AND ');
+      return selectMany(`SELECT * FROM transactions WHERE ${where} ORDER BY occurred_at DESC LIMIT ?`, [
+        ...active.map(([name]) => filters[name]),
+        limit,
+      ]);
     },
 
     listForMail(mailKey) {
