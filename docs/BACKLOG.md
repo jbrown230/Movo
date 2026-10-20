@@ -128,9 +128,10 @@ Estado: hecho, issue de GitHub #36 (rama `36-revisar-el-tipo-de-cambio`).
 
 ### 35. Vista propia para el filtrado de movimientos · 2 pts
 `frontend` · Hito: Funciones de usuario
-- [ ] Mover el filtrado de movimientos a una vista distinta a la del inicio.
-- [ ] Mantener los filtros elegidos al entrar y salir de la vista.
-- [ ] Prueba de la navegación y de los filtros.
+Estado: hecho, issue de GitHub #37 (rama `37-vista-propia-para-el-filtrado-de-movimientos`).
+- [x] Mover el filtrado de movimientos a una vista distinta a la del inicio. No había filtros: se creó la pestaña "Movimientos" con filtros por fecha (días completos), categoría, tipo, banco y monto (desde, hasta o un rango), en un panel plegable con "Aplicar", resueltos en la consulta a SQLite. El inicio muestra solo los últimos 5 movimientos y un enlace a todos; tocar una categoría abre sus movimientos del mes. La navegación de abajo pasó a ser un menú flotante con el ícono de la pantalla actual.
+- [x] Mantener los filtros elegidos al entrar y salir de la vista (mientras la app está abierta).
+- [x] Prueba de la navegación y de los filtros (`tests/application/searchTransactions.test.js` y `tests/presentation/app.test.jsx`).
 
 ### 36. Script para crear los issues con `gh` · 2 pts
 `infra`, `docs` · Hito: Publicación

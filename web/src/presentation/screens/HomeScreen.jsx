@@ -1,20 +1,18 @@
 import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
+import { TransactionList } from '../components/TransactionList.jsx';
 import { getCategory } from '../../domain/categories.js';
-import { displayName } from '../../domain/names.js';
-import { isForeignCurrency } from '../../domain/money.js';
-
+import { toDayString } from '../../domain/period.js';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
 import { useAppData } from '../hooks/useAppData.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
-import { dayLabel, monthName, timeLabel } from '../format/dates.js';
-import { formatColones, formatColonesShort, formatInCurrency, splitColonesDecimals } from '../format/money.js';
-import { amountClass, amountSign, describeTransaction } from '../format/transactionLabels.js';
+import { monthName } from '../format/dates.js';
+import { formatColonesShort, splitColonesDecimals } from '../format/money.js';
 import { CashModal, PasteModal } from '../modals/SimpleModals.jsx';
 import { PurchaseSimulatorModal, SinpeSimulatorModal } from '../modals/SimulatorModals.jsx';
-import { TransactionModal } from '../modals/TransactionModal.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
+import { NO_MOVEMENT_FILTERS } from '../state/movementFilters.js';
 import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
@@ -140,7 +138,22 @@ function BankSimulatorCard() {
   );
 }
 
+/** Cuántas categorías muestra el inicio: las de más gasto del mes. Las demás se filtran en Movimientos. */
+const TOP_CATEGORIES_ON_HOME = 2;
+
+/** Los filtros de lo que va del mes, opcionalmente de una sola categoría. */
+function monthFiltersFor(category = '') {
+  const today = new Date();
+  return {
+    ...NO_MOVEMENT_FILTERS,
+    category,
+    fromDay: toDayString(new Date(today.getFullYear(), today.getMonth(), 1)),
+    toDay: toDayString(today),
+  };
+}
+
 function CategoryCards({ summary }) {
+  const { showMovements } = useNavigation();
   if (!summary.byCategory.length)
     return (
       <div className="cats">
@@ -149,11 +162,17 @@ function CategoryCards({ summary }) {
     );
   return (
     <div className="cats">
-      {summary.byCategory.map((row) => {
+      {summary.byCategory.slice(0, TOP_CATEGORIES_ON_HOME).map((row) => {
         const { name, color } = getCategory(row.category);
         const share = summary.spentCents ? ((row.totalCents / summary.spentCents) * 100).toFixed(0) : 0;
         return (
-          <div className="cat" key={row.category}>
+          <button
+            type="button"
+            className="cat"
+            key={row.category}
+            aria-label={`${name}: ver sus movimientos del mes`}
+            onClick={() => showMovements(monthFiltersFor(row.category))}
+          >
             <CategoryIcon category={row.category} />
             <div>
               <div className="amt">{formatColonesShort(row.totalCents)}</div>
@@ -162,86 +181,32 @@ function CategoryCards({ summary }) {
             <div className="mini">
               <i style={{ width: `${share}%`, background: color }} />
             </div>
-          </div>
+          </button>
         );
       })}
+      {summary.byCategory.length > TOP_CATEGORIES_ON_HOME && (
+        <button
+          type="button"
+          className="ghost cats-more"
+          onClick={() => showMovements(monthFiltersFor(), { openFilters: true })}
+        >
+          Ver las {summary.byCategory.length} categorías en Movimientos
+        </button>
+      )}
     </div>
   );
 }
 
-/** Agrupa los movimientos por día ("Hoy", "Ayer", ...), conservando el orden. */
-function groupByDay(transactions) {
-  const groups = [];
-  for (const transaction of transactions) {
-    const label = dayLabel(transaction.date);
-    if (!groups.length || groups.at(-1).label !== label) groups.push({ label, items: [] });
-    groups.at(-1).items.push(transaction);
-  }
-  return groups;
-}
+/** Cuántos movimientos recientes muestra el inicio; la lista completa está en la vista de movimientos. */
+const RECENT_MOVEMENTS_ON_HOME = 5;
 
-function TransactionRow({ transaction, isHighlighted }) {
-  const { openModal } = useModal();
-  const isForeign = isForeignCurrency(transaction.currency);
-  // Un monto convertido desde dólares o euros casi nunca es redondo: se muestra con sus céntimos.
-  const formatAmount = isForeign ? formatColones : formatColonesShort;
-  return (
-    <button
-      type="button"
-      className={`tx${isHighlighted ? ' flash' : ''}`}
-      onClick={() => openModal(<TransactionModal transactionId={transaction.id} />)}
-    >
-      <CategoryIcon category={transaction.category} />
-      <span className="mid">
-        <div className="t1">{displayName(transaction.counterparty)}</div>
-        <div className="t2">{describeTransaction(transaction)}</div>
-      </span>
-      <span className="r">
-        <div className={amountClass(transaction)}>
-          {amountSign(transaction)}
-          {formatAmount(transaction.crcCents)}
-        </div>
-        <div className="a2">
-          {isForeign ? formatInCurrency(transaction.amountCents, transaction.currency) : timeLabel(transaction.date)}
-        </div>
-      </span>
-    </button>
-  );
-}
-
-function TransactionList({ transactions }) {
-  const { profile } = useSession();
-  const { flashTransactionId } = useNavigation();
-
-  if (!transactions.length) {
-    return (
-      <div className="empty">
-        {profile.demo
-          ? 'Usa el simulador de arriba para hacer un SINPE.'
-          : 'Cuando tu banco te envíe una notificación, aparecerá aquí sola.'}
-      </div>
-    );
-  }
-  return groupByDay(transactions).map((group) => (
-    <div className="group" key={group.label}>
-      <h3>{group.label}</h3>
-      {group.items.map((transaction) => (
-        <TransactionRow
-          key={transaction.id}
-          transaction={transaction}
-          isHighlighted={transaction.id === flashTransactionId}
-        />
-      ))}
-    </div>
-  ));
-}
-
-/** Pantalla de inicio: gasto del mes, categorías y lista de movimientos. */
+/** Pantalla de inicio: gasto del mes, categorías y los últimos movimientos. */
 export function HomeScreen() {
   const { profile } = useSession();
   const { scan } = useGmail();
   const showToast = useToast();
   const { summary, budgetCents, transactions } = useAppData();
+  const { showMovements } = useNavigation();
 
   const refreshInbox = () => {
     if (profile.demo) showToast('En el modo demo, usa el simulador para generar correos.');
@@ -276,10 +241,22 @@ export function HomeScreen() {
         </div>
         <CategoryCards summary={summary} />
         <div className="sec-h">
-          <h2>Movimientos</h2>
+          <h2>Últimos movimientos</h2>
           <span>{transactions.length ? `${transactions.length} en total` : ''}</span>
         </div>
-        <TransactionList transactions={transactions} />
+        <TransactionList
+          transactions={transactions.slice(0, RECENT_MOVEMENTS_ON_HOME)}
+          emptyText={
+            profile.demo
+              ? 'Usa el simulador de arriba para hacer un SINPE.'
+              : 'Cuando tu banco te envíe una notificación, aparecerá aquí sola.'
+          }
+        />
+        {transactions.length > RECENT_MOVEMENTS_ON_HOME && (
+          <button type="button" className="ghost" onClick={() => showMovements(NO_MOVEMENT_FILTERS)}>
+            Ver todos los movimientos
+          </button>
+        )}
       </div>
     </section>
   );

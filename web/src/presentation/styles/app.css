@@ -1,4 +1,10 @@
 :root {
+  /* Menú flotante. Claro: fondo menta claro. Oscuro: fondo oscuro. El ícono y el borde son del color del contador
+     de correos (el acento de la app), y el resplandor alrededor del botón es blanco. */
+  --fab-bg: #eafbf4;
+  --fab-ink: var(--accent);
+  --fab-border: var(--accent);
+  --fab-glow: #ffffff;
   --bg: #eceaf3;
   --app: #f6f5fa;
   --card: #ffffff;
@@ -38,6 +44,7 @@
     --danger: #ff7286;
     --overlay: rgba(0, 0, 0, 0.6);
     --field: #231f31;
+    --fab-bg: #1b1530;
   }
 }
 :root[data-theme='dark'] {
@@ -56,6 +63,7 @@
   --danger: #ff7286;
   --overlay: rgba(0, 0, 0, 0.6);
   --field: #231f31;
+  --fab-bg: #1b1530;
 }
 *,
 *::before,
@@ -406,19 +414,22 @@ textarea {
   font-size: 13px;
   color: var(--muted);
 }
+/* Las categorías con más gasto, en dos columnas. */
 .cats {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
-  overflow-x: auto;
-  padding: 2px 18px 14px;
-  margin: 0 -16px;
-  scrollbar-width: none;
+  margin-bottom: 14px;
 }
-.cats::-webkit-scrollbar {
-  display: none;
+.cats .empty,
+.cats-more {
+  grid-column: 1 / -1;
+}
+.cats-more {
+  margin-top: 0;
 }
 .cat {
-  flex: 0 0 132px;
+  text-align: left;
   background: var(--card);
   border-radius: 20px;
   padding: 14px;
@@ -554,41 +565,138 @@ textarea {
   line-height: 1.45;
 }
 
-/* Navegación */
-.nav {
+/* Navegación: botón flotante con el ícono de la pantalla actual, que despliega las demás. */
+.fab-nav {
   position: fixed;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-  display: flex;
-  gap: 2px;
-  padding: 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--card) 84%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow:
-    0 10px 30px rgba(20, 10, 60, 0.18),
-    0 0 0 1px var(--line);
+  /* En pantallas anchas, alineado al borde derecho de la app (440 px de ancho máximo). */
+  right: max(16px, calc(50% - 220px + 16px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
 }
-.nav button {
+.fab {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  /* Un poco translúcido, con borde sólido y un resplandor alrededor; los colores cambian con el modo. */
+  background: color-mix(in srgb, var(--fab-bg) 88%, transparent);
+  color: var(--fab-ink);
+  border: 2px solid var(--fab-border);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--fab-glow) 45%, transparent),
+    0 10px 26px rgba(20, 10, 60, 0.25);
+  transition: transform 0.15s;
+}
+.fab:active {
+  transform: scale(0.94);
+}
+.fab svg {
+  width: 24px;
+  height: 24px;
+}
+/* Al abrir: el fondo se oscurece, el ícono gira y las opciones salen del botón una tras otra. */
+@keyframes fab-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fab-icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.6);
+  }
+}
+@keyframes fab-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.85);
+  }
+}
+.fab-icon {
+  display: grid;
+  animation: fab-icon-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.fab-menu li {
+  transform-origin: bottom right;
+  animation: fab-item-in 0.26s cubic-bezier(0.2, 0.9, 0.25, 1.15) both;
+  animation-delay: calc((var(--from-fab) - 1) * 45ms);
+}
+.fab-scrim {
+  animation: fab-fade-in 0.2s ease;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--overlay);
+}
+.fab-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+.fab-menu button {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 11px 15px;
-  border-radius: 999px;
+  gap: 10px;
+}
+.fab-label {
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 84%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--ink);
   font-weight: 600;
   font-size: 14px;
-  color: var(--muted);
+  box-shadow: 0 4px 14px rgba(20, 10, 60, 0.16);
 }
-.nav button svg {
+.fab-item-icon {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  margin-right: 6px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--card) 84%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--ink);
+  box-shadow:
+    0 6px 18px rgba(20, 10, 60, 0.2),
+    0 0 0 1px var(--line);
+}
+.fab-item-icon svg {
   width: 20px;
   height: 20px;
 }
-.nav button[aria-current='page'] {
-  background: var(--ink);
-  color: var(--app);
+.fab-item-icon .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+/* La pantalla actual queda marcada. */
+.fab-menu button[aria-current='page'] .fab-item-icon {
+  background: var(--fab-bg);
+  color: var(--fab-ink);
+  border: 2px solid var(--fab-border);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--fab-glow) 45%, transparent);
+}
+.fab-menu button[aria-current='page'] .fab-label {
+  background: color-mix(in srgb, var(--fab-bg) 88%, transparent);
+  color: var(--fab-ink);
+  box-shadow: 0 0 0 2px var(--fab-border);
 }
 .badge {
   min-width: 20px;
@@ -862,6 +970,7 @@ textarea {
   margin: 0 0 6px 4px;
 }
 .field input,
+.field select,
 .field textarea {
   width: 100%;
   border: 1.5px solid transparent;
@@ -872,6 +981,7 @@ textarea {
   outline: none;
 }
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
 }
@@ -1255,10 +1365,95 @@ textarea {
   font-size: 15px;
   line-height: 1.45;
 }
-@media (max-width: 360px) {
-  .nav button span:not(.badge) {
-    display: none;
+/* Vista de movimientos: botón "Filtros" que abre un panel con los campos y "Aplicar". */
+.filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 12px;
+}
+.filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--card);
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.filters-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+.filters-toggle .chevron {
+  display: grid;
+  transition: transform 0.2s;
+}
+.filters-toggle[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+/* El panel se despliega hacia abajo al abrir y se recoge al cerrar (0,22 s, igual que PANEL_ANIMATION_MS). */
+@keyframes filters-open {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
   }
+}
+@keyframes filters-close {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+.filters-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: filters-open 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.filters-collapse.closing {
+  animation: filters-close 0.22s ease forwards;
+  pointer-events: none;
+}
+.filters-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.filters {
+  padding: 14px 14px 4px;
+}
+.filters .cta {
+  margin-bottom: 0;
+}
+.field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* que un campo de fecha no ensanche la columna */
+  gap: 10px;
+}
+.field-pair input,
+.field-pair select {
+  min-width: 0;
+}
+.field select {
+  appearance: none;
+  color: inherit;
+}
+.filters .hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: -2px 4px 10px;
+  line-height: 1.45;
+}
+.filters .hint.warn {
+  color: var(--warn);
+}
+.filters .ghost {
+  margin: 10px 0 10px;
+}
+
+@media (max-width: 360px) {
   .big {
     font-size: 44px;
   }
