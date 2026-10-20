@@ -195,9 +195,32 @@ Si Redis no está configurado o deja de responder, las mismas claves se guardan 
 ## Sincronización
 
 1. El teléfono envía lo marcado con `needs_backup` (máximo 500 registros por solicitud) junto con su cursor `since`.
-2. El servidor valida cada campo con una lista blanca y guarda con "gana el más reciente": solo reemplaza si `updatedAt` es mayor.
+2. El servidor valida cada campo con una lista blanca y guarda con "gana el más reciente": solo reemplaza si `updatedAt` es mayor (ver "Conflictos entre teléfonos").
 3. El servidor responde con lo que cambió para esa persona después del cursor, y un cursor nuevo. Si hay más de 1000 cambios, `hasMore` es `true` y se pide otra vez.
 4. El teléfono aplica esos cambios con la misma regla y guarda el cursor.
+
+### Conflictos entre teléfonos
+
+Si dos teléfonos de la misma persona cambian lo mismo antes de sincronizar, la regla es **gana la última escritura, registro por registro**. Cada movimiento, regla de categoría y ajuste se decide por separado, según la marca de tiempo `updatedAt` que pone el teléfono al hacer el cambio. No importa quién sincronice primero.
+
+- **En el servidor** (`server/src/domain/backupRecord.js`, `shouldReplace`): un cambio solo reemplaza al guardado si su `updatedAt` es mayor. En un empate se queda lo que llegó primero.
+- **En el teléfono** (`web/src/infrastructure/sqlite/backupRepository.js`, `keepsLocal`): lo que llega reemplaza lo local si es más reciente. Si lo local es más reciente, se queda y se sube en la próxima sincronización. En un empate el teléfono adopta la versión del servidor, salvo que ya sea idéntica a la suya (lo que él mismo acaba de subir, que tampoco cuenta como "recibido").
+
+| Caso | Resultado en los dos teléfonos |
+|---|---|
+| Los dos editan el mismo movimiento | Queda el último cambio, sincronice primero quien sincronice |
+| Uno edita y el otro elimina | Gana lo último: si eliminar fue después, queda eliminado; si editar fue después, el movimiento vuelve con el cambio |
+| Editan movimientos distintos | Se conservan los dos cambios: no hay conflicto |
+| Los dos cambian el presupuesto | Queda el último valor |
+| Los dos cambian lo mismo en el mismo milisegundo | Queda lo que llegó primero al servidor |
+
+Cada caso tiene su prueba con dos teléfonos simulados (la app real con SQLite) y el código real del servidor, con el reloj controlado: `tests/contract/syncConflicts.test.js`.
+
+Límites que se aceptan para el MVP:
+
+- **Se compara el registro completo, no cada campo.** Si un teléfono cambia la categoría y el otro la dirección del mismo movimiento, queda solo el último de los dos cambios.
+- **Manda el reloj del teléfono.** Si un teléfono tiene la hora adelantada, sus cambios ganan aunque se hayan hecho antes.
+- **Eliminar es un borrado lógico** (`is_deleted`), así que un cambio posterior en otro teléfono lo hace volver.
 
 ## Separación por usuario
 

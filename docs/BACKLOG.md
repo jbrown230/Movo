@@ -99,9 +99,10 @@ Estado: hecho, issue de GitHub #21 (rama `21-cobertura-de-estados-y-casos-raros-
 ### 20. Sincronización entre varios teléfonos con conflictos · 3 pts
 `backend`, `frontend` · Hito: Más bancos
 Hoy el respaldo en MongoDB sincroniza, pero no hay política explícita si dos teléfonos editan el mismo movimiento.
-- [ ] Documentar y probar la regla de resolución (última escritura por movimiento, con marca de tiempo).
-- [ ] Prueba automática con dos clientes simulados.
-- [ ] Documentar el comportamiento en `docs/ARQUITECTURA.md`.
+Estado: hecho, issue de GitHub #22 (rama `22-sincronizacion-entre-varios-telefonos-con-conflictos`).
+- [x] Documentar y probar la regla de resolución (última escritura por movimiento, con marca de tiempo). La prueba encontró un caso que dejaba los teléfonos distintos para siempre (dos cambios en el mismo milisegundo) y se corrigió: en un empate, el teléfono adopta la versión del servidor.
+- [x] Prueba automática con dos clientes simulados (`tests/contract/syncConflicts.test.js`): ediciones cruzadas en los dos órdenes, editar contra eliminar, movimientos distintos, presupuesto y empate.
+- [x] Documentar el comportamiento en `docs/ARQUITECTURA.md` (sección "Conflictos entre teléfonos", con sus límites).
 
 ### 21. Exportar movimientos a CSV · 2 pts
 `frontend` · Hito: Funciones de usuario
