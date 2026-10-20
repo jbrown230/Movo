@@ -39,6 +39,13 @@ function toMailRecord(mail, bank, { status, template = null, transactionId = nul
   };
 }
 
+/**
+ * Marca de tiempo de un movimiento recién leído: la fecha de la compra, no la hora de lectura (y nunca
+ * más que ahora). Así, volver a leer el mismo correo en un teléfono limpio da la misma marca, y no le gana
+ * en la sincronización a lo que la persona ya editó en el respaldo, que siempre es posterior.
+ */
+const readMovementTimestamp = (date) => Math.min(Date.parse(date) || Date.now(), Date.now());
+
 /** El movimiento nuevo que sale de una fila leída del correo. */
 function toNewTransaction({ id, item, bank, mailKey, categorization, exchangeRatesOn }) {
   const rate = isForeignCurrency(item.currency) ? exchangeRatesOn(item.date)[item.currency] || 0 : null;
@@ -57,6 +64,7 @@ function toNewTransaction({ id, item, bank, mailKey, categorization, exchangeRat
     bank,
     mailKey,
     note: item.note,
+    updatedAt: readMovementTimestamp(item.date),
   };
 }
 

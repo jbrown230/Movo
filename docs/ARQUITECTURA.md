@@ -215,12 +215,14 @@ Si dos teléfonos de la misma persona cambian lo mismo antes de sincronizar, la 
 | Editan movimientos distintos | Se conservan los dos cambios: no hay conflicto |
 | Los dos cambian el presupuesto | Queda el último valor |
 | Los dos cambian lo mismo en el mismo milisegundo | Queda lo que llegó primero al servidor |
+| Un teléfono limpio vuelve a leer de Gmail un movimiento que ya se editó en otro | Queda lo editado: el movimiento recién leído lleva como marca la fecha de la compra, no la hora de lectura |
 
 Cada caso tiene su prueba con dos teléfonos simulados (la app real con SQLite) y el código real del servidor, con el reloj controlado: `tests/contract/syncConflicts.test.js`.
 
 Límites que se aceptan para el MVP:
 
 - **Se compara el registro completo, no cada campo.** Si un teléfono cambia la categoría y el otro la dirección del mismo movimiento, queda solo el último de los dos cambios.
+- **Un movimiento leído de un correo lleva como `updatedAt` la fecha de la compra** (nunca más que la hora actual), no la hora en que se leyó. Así, releer el mismo correo en otro teléfono, o tras borrar los datos del navegador, da la misma marca y no pisa las ediciones del respaldo, que siempre son posteriores (#59).
 - **Manda el reloj del teléfono.** Si un teléfono tiene la hora adelantada, sus cambios ganan aunque se hayan hecho antes.
 - **Eliminar es un borrado lógico** (`is_deleted`), así que un cambio posterior en otro teléfono lo hace volver.
 
