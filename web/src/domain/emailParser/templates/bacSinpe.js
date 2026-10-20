@@ -22,6 +22,15 @@ const AMOUNT_REGEX = new RegExp(
   `monto de\\s*(?:(CRC|USD|₡|\\$)\\s*)?${AMOUNT_PATTERN}(?:\\s*(Colones|D[oó]lares|USD|CRC))?`,
   'i',
 );
+const HOLDER_REGEX = /Hola\s+([^:\n]+?)\s*:/i;
+const COUNTERPARTY_REGEX =
+  /(?:a favor de|de parte de|destinatario|remitente|cliente destino|cliente origen)\s*:\s*([^,.\n]+)/i;
+const ACCOUNT_REGEX = /cuenta IBAN\s*([A-Z0-9]+)/i;
+const CONCEPT_REGEX = /por concepto de\s*(.+?)(?:\.?\s*D[ií]a y hora|\.\s*D[ií]a|\.|$)/i;
+
+function looksLikeBacSinpe(text) {
+  return IS_SINPE.test(text) && IS_BAC.test(text) && ACTION_PATTERN.test(text);
+}
 
 function readDate(text) {
   const match = text.match(DATE_TIME_REGEX);
@@ -38,8 +47,44 @@ function readDate(text) {
 }
 
 function readConcept(text) {
-  const match = text.match(/por concepto de\s*(.+?)(?:\.?\s*D[ií]a y hora|\.\s*D[ií]a|\.|$)/i);
-  return match?.[1]?.trim() || null;
+  return text.match(CONCEPT_REGEX)?.[1]?.trim() || null;
+}
+
+/** @returns {{amount: number, currency: string}|null} */
+function readAmount(text) {
+  const match = text.match(AMOUNT_REGEX);
+  if (!match) return null;
+
+  const amount = parseAmount(match[2]);
+  if (!amount || Number.isNaN(amount)) return null;
+
+  return { amount, currency: detectCurrency(match[3] || match[1] || 'Colones') };
+}
+
+function readIsCredit(text) {
+  const action = text.match(ACTION_PATTERN)?.[1] ?? '';
+  return /acredit/i.test(action);
+}
+
+function readAccountHolder(text) {
+  return text.match(HOLDER_REGEX)?.[1]?.trim() || null;
+}
+
+function readCounterparty(text) {
+  return text.match(COUNTERPARTY_REGEX)?.[1]?.trim() || null;
+}
+
+function readAccountLastFour(text) {
+  return text.match(ACCOUNT_REGEX)?.[1]?.slice(-4) || null;
+}
+
+function isTransferBetweenOwnAccounts(accountHolder, counterparty) {
+  return Boolean(accountHolder && counterparty && isSamePerson(accountHolder, counterparty));
+}
+
+function resolveDirection({ isCredit, isOwnTransfer }) {
+  if (isOwnTransfer) return Direction.OWN_TRANSFER;
+  return isCredit ? Direction.INCOME : Direction.EXPENSE;
 }
 
 function buildNote({ isOwnTransfer, reason, accountLastFour }) {
@@ -53,43 +98,30 @@ function buildNote({ isOwnTransfer, reason, accountLastFour }) {
 
 /** @returns {Array|null} La transferencia SINPE de BAC, o null si el texto no es de esta plantilla. */
 export function parseBacSinpe(text) {
-  if (!IS_SINPE.test(text) || !IS_BAC.test(text) || !ACTION_PATTERN.test(text)) {
-    return null;
-  }
+  if (!looksLikeBacSinpe(text)) return null;
 
-  const amountMatch = text.match(AMOUNT_REGEX);
-  if (!amountMatch) return null;
+  const money = readAmount(text);
+  if (!money) return null;
 
-  const amount = parseAmount(amountMatch[2]);
-  if (!amount || Number.isNaN(amount)) return null;
-
-  const actionMatch = text.match(ACTION_PATTERN);
-  const isCredit = /acredit/i.test(actionMatch[1]);
-
-  const accountHolder = text.match(/Hola\s+([^:\n]+?)\s*:/i)?.[1]?.trim();
-  const counterpartyMatch = text.match(
-    /(?:a favor de|de parte de|destinatario|remitente|cliente destino|cliente origen)\s*:\s*([^,.\n]+)/i,
-  );
-  const counterparty = counterpartyMatch?.[1]?.trim() || null;
-  const isOwnTransfer = Boolean(accountHolder && counterparty && isSamePerson(accountHolder, counterparty));
-
-  let direction = isCredit ? Direction.INCOME : Direction.EXPENSE;
-  if (isOwnTransfer) direction = Direction.OWN_TRANSFER;
-
-  const accountMatch = text.match(/cuenta IBAN\s*([A-Z0-9]+)/i);
-  const accountLastFour = accountMatch?.[1]?.slice(-4) || null;
+  const counterparty = readCounterparty(text);
+  const isOwnTransfer = isTransferBetweenOwnAccounts(readAccountHolder(text), counterparty);
+  const direction = resolveDirection({ isCredit: readIsCredit(text), isOwnTransfer });
 
   return [
     {
       type: TransactionType.SINPE,
       direction,
-      currency: detectCurrency(amountMatch[3] || amountMatch[1] || 'Colones'),
-      amount,
+      currency: money.currency,
+      amount: money.amount,
       counterparty,
       date: readDate(text),
       declined: false,
       status: null,
-      note: buildNote({ isOwnTransfer, reason: readConcept(text), accountLastFour }),
+      note: buildNote({
+        isOwnTransfer,
+        reason: readConcept(text),
+        accountLastFour: readAccountLastFour(text),
+      }),
     },
   ];
 }
