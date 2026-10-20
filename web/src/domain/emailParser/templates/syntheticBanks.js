@@ -1,11 +1,8 @@
-// Plantillas SINTÉTICAS de BAC y Banco Nacional.
+// Plantilla SINTÉTICA del Banco Nacional (solo para su SINPE Móvil en la demo).
 //
-// Imitan la estructura típica de una notificación, pero son inventadas: sirven
-// para el modo demo hasta tener correos reales anonimizados de esos bancos.
-// Para reemplazarlas por una plantilla real, sigue el modelo de bcrSinpe.js y bcrCard.js.
-// Del Banco Nacional ya hay plantilla real para la compra con tarjeta (bnVoucher.js);
-// la sintética de aquí queda solo para su SINPE Móvil en la demo. El BN no notifica los
-// SINPE por correo, así que no existe un formato real que copiar.
+// El BN no notifica los SINPE por correo, así que no existe un formato real que copiar.
+// Para BCR y BAC ya existen plantillas reales (tarjeta y SINPE).
+// Del Banco Nacional ya hay plantilla real para la compra con tarjeta (bnVoucher.js).
 
 import { costaRicaToIso } from '../dateTime.js';
 import { parseAmount } from '../amount.js';

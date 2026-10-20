@@ -13,6 +13,15 @@ const ANY_LINE_BREAK = new RegExp(`[\\n${HARD_LINE_BREAK}]`);
 const TEXT_NODE = 3;
 const ELEMENT_NODE = 1;
 
+/**
+ * Linkedom (y a veces un HTML pegado desde Gmail) deja un <table> como raíz del
+ * documento, con un body vacío. Hay que leer esa raíz, no el body hueco.
+ */
+function contentRoot(doc) {
+  if (doc.body && doc.body.childNodes.length > 0) return doc.body;
+  return doc.documentElement || doc;
+}
+
 /** Colapsa los espacios del texto como lo haría un navegador (excepto dentro de <pre>). */
 function collapseWhitespace(node) {
   for (const child of node.childNodes) {
@@ -50,7 +59,8 @@ export function htmlToText(html) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   doc.querySelectorAll('style,script,head,title').forEach((node) => node.remove());
 
-  collapseWhitespace(doc.body || doc);
+  const root = contentRoot(doc);
+  collapseWhitespace(root);
   doc.querySelectorAll('br').forEach((br) => br.replaceWith(HARD_LINE_BREAK));
   flattenTableCells(doc);
   doc.querySelectorAll('tr').forEach((row) => {
@@ -61,7 +71,7 @@ export function htmlToText(html) {
     block.append('\n');
   });
 
-  return (doc.body?.textContent || '')
+  return (root.textContent || '')
     .split(ANY_LINE_BREAK)
     .map((line) =>
       line

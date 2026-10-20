@@ -16,7 +16,7 @@ export const FALLBACK_EXCHANGE_RATE = 510; // colones por dólar, mientras no ha
  * envía ese remitente es publicidad y avisos que no son movimientos.
  */
 export const DEFAULT_GMAIL_QUERY =
-  '(from:baccr.com OR from:credomatic OR (from:bncr.fi.cr subject:"Voucher Digital") OR from:bancobcr.com OR from:davivienda OR from:promerica OR subject:SINPE)';
+  '(from:baccr.com OR from:baccredomatic.cr OR (from:bncr.fi.cr subject:"Voucher Digital") OR from:bancobcr.com OR from:davivienda OR from:promerica OR subject:SINPE)';
 
 /** Nombres de los ajustes que se sincronizan. Deben coincidir con SYNCED_SETTING_NAMES de shared/backupContract.js. */
 export const SettingName = Object.freeze({ BUDGET: 'budget', GMAIL_QUERY: 'gmail_query' });
