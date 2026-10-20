@@ -1,21 +1,21 @@
+import { useMemo } from 'react';
 import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
+import { MovementFilters } from '../components/MovementFilters.jsx';
+import { TransactionList } from '../components/TransactionList.jsx';
 import { getCategory } from '../../domain/categories.js';
-import { displayName } from '../../domain/names.js';
-import { isForeignCurrency } from '../../domain/money.js';
-
+import { toDayString } from '../../domain/period.js';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
 import { useAppData } from '../hooks/useAppData.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
-import { dayLabel, monthName, timeLabel } from '../format/dates.js';
-import { formatColones, formatColonesShort, formatInCurrency, splitColonesDecimals } from '../format/money.js';
-import { amountClass, amountSign, describeTransaction } from '../format/transactionLabels.js';
+import { monthName } from '../format/dates.js';
+import { formatColonesShort, splitColonesDecimals } from '../format/money.js';
 import { CashModal, PasteModal } from '../modals/SimpleModals.jsx';
 import { PurchaseSimulatorModal, SinpeSimulatorModal } from '../modals/SimulatorModals.jsx';
-import { TransactionModal } from '../modals/TransactionModal.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
-import { Views, useNavigation } from '../state/NavigationProvider.jsx';
+import { NO_MOVEMENT_FILTERS, countActiveFilters, toSearchFilters } from '../state/movementFilters.js';
+import { HOME_MOVEMENTS_ANCHOR_ID, Views, useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
 
@@ -140,7 +140,19 @@ function BankSimulatorCard() {
   );
 }
 
+/** Los filtros que abre una tarjeta de categoría: esa categoría, en lo que va del mes. */
+function monthFiltersFor(category) {
+  const today = new Date();
+  return {
+    ...NO_MOVEMENT_FILTERS,
+    category,
+    fromDay: toDayString(new Date(today.getFullYear(), today.getMonth(), 1)),
+    toDay: toDayString(today),
+  };
+}
+
 function CategoryCards({ summary }) {
+  const { filterMovements } = useNavigation();
   if (!summary.byCategory.length)
     return (
       <div className="cats">
@@ -153,7 +165,13 @@ function CategoryCards({ summary }) {
         const { name, color } = getCategory(row.category);
         const share = summary.spentCents ? ((row.totalCents / summary.spentCents) * 100).toFixed(0) : 0;
         return (
-          <div className="cat" key={row.category}>
+          <button
+            type="button"
+            className="cat"
+            key={row.category}
+            aria-label={`${name}: ver sus movimientos del mes`}
+            onClick={() => filterMovements(monthFiltersFor(row.category))}
+          >
             <CategoryIcon category={row.category} />
             <div>
               <div className="amt">{formatColonesShort(row.totalCents)}</div>
@@ -162,86 +180,52 @@ function CategoryCards({ summary }) {
             <div className="mini">
               <i style={{ width: `${share}%`, background: color }} />
             </div>
-          </div>
+          </button>
         );
       })}
     </div>
   );
 }
 
-/** Agrupa los movimientos por día ("Hoy", "Ayer", ...), conservando el orden. */
-function groupByDay(transactions) {
-  const groups = [];
-  for (const transaction of transactions) {
-    const label = dayLabel(transaction.date);
-    if (!groups.length || groups.at(-1).label !== label) groups.push({ label, items: [] });
-    groups.at(-1).items.push(transaction);
-  }
-  return groups;
-}
+/** Lista de movimientos del inicio: todos, o los que cumplen los filtros. */
+function MovementsSection() {
+  const { profile, services, dataVersion } = useSession();
+  const { movementFilters, setMovementFilters, filtersPanelRequest } = useNavigation();
+  const { transactions } = useAppData();
+  const isFiltered = countActiveFilters(movementFilters) > 0;
 
-function TransactionRow({ transaction, isHighlighted }) {
-  const { openModal } = useModal();
-  const isForeign = isForeignCurrency(transaction.currency);
-  // Un monto convertido desde dólares o euros casi nunca es redondo: se muestra con sus céntimos.
-  const formatAmount = isForeign ? formatColones : formatColonesShort;
+  const filtered = useMemo(
+    () => (isFiltered ? services.queries.searchTransactions(toSearchFilters(movementFilters)) : null),
+    // dataVersion hace que se busque de nuevo después de cada cambio en los datos.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [services, dataVersion, movementFilters, isFiltered],
+  );
+  const visible = filtered ?? transactions;
+
+  let emptyText = 'Cuando tu banco te envíe una notificación, aparecerá aquí sola.';
+  if (profile.demo) emptyText = 'Usa el simulador de arriba para hacer un SINPE.';
+  if (isFiltered) emptyText = 'Ningún movimiento cumple estos filtros.';
+
+  let countText = transactions.length ? `${transactions.length} en total` : '';
+  if (isFiltered) countText = `${filtered.length} con estos filtros`;
+
   return (
-    <button
-      type="button"
-      className={`tx${isHighlighted ? ' flash' : ''}`}
-      onClick={() => openModal(<TransactionModal transactionId={transaction.id} />)}
-    >
-      <CategoryIcon category={transaction.category} />
-      <span className="mid">
-        <div className="t1">{displayName(transaction.counterparty)}</div>
-        <div className="t2">{describeTransaction(transaction)}</div>
-      </span>
-      <span className="r">
-        <div className={amountClass(transaction)}>
-          {amountSign(transaction)}
-          {formatAmount(transaction.crcCents)}
-        </div>
-        <div className="a2">
-          {isForeign ? formatInCurrency(transaction.amountCents, transaction.currency) : timeLabel(transaction.date)}
-        </div>
-      </span>
-    </button>
+    <>
+      <div className="sec-h" id={HOME_MOVEMENTS_ANCHOR_ID}>
+        <h2>Movimientos</h2>
+        <span>{countText}</span>
+      </div>
+      <MovementFilters filters={movementFilters} setFilters={setMovementFilters} panelRequest={filtersPanelRequest} />
+      <TransactionList transactions={visible} emptyText={emptyText} />
+    </>
   );
 }
-
-function TransactionList({ transactions }) {
-  const { profile } = useSession();
-  const { flashTransactionId } = useNavigation();
-
-  if (!transactions.length) {
-    return (
-      <div className="empty">
-        {profile.demo
-          ? 'Usa el simulador de arriba para hacer un SINPE.'
-          : 'Cuando tu banco te envíe una notificación, aparecerá aquí sola.'}
-      </div>
-    );
-  }
-  return groupByDay(transactions).map((group) => (
-    <div className="group" key={group.label}>
-      <h3>{group.label}</h3>
-      {group.items.map((transaction) => (
-        <TransactionRow
-          key={transaction.id}
-          transaction={transaction}
-          isHighlighted={transaction.id === flashTransactionId}
-        />
-      ))}
-    </div>
-  ));
-}
-
-/** Pantalla de inicio: gasto del mes, categorías y lista de movimientos. */
+/** Pantalla de inicio: gasto del mes, categorías y movimientos (con filtros). */
 export function HomeScreen() {
   const { profile } = useSession();
   const { scan } = useGmail();
   const showToast = useToast();
-  const { summary, budgetCents, transactions } = useAppData();
+  const { summary, budgetCents } = useAppData();
 
   const refreshInbox = () => {
     if (profile.demo) showToast('En el modo demo, usa el simulador para generar correos.');
@@ -275,11 +259,7 @@ export function HomeScreen() {
           </span>
         </div>
         <CategoryCards summary={summary} />
-        <div className="sec-h">
-          <h2>Movimientos</h2>
-          <span>{transactions.length ? `${transactions.length} en total` : ''}</span>
-        </div>
-        <TransactionList transactions={transactions} />
+        <MovementsSection />
       </div>
     </section>
   );

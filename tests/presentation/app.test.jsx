@@ -24,6 +24,19 @@ vi.mock('../../web/src/composition/platform.js', async (importOriginal) => {
 
 const { App } = await import('../../web/src/presentation/App.jsx');
 
+/** Elige una pantalla en la barra de abajo. */
+async function goToTab(user, name) {
+  const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
+  // El botón de la bandeja también lleva el número de correos: se busca por el comienzo del nombre.
+  await user.click(within(navigation).getByRole('button', { name: new RegExp(`^${name}`) }));
+}
+
+/** Abre el panel de filtros de la vista de movimientos. */
+async function openFilters(user) {
+  await user.click(screen.getByRole('button', { name: /^Filtros/ }));
+  return within(screen.getByRole('search', { name: 'Filtros de movimientos' }));
+}
+
 async function openDemo() {
   const user = userEvent.setup();
   render(<App />);
@@ -86,8 +99,7 @@ describe('modo demo', () => {
 
   test('la bandeja muestra los correos y permite ver lo que leyó Movo', async () => {
     const user = await openDemo();
-    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
-    await user.click(within(navigation).getByRole('button', { name: /Bandeja/ }));
+    await goToTab(user, 'Bandeja');
 
     const mails = await screen.findAllByRole('button', { name: /BAC Credomatic|Banco Nacional|BCR/ });
     expect(mails.length).toBeGreaterThan(5);
@@ -99,8 +111,7 @@ describe('modo demo', () => {
 
   test('en ajustes se puede reiniciar o salir del demo', async () => {
     const user = await openDemo();
-    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
-    await user.click(within(navigation).getByRole('button', { name: /Ajustes/ }));
+    await goToTab(user, 'Ajustes');
     expect(screen.getByText('Reiniciar datos de ejemplo')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Salir del modo demo' }));
@@ -171,8 +182,7 @@ describe('confirmaciones', () => {
 
   test('cambiar el presupuesto pide confirmación', async () => {
     const user = await openDemo();
-    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
-    await user.click(within(navigation).getByRole('button', { name: /Ajustes/ }));
+    await goToTab(user, 'Ajustes');
     await user.click(screen.getByRole('button', { name: /Presupuesto mensual/ }));
 
     const amount = within(screen.getByRole('dialog')).getByLabelText('Monto');
@@ -190,8 +200,7 @@ describe('confirmaciones', () => {
 describe('apariencia', () => {
   async function openSettings() {
     const user = await openDemo();
-    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
-    await user.click(within(navigation).getByRole('button', { name: /Ajustes/ }));
+    await goToTab(user, 'Ajustes');
     return user;
   }
 
@@ -218,5 +227,88 @@ describe('apariencia', () => {
     await openSettings();
     const options = screen.getByRole('group', { name: 'Apariencia' });
     expect(within(options).getByRole('button', { name: 'Oscuro' })).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('movimientos y filtros en el inicio', () => {
+  beforeEach(() => localStorage.clear());
+
+  const movementRows = () =>
+    within(screen.getByRole('region', { name: 'Inicio' }))
+      .queryAllByRole('button')
+      .filter((button) => button.classList.contains('tx'));
+
+  test('sin filtros, el inicio muestra todos los movimientos bajo el título "Movimientos"', async () => {
+    await openDemo();
+    expect(screen.getByRole('heading', { name: 'Movimientos' })).toBeInTheDocument();
+    expect(movementRows().length).toBeGreaterThan(5);
+    expect(screen.queryByRole('button', { name: /Ver todos/ })).not.toBeInTheDocument();
+  });
+
+  test('filtrar por categoría muestra todos los que cumplen, y se conserva al cambiar de pestaña', async () => {
+    const user = await openDemo();
+    const all = movementRows().length;
+    const filters = await openFilters(user);
+    await user.selectOptions(filters.getByLabelText('Categoría'), 'ocio');
+    expect(movementRows()).toHaveLength(all); // nada cambia hasta aplicar
+    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
+
+    const leisure = movementRows();
+    expect(leisure.length).toBeGreaterThan(0);
+    expect(leisure.every((row) => /Netflix|Spotify|Steam/i.test(row.textContent))).toBe(true);
+    expect(screen.getByText(/con estos filtros/)).toBeInTheDocument();
+
+    await goToTab(user, 'Ajustes');
+    await goToTab(user, 'Inicio');
+    expect(screen.getByRole('button', { name: /^Filtros \(1\)/ })).toBeInTheDocument();
+    expect(movementRows()).toHaveLength(leisure.length);
+
+    await user.click(screen.getByRole('button', { name: 'Quitar filtros' }));
+    expect(movementRows()).toHaveLength(all);
+  });
+
+  test('filtrar por monto: solo "desde" deja los mayores, y un rango al revés avisa', async () => {
+    const user = await openDemo();
+    const filters = await openFilters(user);
+    await user.type(filters.getByLabelText('Monto desde'), '20000');
+    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
+    const large = movementRows();
+    expect(large.length).toBeGreaterThan(0);
+    expect(large.every((row) => Number(row.querySelector('.a').textContent.replace(/\D/g, '')) >= 20000)).toBe(true);
+
+    const again = await openFilters(user);
+    await user.type(again.getByLabelText('Monto hasta'), '100');
+    expect(again.getByText(/El monto "desde" es mayor que el monto "hasta"/)).toBeInTheDocument();
+    expect(again.getByRole('button', { name: 'Aplicar' })).toBeDisabled();
+  });
+
+  test('tocar una categoría del inicio filtra la lista por ella en el mes', async () => {
+    const user = await openDemo();
+    const cards = screen.getAllByRole('button', { name: /: ver sus movimientos del mes$/ });
+    expect(cards.length).toBeGreaterThan(2); // todas las categorías del mes, en la fila desplazable
+    const category = cards[0].getAttribute('aria-label').split(':')[0];
+
+    await user.click(cards[0]);
+    expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
+    const filters = await openFilters(user);
+    const selected = filters.getByLabelText('Categoría');
+    expect(selected.options[selected.selectedIndex].text).toBe(category);
+    expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(movementRows().length).toBeGreaterThan(0);
+  });
+});
+describe('barra de abajo', () => {
+  beforeEach(() => localStorage.clear());
+
+  test('muestra ícono y nombre de cada pantalla, y marca la actual', async () => {
+    const user = await openDemo();
+    const navigation = within(screen.getByRole('navigation', { name: 'Navegación principal' }));
+    const buttons = navigation.getAllByRole('button');
+    expect(buttons.map((button) => button.querySelector('span').textContent)).toEqual(['Inicio', 'Bandeja', 'Ajustes']);
+    expect(navigation.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
+
+    await goToTab(user, 'Ajustes');
+    expect(navigation.getByRole('button', { name: 'Ajustes' })).toHaveAttribute('aria-current', 'page');
+    expect(navigation.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'false');
   });
 });

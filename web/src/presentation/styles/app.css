@@ -418,6 +418,7 @@ textarea {
   display: none;
 }
 .cat {
+  text-align: left;
   flex: 0 0 132px;
   background: var(--card);
   border-radius: 20px;
@@ -590,6 +591,7 @@ textarea {
   background: var(--ink);
   color: var(--app);
 }
+
 .badge {
   min-width: 20px;
   height: 20px;
@@ -862,6 +864,7 @@ textarea {
   margin: 0 0 6px 4px;
 }
 .field input,
+.field select,
 .field textarea {
   width: 100%;
   border: 1.5px solid transparent;
@@ -872,6 +875,7 @@ textarea {
   outline: none;
 }
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
 }
@@ -1255,6 +1259,94 @@ textarea {
   font-size: 15px;
   line-height: 1.45;
 }
+/* Vista de movimientos: botón "Filtros" que abre un panel con los campos y "Aplicar". */
+.filters-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 12px;
+}
+.filters-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--card);
+  font-weight: 600;
+  font-size: 15px;
+  box-shadow: 0 0 0 1px var(--line);
+}
+.filters-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+.filters-toggle .chevron {
+  display: grid;
+  transition: transform 0.2s;
+}
+.filters-toggle[aria-expanded='true'] .chevron {
+  transform: rotate(180deg);
+}
+/* El panel se despliega hacia abajo al abrir y se recoge al cerrar (0,22 s, igual que PANEL_ANIMATION_MS). */
+@keyframes filters-open {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+@keyframes filters-close {
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+.filters-collapse {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: filters-open 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.filters-collapse.closing {
+  animation: filters-close 0.22s ease forwards;
+  pointer-events: none;
+}
+.filters-collapse-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.filters {
+  padding: 14px 14px 4px;
+}
+.filters .cta {
+  margin-bottom: 0;
+}
+.field-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)); /* que un campo de fecha no ensanche la columna */
+  gap: 10px;
+}
+.field-pair input,
+.field-pair select {
+  min-width: 0;
+}
+.field select {
+  appearance: none;
+  color: inherit;
+}
+.filters .hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: -2px 4px 10px;
+  line-height: 1.45;
+}
+.filters .hint.warn {
+  color: var(--warn);
+}
+.filters .ghost {
+  margin: 10px 0 10px;
+}
+
 @media (max-width: 360px) {
   .nav button span:not(.badge) {
     display: none;

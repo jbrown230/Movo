@@ -1,6 +1,6 @@
 // Consultas de solo lectura que usa la interfaz.
 
-import { monthRange } from '../domain/period.js';
+import { dayRange, monthRange } from '../domain/period.js';
 
 export function createQueries({ transactions, mails }) {
   return {
@@ -11,7 +11,19 @@ export function createQueries({ transactions, mails }) {
       return { spentCents, incomeCents, movedBetweenOwnAccountsCents, byCategory };
     },
 
-    listTransactions: (limit) => transactions.list(limit),
+    listTransactions: (limit) => transactions.list({}, limit),
+
+    /**
+     * Movimientos filtrados para la vista de movimientos.
+     *
+     * @param {{ fromDay?: string, toDay?: string, category?: string, direction?: string, bank?: string,
+     *           minCents?: number, maxCents?: number }} filters  Días "AAAA-MM-DD" (los dos se incluyen completos)
+     *           y montos en céntimos de colones. Lo que falte no filtra.
+     */
+    searchTransactions({ fromDay, toDay, minCents, maxCents, ...exact } = {}) {
+      const { from, to } = dayRange(fromDay, toDay);
+      return transactions.list({ ...exact, from, to, minCrcCents: minCents, maxCrcCents: maxCents });
+    },
     getTransaction: (id) => transactions.get(id),
     countTransactions: () => transactions.countActive(),
 
