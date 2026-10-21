@@ -91,8 +91,17 @@ const FILTER_CONDITIONS = [
   ['bank', 'bank=?'],
   ['minCrcCents', 'amount_crc_cents>=?'],
   ['maxCrcCents', 'amount_crc_cents<=?'],
+  ['text', "counterparty LIKE ? ESCAPE '\\'"],
 ];
-const isActiveFilter = (value) => value !== null && value !== undefined && value !== '';
+const isActiveFilter = (value) => value !== null && value !== undefined && String(value).trim() !== '';
+
+/** El valor que va a SQL. La búsqueda de texto se vuelve "contiene", sin que `%` ni `_` hagan de comodín. */
+function toSqlValue(name, value) {
+  if (name !== 'text') return value;
+  return `%${String(value)
+    .trim()
+    .replace(/[\\%_]/g, (character) => `\\${character}`)}%`;
+}
 
 /** Gastos por categoría, ingresos y dinero movido entre cuentas propias, dentro de un periodo. */
 function summarizeMonth(sql, range) {
@@ -129,14 +138,15 @@ export function createTransactionRepository(sql) {
      * Los movimientos no eliminados que cumplen los filtros, del más reciente al más antiguo.
      *
      * @param {{ from?: string, to?: string, category?: string, direction?: string, bank?: string,
-     *           minCrcCents?: number, maxCrcCents?: number }} [filters]  Fechas ISO (desde incluida, hasta
-     *           excluida) y montos en céntimos de colones, ya convertidos si fueron en otra moneda.
+     *           minCrcCents?: number, maxCrcCents?: number, text?: string }} [filters]  Fechas ISO (desde incluida,
+     *           hasta excluida), montos en céntimos de colones (ya convertidos si fueron en otra moneda) y un texto
+     *           que debe aparecer en el nombre del comercio o persona.
      */
     list(filters = {}, limit = 400) {
       const active = FILTER_CONDITIONS.filter(([name]) => isActiveFilter(filters[name]));
       const where = ['is_deleted=0', ...active.map(([, condition]) => condition)].join(' AND ');
       return selectMany(`SELECT * FROM transactions WHERE ${where} ORDER BY occurred_at DESC LIMIT ?`, [
-        ...active.map(([name]) => filters[name]),
+        ...active.map(([name]) => toSqlValue(name, filters[name])),
         limit,
       ]);
     },

@@ -17,8 +17,9 @@ export function createQueries({ transactions, mails }) {
      * Movimientos filtrados para la vista de movimientos.
      *
      * @param {{ fromDay?: string, toDay?: string, category?: string, direction?: string, bank?: string,
-     *           minCents?: number, maxCents?: number }} filters  Días "AAAA-MM-DD" (los dos se incluyen completos)
-     *           y montos en céntimos de colones. Lo que falte no filtra.
+     *           minCents?: number, maxCents?: number, text?: string }} filters  Días "AAAA-MM-DD" (los dos se
+     *           incluyen completos), montos en céntimos de colones y `text`, que se busca en el nombre del comercio
+     *           o persona. Lo que falte no filtra.
      */
     searchTransactions({ fromDay, toDay, minCents, maxCents, ...exact } = {}) {
       const { from, to } = dayRange(fromDay, toDay);

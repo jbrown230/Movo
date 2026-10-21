@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BottomNav } from './screens/BottomNav.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
 import { InboxScreen } from './screens/InboxScreen.jsx';
+import { MovementsScreen } from './screens/MovementsScreen.jsx';
 import { OnboardingScreen } from './screens/OnboardingScreen.jsx';
 import { SettingsScreen } from './screens/SettingsScreen.jsx';
 import { PasteModal } from './modals/SimpleModals.jsx';
@@ -26,7 +27,7 @@ function useSharedTextFromOtherApps() {
   }, [openModal]);
 }
 
-/** Las tres pantallas principales; solo la activa se ve, las otras quedan ocultas pero conservan su estado. */
+/** Las cuatro pantallas principales; solo la activa se ve, las otras quedan ocultas pero conservan su estado. */
 function MainScreens() {
   const { view } = useNavigation();
   useSharedTextFromOtherApps();
@@ -36,6 +37,9 @@ function MainScreens() {
       <div className="app">
         <div hidden={view !== Views.HOME}>
           <HomeScreen />
+        </div>
+        <div hidden={view !== Views.MOVEMENTS}>
+          <MovementsScreen />
         </div>
         <div hidden={view !== Views.INBOX}>
           <InboxScreen />

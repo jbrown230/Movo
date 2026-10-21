@@ -4,18 +4,14 @@ import { NO_MOVEMENT_FILTERS } from './movementFilters.js';
 /**
  * Pantalla activa y movimiento resaltado.
  *
- * `view`: "home" (inicio), "inbox" (bandeja) o "settings" (ajustes).
- * `movementFilters`: los filtros de la lista de movimientos del inicio. Viven aquí para que se conserven al
+ * `view`: "home" (inicio), "movements" (movimientos), "inbox" (bandeja) o "settings" (ajustes).
+ * `movementFilters`: los filtros de la pantalla de movimientos. Viven aquí para que se conserven al
  *   cambiar de pestaña, y para que otras partes puedan filtrar esa lista (`filterMovements`).
- * `filtersPanelRequest`: sube cada vez que otra pantalla pide abrir el panel de filtros al llegar.
  * `flashTransactionId`: el movimiento recién registrado, que se resalta un momento en la lista.
  */
 const NavigationContext = createContext(null);
 
-export const Views = Object.freeze({ HOME: 'home', INBOX: 'inbox', SETTINGS: 'settings' });
-
-/** Id del título de la lista de movimientos del inicio, para llevar la pantalla hasta ella al filtrar. */
-export const HOME_MOVEMENTS_ANCHOR_ID = 'movimientos-del-inicio';
+export const Views = Object.freeze({ HOME: 'home', MOVEMENTS: 'movements', INBOX: 'inbox', SETTINGS: 'settings' });
 
 const FLASH_DURATION_MS = 2600;
 
@@ -23,7 +19,6 @@ export function NavigationProvider({ children }) {
   const [view, setView] = useState(Views.HOME);
   const [flashTransactionId, setFlashTransactionId] = useState(null);
   const [movementFilters, setMovementFilters] = useState(NO_MOVEMENT_FILTERS);
-  const [filtersPanelRequest, setFiltersPanelRequest] = useState(0);
   const flashTimer = useRef(null);
 
   const goTo = useCallback((nextView) => {
@@ -37,13 +32,14 @@ export function NavigationProvider({ children }) {
     flashTimer.current = setTimeout(() => setFlashTransactionId(null), FLASH_DURATION_MS);
   }, []);
 
-  /** Filtra la lista del inicio y lleva la pantalla hasta ella; con `openFilters`, abre también el panel. */
-  const filterMovements = useCallback((filters, { openFilters = false } = {}) => {
-    setMovementFilters(filters);
-    if (openFilters) setFiltersPanelRequest((count) => count + 1);
-    setView(Views.HOME);
-    document.getElementById(HOME_MOVEMENTS_ANCHOR_ID)?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-  }, []);
+  /** Lleva a la pantalla de movimientos ya filtrada (por ejemplo, al tocar una categoría del inicio). */
+  const filterMovements = useCallback(
+    (filters) => {
+      setMovementFilters(filters);
+      goTo(Views.MOVEMENTS);
+    },
+    [goTo],
+  );
 
   useEffect(() => () => clearTimeout(flashTimer.current), []);
 
@@ -56,9 +52,8 @@ export function NavigationProvider({ children }) {
       movementFilters,
       setMovementFilters,
       filterMovements,
-      filtersPanelRequest,
     }),
-    [view, goTo, flashTransactionId, flashTransaction, movementFilters, filterMovements, filtersPanelRequest],
+    [view, goTo, flashTransactionId, flashTransaction, movementFilters, filterMovements],
   );
   return <NavigationContext.Provider value={value}>{children}</NavigationContext.Provider>;
 }

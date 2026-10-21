@@ -587,6 +587,18 @@ textarea {
   width: 20px;
   height: 20px;
 }
+/* Con cuatro pestañas, solo la activa muestra su nombre; en las demás queda para lectores de pantalla. */
+.nav button:not([aria-current='page']) span:not(.badge) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.nav button {
+  position: relative;
+}
 .nav button[aria-current='page'] {
   background: var(--ink);
   color: var(--app);
@@ -1259,19 +1271,65 @@ textarea {
   font-size: 15px;
   line-height: 1.45;
 }
-/* Vista de movimientos: botón "Filtros" que abre un panel con los campos y "Aplicar". */
-.filters-head {
+/* Pantalla de movimientos: búsqueda, botón "Filtros" (abre una hoja), chips de tipo y la lista. */
+.mv-body {
+  padding: 8px 16px 0;
+}
+.mv-tools {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.searchbox {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 4px 12px;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--field);
+  border: 1.5px solid transparent;
+}
+.searchbox:focus-within {
+  border-color: var(--accent);
+}
+.searchbox > svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+.searchbox input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 16px;
+}
+.searchbox input::-webkit-search-cancel-button {
+  display: none;
+}
+.searchbox button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.searchbox button svg {
+  width: 16px;
+  height: 16px;
 }
 .filters-toggle {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 16px;
+  padding: 0 16px;
   border-radius: 999px;
   background: var(--card);
   font-weight: 600;
@@ -1282,44 +1340,18 @@ textarea {
   width: 18px;
   height: 18px;
 }
-.filters-toggle .chevron {
-  display: grid;
-  transition: transform 0.2s;
+.mv-clear {
+  display: block;
+  margin: -4px 4px 12px;
 }
-.filters-toggle[aria-expanded='true'] .chevron {
-  transform: rotate(180deg);
+.filters-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: -2px 4px 10px;
+  line-height: 1.45;
 }
-/* El panel se despliega hacia abajo al abrir y se recoge al cerrar (0,22 s, igual que PANEL_ANIMATION_MS). */
-@keyframes filters-open {
-  from {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-}
-@keyframes filters-close {
-  to {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-}
-.filters-collapse {
-  display: grid;
-  grid-template-rows: 1fr;
-  animation: filters-open 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.filters-collapse.closing {
-  animation: filters-close 0.22s ease forwards;
-  pointer-events: none;
-}
-.filters-collapse-inner {
-  min-height: 0;
-  overflow: hidden;
-}
-.filters {
-  padding: 14px 14px 4px;
-}
-.filters .cta {
-  margin-bottom: 0;
+.filters-hint.warn {
+  color: var(--warn);
 }
 .field-pair {
   display: grid;
@@ -1333,18 +1365,6 @@ textarea {
 .field select {
   appearance: none;
   color: inherit;
-}
-.filters .hint {
-  font-size: 13px;
-  color: var(--muted);
-  margin: -2px 4px 10px;
-  line-height: 1.45;
-}
-.filters .hint.warn {
-  color: var(--warn);
-}
-.filters .ghost {
-  margin: 10px 0 10px;
 }
 
 @media (max-width: 360px) {

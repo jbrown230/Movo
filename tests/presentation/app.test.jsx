@@ -34,10 +34,10 @@ async function goToTab(user, name) {
   await user.click(within(navigation).getByRole('button', { name: new RegExp(`^${name}`) }));
 }
 
-/** Abre el panel de filtros de la vista de movimientos. */
+/** Abre la hoja de filtros de la pantalla de movimientos. */
 async function openFilters(user) {
   await user.click(screen.getByRole('button', { name: /^Filtros/ }));
-  return within(screen.getByRole('search', { name: 'Filtros de movimientos' }));
+  return within(screen.getByRole('dialog'));
 }
 
 async function openDemo() {
@@ -97,6 +97,7 @@ describe('modo demo', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Leer' }));
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Leer' }));
 
+    await goToTab(user, 'Movimientos'); // el inicio solo muestra los últimos; este es de enero
     expect(await screen.findByRole('button', { name: /Panaderia Prueba/ })).toBeInTheDocument();
   });
 
@@ -128,6 +129,7 @@ describe('confirmaciones', () => {
 
   async function openFirstNetflix() {
     const user = await openDemo();
+    await goToTab(user, 'Movimientos');
     await user.click(screen.getAllByRole('button', { name: /Netflix/i })[0]);
     await screen.findByText('¿Cómo contarlo?');
     return user;
@@ -233,24 +235,63 @@ describe('apariencia', () => {
   });
 });
 
-describe('movimientos y filtros en el inicio', () => {
+describe('movimientos', () => {
   beforeEach(() => localStorage.clear());
 
-  const movementRows = () =>
-    within(screen.getByRole('region', { name: 'Inicio' }))
+  /** Las filas de movimientos de una pantalla ("Inicio" o "Movimientos"). */
+  const movementRows = (regionName = 'Movimientos') =>
+    within(screen.getByRole('region', { name: regionName }))
       .queryAllByRole('button')
       .filter((button) => button.classList.contains('tx'));
 
-  test('sin filtros, el inicio muestra todos los movimientos bajo el título "Movimientos"', async () => {
-    await openDemo();
-    expect(screen.getByRole('heading', { name: 'Movimientos' })).toBeInTheDocument();
+  const openMovements = async (user) => {
+    await goToTab(user, 'Movimientos');
+    return movementRows().length;
+  };
+
+  test('el inicio muestra solo los últimos movimientos y "Ver todos" lleva a la pestaña Movimientos', async () => {
+    const user = await openDemo();
+    expect(screen.getByRole('heading', { name: 'Últimos movimientos' })).toBeInTheDocument();
+    expect(movementRows('Inicio')).toHaveLength(5);
+
+    await user.click(screen.getByRole('button', { name: /^Ver todos/ }));
+    expect(screen.getByRole('heading', { name: 'Movimientos', level: 1 })).toBeInTheDocument();
     expect(movementRows().length).toBeGreaterThan(5);
-    expect(screen.queryByRole('button', { name: /Ver todos/ })).not.toBeInTheDocument();
   });
 
-  test('filtrar por categoría muestra todos los que cumplen, y se conserva al cambiar de pestaña', async () => {
+  test('buscar por texto deja los movimientos del comercio, y borrar la búsqueda los devuelve todos', async () => {
     const user = await openDemo();
-    const all = movementRows().length;
+    const all = await openMovements(user);
+
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar movimientos' }), 'netflix');
+    const found = movementRows();
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.length).toBeLessThan(all);
+    expect(found.every((row) => /netflix/i.test(row.textContent))).toBe(true);
+    expect(screen.getByText(/con estos filtros/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Borrar búsqueda' }));
+    expect(movementRows()).toHaveLength(all);
+  });
+
+  test('los chips de tipo muestran solo los ingresos, o todo otra vez', async () => {
+    const user = await openDemo();
+    const all = await openMovements(user);
+    const types = within(screen.getByRole('group', { name: 'Tipo de movimiento' }));
+
+    await user.click(types.getByRole('button', { name: 'Ingresos' }));
+    const income = movementRows();
+    expect(income.length).toBeGreaterThan(0);
+    expect(income.length).toBeLessThan(all);
+    expect(income.every((row) => row.querySelector('.a.in'))).toBe(true);
+
+    await user.click(types.getByRole('button', { name: 'Todos' }));
+    expect(movementRows()).toHaveLength(all);
+  });
+
+  test('filtrar por categoría en la hoja muestra los que cumplen, y se conserva al cambiar de pestaña', async () => {
+    const user = await openDemo();
+    const all = await openMovements(user);
     const filters = await openFilters(user);
     await user.selectOptions(filters.getByLabelText('Categoría'), 'ocio');
     expect(movementRows()).toHaveLength(all); // nada cambia hasta aplicar
@@ -262,7 +303,7 @@ describe('movimientos y filtros en el inicio', () => {
     expect(screen.getByText(/con estos filtros/)).toBeInTheDocument();
 
     await goToTab(user, 'Ajustes');
-    await goToTab(user, 'Inicio');
+    await goToTab(user, 'Movimientos');
     expect(screen.getByRole('button', { name: /^Filtros \(1\)/ })).toBeInTheDocument();
     expect(movementRows()).toHaveLength(leisure.length);
 
@@ -272,6 +313,7 @@ describe('movimientos y filtros en el inicio', () => {
 
   test('filtrar por monto: solo "desde" deja los mayores, y un rango al revés avisa', async () => {
     const user = await openDemo();
+    await openMovements(user);
     const filters = await openFilters(user);
     await user.type(filters.getByLabelText('Monto desde'), '20000');
     await user.click(filters.getByRole('button', { name: 'Aplicar' }));
@@ -285,18 +327,20 @@ describe('movimientos y filtros en el inicio', () => {
     expect(again.getByRole('button', { name: 'Aplicar' })).toBeDisabled();
   });
 
-  test('tocar una categoría del inicio filtra la lista por ella en el mes', async () => {
+  test('tocar una categoría del inicio abre Movimientos filtrado por ella en el mes', async () => {
     const user = await openDemo();
     const cards = screen.getAllByRole('button', { name: /: ver sus movimientos del mes$/ });
     expect(cards.length).toBeGreaterThan(2); // todas las categorías del mes, en la fila desplazable
     const category = cards[0].getAttribute('aria-label').split(':')[0];
 
     await user.click(cards[0]);
+    expect(screen.getByRole('heading', { name: 'Movimientos', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
     const filters = await openFilters(user);
     const selected = filters.getByLabelText('Categoría');
     expect(selected.options[selected.selectedIndex].text).toBe(category);
     expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
+    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
     expect(movementRows().length).toBeGreaterThan(0);
   });
 });
@@ -344,7 +388,12 @@ describe('barra de abajo', () => {
     const user = await openDemo();
     const navigation = within(screen.getByRole('navigation', { name: 'Navegación principal' }));
     const buttons = navigation.getAllByRole('button');
-    expect(buttons.map((button) => button.querySelector('span').textContent)).toEqual(['Inicio', 'Bandeja', 'Ajustes']);
+    expect(buttons.map((button) => button.querySelector('span').textContent)).toEqual([
+      'Inicio',
+      'Movimientos',
+      'Bandeja',
+      'Ajustes',
+    ]);
     expect(navigation.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
 
     await goToTab(user, 'Ajustes');
