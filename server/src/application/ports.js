@@ -53,7 +53,8 @@
  * @property {string|null} date
  * @property {string} source            Texto que se le muestra a la persona.
  * @property {{ rate: number, date: string }|null} euro  Colones por euro, o null si no se conoce.
- * @property {Array<{ date: string, usd: number, eur: number|null }>} history
+ * @property {{ rate: number, date: string }|null} nio  Colones por córdoba nicaragüense, o null si no se conoce.
+ * @property {Array<{ date: string, usd: number, eur: number|null, nio?: number }>} history
  *           Colones por dólar y por euro de cada día reciente, del más viejo al más nuevo. Vacío si no hay fuente.
  *
  * @typedef {Object} ExchangeRateSource

@@ -10,11 +10,11 @@ const SMALL_AMOUNT_CENTS = 100_000; // ₡1 000
 /** ₡12 500,50 */
 export const formatColones = (cents) => '₡' + withTwoDecimals.format(cents / 100);
 
-/** Monto en su moneda original: US$7,99 o €7,99. */
+/** Monto en su moneda original: US$7,99, €7,99 o C$300,00. */
 export const formatInCurrency = (cents, currency) => CURRENCY_SYMBOL[currency] + withTwoDecimals.format(cents / 100);
 
 /** Cómo se nombra una unidad de cada moneda extranjera: "a ₡455,60 por dólar". */
-export const CURRENCY_UNIT_NAME = Object.freeze({ USD: 'dólar', EUR: 'euro' });
+export const CURRENCY_UNIT_NAME = Object.freeze({ USD: 'dólar', EUR: 'euro', NIO: 'córdoba' });
 
 /**
  * Colones sin céntimos (₡12 500), salvo montos pequeños con fracción:

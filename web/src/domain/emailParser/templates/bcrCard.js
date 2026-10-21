@@ -8,7 +8,7 @@
 
 import { Direction, TransactionType } from '../../types.js';
 import { parseAmount } from '../amount.js';
-import { detectCurrency } from '../currency.js';
+import { detectCurrency, isKnownCurrencyText } from '../currency.js';
 import { costaRicaToIso, to24Hour } from '../dateTime.js';
 import { collapseSpaces, isDeclinedStatus } from '../text.js';
 
@@ -29,6 +29,7 @@ const splitCells = (line) => (line.includes('\t') ? line.split('\t') : line.spli
 function buildItem({ dateText, amountText, currencyText, merchant, status, cardLastFour }) {
   const match = dateText.match(DATE_TIME);
   if (!match) return null;
+  if (currencyText.trim() && !isKnownCurrencyText(currencyText)) return null; // moneda que no sabemos convertir
   const [, day, month, year, hour, minute, second, meridiem] = match;
   return {
     type: TransactionType.CARD,
@@ -84,7 +85,7 @@ function readTable(lines, headerIndex, cardLastFour) {
 // Respaldo: la fila completa en una sola línea, con espacios simples entre las celdas.
 const SINGLE_LINE_ROW = new RegExp(
   '(\\d{1,2}\\/\\d{1,2}\\/\\d{4}\\s+\\d{1,2}:\\d{2}(?::\\d{2})?)\\s+\\d+\\s+\\d+\\s+(\\d[\\d.,]*|\\.\\d+)\\s+' +
-    '(US DOLLAR|D[OÓ]LAR(?:ES)?|USD|EUROS?|EUR|COLON(?:ES)?(?: COSTARRICENSES?)?|CRC)\\s+(.+?)\\s+' +
+    '(US DOLLAR|D[OÓ]LAR(?:ES)?|USD|EUROS?|EUR|C[OÓ]RDOBAS?(?: ORO)?|NIO|COLON(?:ES)?(?: COSTARRICENSES?)?|CRC)\\s+(.+?)\\s+' +
     '(Aprobad[ao]|Negad[ao]|Rechazad[ao]|Declinad[ao]|Anulad[ao]|Procesad[ao])\\s*$',
   'gim',
 );

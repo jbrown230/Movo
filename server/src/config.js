@@ -3,6 +3,7 @@
 const DEFAULT_PORT = 3000;
 const DEFAULT_REQUESTS_PER_MINUTE = 60;
 const DEFAULT_FALLBACK_EXCHANGE_RATE = 510;
+const DEFAULT_NIO_PER_USD = 36.6243; // oficial del Banco Central de Nicaragua: fija durante todo 2026
 
 const TRUE_WORDS = /^(1|true|yes|si|sí)$/i;
 const readBoolean = (value, defaultValue) =>
@@ -21,6 +22,7 @@ export const config = {
   redisUrl: process.env.REDIS_URL || '',
   cloudSync: readBoolean(process.env.CLOUD_SYNC, false), // apagado salvo que se active con CLOUD_SYNC=true
   bccrToken: process.env.BCCR_TOKEN || '',
+  nioPerUsd: Number(process.env.NIO_PER_USD || DEFAULT_NIO_PER_USD),
   fallbackExchangeRate: Number(process.env.FX_FALLBACK || DEFAULT_FALLBACK_EXCHANGE_RATE),
   requestsPerMinute: Number(process.env.RATE_LIMIT_PER_MIN || DEFAULT_REQUESTS_PER_MINUTE),
   /** Carpeta con la app compilada, para servirla desde la API (opcional). */

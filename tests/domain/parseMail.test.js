@@ -7,7 +7,13 @@ import { detectCurrency } from '../../web/src/domain/emailParser/currency.js';
 import { categorize } from '../../web/src/domain/categories.js';
 import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
-import { BCR_SINPE_ENVIADO, BCR_SINPE_RECIBIDO, BCR_SINPE_PROPIO, BCR_TARJETA_NEGADA } from '../fixtures/bcrMails.js';
+import {
+  BCR_SINPE_ENVIADO,
+  BCR_SINPE_RECIBIDO,
+  BCR_SINPE_PROPIO,
+  BCR_TARJETA_CORDOBAS,
+  BCR_TARJETA_NEGADA,
+} from '../fixtures/bcrMails.js';
 import { BN_VOUCHER_COMPRA, BN_VOUCHER_COMPRA_TEXTO_PLANO } from '../fixtures/bnMails.js';
 import {
   BAC_COMPRA_APROBADA,
@@ -122,6 +128,20 @@ test('BCR: SINPE recibido es ingreso', () => {
     categorize({ counterparty: parsed.counterparty, type: parsed.type, direction: parsed.direction }).category,
     'ingreso',
   );
+});
+
+test('BCR: una compra en "CORDOBA ORO" se lee como córdobas, no como colones', () => {
+  const parsed = parseFirstApproved(BCR_TARJETA_CORDOBAS);
+  assert.equal(parsed.template, 'BCR tarjeta');
+  assert.equal(parsed.currency, 'NIO');
+  assert.equal(parsed.amountCents, 30000);
+  assert.equal(parsed.counterparty, 'COMERCIO NICARAGUA PRUEBA Rivas NI');
+});
+
+test('BCR: una moneda que Movo no sabe convertir no se cuenta como colones', () => {
+  const body = BCR_TARJETA_CORDOBAS.body.replace('CORDOBA ORO', 'LIBRA ESTERLINA');
+  const result = parseMail({ ...BCR_TARJETA_CORDOBAS, body });
+  assert.equal(result.ok, false);
 });
 
 test('BCR: una compra con tarjeta NEGADA queda marcada como negada', () => {

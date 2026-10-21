@@ -1,9 +1,11 @@
-// Tipo de cambio del dólar y del euro, tomado de la API del Sistema de Divulgación de Datos
+// Tipo de cambio del dólar, del euro y (si se configura) del córdoba, tomado de la API del Sistema de Divulgación de Datos
 // Económicos (SDDE) del Banco Central de Costa Rica (BCCR).
 //
 // El BCCR publica el dólar en colones (venta, indicador 318) y el euro en dólares (indicador 333).
-// Los colones por euro salen de multiplicar los dos. Además del valor de hoy se devuelve el de cada
-// día reciente, para convertir cada compra con el tipo de cambio del día en que se hizo.
+// Los colones por euro salen de multiplicar los dos. El BCCR no publica el córdoba nicaragüense: sus colones
+// salen de dividir los colones por dólar entre los córdobas por dólar oficiales del Banco Central de Nicaragua
+// (`nioPerUsd`, fijo en 36,6243 durante 2026). Además del valor de hoy se devuelve el de cada día reciente,
+// para convertir cada compra con el tipo de cambio del día en que se hizo.
 
 import { parseSeries } from './parseBccrResponse.js';
 
@@ -20,6 +22,7 @@ const twoDigits = (number) => String(number).padStart(2, '0');
 const formatYearMonthDay = (date) =>
   `${date.getFullYear()}/${twoDigits(date.getMonth() + 1)}/${twoDigits(date.getDate())}`;
 const roundToCents = (value) => Math.round(value * 100) / 100;
+const roundToTenThousandths = (value) => Math.round(value * 10_000) / 10_000; // un córdoba vale pocos colones: se necesitan más decimales
 
 /** Último valor de la serie publicado ese día o antes (las series vienen ordenadas por fecha). */
 function valueOnOrBefore(series, date) {
@@ -31,21 +34,24 @@ function valueOnOrBefore(series, date) {
   return found;
 }
 
-/** Colones por dólar y por euro de cada día reciente con dólar publicado. */
-function buildHistory(dollarSeries, euroInDollarsSeries) {
+/** Colones por dólar, por euro (y por córdoba, si se conoce su relación con el dólar) de cada día reciente. */
+function buildHistory(dollarSeries, euroInDollarsSeries, nioPerUsd) {
   return dollarSeries.slice(-DAYS_OF_HISTORY).map(({ date, value: dollar }) => {
     const euroInDollars = valueOnOrBefore(euroInDollarsSeries, date);
-    return { date, usd: roundToCents(dollar), eur: euroInDollars ? roundToCents(dollar * euroInDollars) : null };
+    const entry = { date, usd: roundToCents(dollar), eur: euroInDollars ? roundToCents(dollar * euroInDollars) : null };
+    if (nioPerUsd > 0) entry.nio = roundToTenThousandths(dollar / nioPerUsd);
+    return entry;
   });
 }
 
 /**
  * @param {Object} options
  * @param {string} options.token  Token generado en el sitio de Indicadores Económicos del BCCR (Mi Perfil).
+ * @param {number} [options.nioPerUsd]  Córdobas por dólar (oficial del Banco Central de Nicaragua). Sin él, no se convierte el córdoba.
  * @param {typeof fetch} [options.httpFetch]  Solo para pruebas.
  * @returns {import('../../application/ports.js').ExchangeRateSource}
  */
-export function createBccrExchangeRateSource({ token, httpFetch = fetch }) {
+export function createBccrExchangeRateSource({ token, nioPerUsd = 0, httpFetch = fetch }) {
   /** Valores publicados de un indicador en los últimos días. */
   async function fetchSeries(indicator) {
     const today = new Date();
@@ -75,13 +81,14 @@ export function createBccrExchangeRateSource({ token, httpFetch = fetch }) {
         fetchSeries(DOLLAR_SELLING_INDICATOR),
         fetchSeries(EURO_IN_DOLLARS_INDICATOR).catch(() => []),
       ]);
-      const history = buildHistory(dollarSeries, euroInDollarsSeries);
+      const history = buildHistory(dollarSeries, euroInDollarsSeries, nioPerUsd);
       const today = history.at(-1);
       return {
         rate: today.usd,
         date: today.date,
         source: SOURCE_TEXT,
         euro: today.eur ? { rate: today.eur, date: today.date } : null,
+        nio: today.nio ? { rate: today.nio, date: today.date } : null,
         history,
       };
     },

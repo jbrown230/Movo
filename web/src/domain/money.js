@@ -13,12 +13,13 @@ export const CURRENCY_SYMBOL = Object.freeze({
   [Currency.CRC]: '₡',
   [Currency.USD]: 'US$',
   [Currency.EUR]: '€',
+  [Currency.NIO]: 'C$',
 });
 
 export const isForeignCurrency = (currency) => currency !== Currency.CRC;
 
 /**
- * Monto en colones, en céntimos. Los dólares y los euros se convierten con el tipo de cambio dado
+ * Monto en colones, en céntimos. Los dólares, euros y córdobas se convierten con el tipo de cambio dado
  * (colones por unidad de la moneda); sin tipo de cambio quedan en 0 hasta que llegue uno.
  */
 export function toColonesCents(amountCents, currency, exchangeRate) {

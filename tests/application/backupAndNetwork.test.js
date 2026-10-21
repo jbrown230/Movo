@@ -5,6 +5,7 @@ import assert from 'node:assert/strict';
 import { createTestApp } from '../helpers/createTestApp.js';
 import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
+import { BCR_TARJETA_CORDOBAS } from '../fixtures/bcrMails.js';
 
 const NO_CHANGES = { transactions: [], categoryRules: [], settings: [] };
 
@@ -205,6 +206,18 @@ test('una compra en euros se convierte con los colones por euro del servidor', a
   assert.equal(transaction.currency, 'EUR');
   assert.equal(transaction.exchangeRate, 512.3);
   assert.equal(transaction.crcCents, 512300);
+});
+
+test('una compra en córdobas se convierte con los colones por córdoba del servidor', async () => {
+  const backend = { getExchangeRate: async () => ({ rate: 455.6, source: 'BCCR', nio: { rate: 12.4 } }) };
+  const { services } = createTestApp({ backend });
+  await services.refreshExchangeRate();
+
+  const { transaction } = services.readMail({ id: 'cordobas-1', ...BCR_TARJETA_CORDOBAS });
+  assert.equal(transaction.currency, 'NIO');
+  assert.equal(transaction.amountCents, 30000); // C$300,00
+  assert.equal(transaction.exchangeRate, 12.4);
+  assert.equal(transaction.crcCents, 372000); // ₡3 720
 });
 
 test('sin tipo de cambio del euro, la compra queda sin convertir y se convierte cuando llega', async () => {

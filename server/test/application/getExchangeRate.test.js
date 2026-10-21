@@ -23,6 +23,7 @@ test('sin fuente configurada se usa el valor de referencia', async () => {
     date: null,
     source: 'valor de referencia del servidor',
     euro: null,
+    nio: null,
     history: [],
   });
 });
