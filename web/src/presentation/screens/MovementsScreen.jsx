@@ -31,7 +31,7 @@ function SearchBox({ value, onChange }) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Buscar comercio o persona"
+        placeholder="Buscar comercio"
         aria-label="Buscar movimientos"
         autoComplete="off"
       />
