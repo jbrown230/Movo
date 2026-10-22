@@ -1462,16 +1462,40 @@ textarea {
   font-size: 14px;
   font-weight: 500;
 }
-.fchip:has(.ic) {
-  padding-left: 8px;
-}
-.fchip .ic svg {
-  width: 14px;
-  height: 14px;
-}
 .fchip[aria-pressed='true'] {
   background: var(--ink);
   color: var(--app);
+}
+/* "Más filtros": fila que despliega el banco y el monto. */
+.fmore {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+.fmore-hint {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.fmore svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.fmore[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.fmore-body {
+  padding-top: 6px;
 }
 .fsheet-foot {
   position: sticky;

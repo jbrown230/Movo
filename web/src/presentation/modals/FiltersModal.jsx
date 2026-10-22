@@ -1,9 +1,10 @@
-// Hoja "Filtros" de la pantalla de movimientos: fecha, categoría, banco y monto.
+// Hoja "Filtros" de la pantalla de movimientos. A la vista quedan lo más usado (fecha y categoría);
+// el banco y el monto se despliegan con "Más filtros".
 // Edita un borrador: nada se aplica hasta tocar el botón de abajo, que dice cuántos movimientos quedan.
 
 import { useMemo, useState } from 'react';
 import { Field } from '../components/formControls.jsx';
-import { CategoryIcon } from '../components/Icon.jsx';
+import { Icon } from '../components/Icon.jsx';
 import { ModalHeader } from '../components/ModalHeader.jsx';
 import { BANKS } from '../../domain/banks.js';
 import { CATEGORIES } from '../../domain/categories.js';
@@ -18,15 +19,10 @@ import {
 import { useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 
-const CATEGORY_KEYS = Object.keys(CATEGORIES);
-const BANK_KEYS = Object.keys(BANKS);
-const CATEGORY_ICON_SIZE = 22;
-
 /** Una pastilla que se enciende al tocarla y se apaga al tocarla otra vez. */
-function Pill({ label, isOn, onToggle, icon = null }) {
+function Pill({ label, isOn, onToggle }) {
   return (
     <button type="button" className="fchip" aria-pressed={isOn} onClick={onToggle}>
-      {icon}
       {label}
     </button>
   );
@@ -49,7 +45,6 @@ function PillGroup({ label, options, selected, onSelect }) {
         <Pill
           key={option.value}
           label={option.label}
-          icon={option.icon}
           isOn={selected === option.value}
           onToggle={() => onSelect(selected === option.value ? '' : option.value)}
         />
@@ -58,35 +53,46 @@ function PillGroup({ label, options, selected, onSelect }) {
   );
 }
 
-const CATEGORY_OPTIONS = CATEGORY_KEYS.map((key) => ({
-  value: key,
-  label: CATEGORIES[key].name,
-  icon: <CategoryIcon category={key} size={CATEGORY_ICON_SIZE} />,
-}));
-const BANK_OPTIONS = BANK_KEYS.map((key) => ({ value: key, label: BANKS[key].name }));
+const CATEGORY_OPTIONS = Object.entries(CATEGORIES).map(([value, { name }]) => ({ value, label: name }));
+const BANK_OPTIONS = Object.entries(BANKS).map(([value, { name }]) => ({ value, label: name }));
 
+/** Fecha: períodos rápidos y, solo si se pide "Personalizado", los dos campos de fecha. */
 function DateSection({ draft, setDraft }) {
   const presets = useMemo(() => datePresets(), []);
-  const isOn = (preset) => draft.fromDay === preset.fromDay && draft.toDay === preset.toDay;
-  const togglePreset = (preset) =>
-    setDraft({ ...draft, fromDay: isOn(preset) ? '' : preset.fromDay, toDay: isOn(preset) ? '' : preset.toDay });
+  const matches = (preset) => draft.fromDay === preset.fromDay && draft.toDay === preset.toDay;
+  const hasCustomDates = Boolean(draft.fromDay || draft.toDay) && !presets.some(matches);
+  const [isCustomOpen, setIsCustomOpen] = useState(hasCustomDates);
+  const setDays = (fromDay, toDay) => setDraft({ ...draft, fromDay, toDay });
   const setDay = (name) => (event) => setDraft({ ...draft, [name]: event.target.value });
+
+  const togglePreset = (preset) => {
+    setIsCustomOpen(false);
+    if (matches(preset)) setDays('', '');
+    else setDays(preset.fromDay, preset.toDay);
+  };
+  const toggleCustom = () => {
+    if (isCustomOpen && hasCustomDates) setDays('', ''); // al cerrarlo no queda una fecha escondida filtrando
+    setIsCustomOpen(!isCustomOpen);
+  };
 
   return (
     <Section title="Fecha">
       <div className="fchips" role="group" aria-label="Período">
         {presets.map((preset) => (
-          <Pill key={preset.id} label={preset.label} isOn={isOn(preset)} onToggle={() => togglePreset(preset)} />
+          <Pill key={preset.id} label={preset.label} isOn={matches(preset)} onToggle={() => togglePreset(preset)} />
         ))}
+        <Pill label="Personalizado" isOn={isCustomOpen} onToggle={toggleCustom} />
       </div>
-      <div className="field-pair">
-        <Field htmlFor="filterFromDay" label="Fecha desde">
-          <input id="filterFromDay" type="date" value={draft.fromDay} onChange={setDay('fromDay')} />
-        </Field>
-        <Field htmlFor="filterToDay" label="Fecha hasta">
-          <input id="filterToDay" type="date" value={draft.toDay} onChange={setDay('toDay')} />
-        </Field>
-      </div>
+      {isCustomOpen && (
+        <div className="field-pair">
+          <Field htmlFor="filterFromDay" label="Fecha desde">
+            <input id="filterFromDay" type="date" value={draft.fromDay} onChange={setDay('fromDay')} />
+          </Field>
+          <Field htmlFor="filterToDay" label="Fecha hasta">
+            <input id="filterToDay" type="date" value={draft.toDay} onChange={setDay('toDay')} />
+          </Field>
+        </div>
+      )}
     </Section>
   );
 }
@@ -106,31 +112,48 @@ function AmountField({ id, label, value, onChange }) {
   );
 }
 
-function AmountSection({ draft, setDraft, warnings }) {
-  const setAmount = (name) => (value) => setDraft({ ...draft, [name]: value });
+/** Banco y monto, plegados detrás de "Más filtros" (se abren solos si ya hay uno puesto). */
+function MoreFilters({ draft, setDraft, warnings }) {
+  const hasValues = Boolean(draft.bank || draft.minAmountText || draft.maxAmountText);
+  const [isOpen, setIsOpen] = useState(hasValues);
+  const setField = (name) => (value) => setDraft({ ...draft, [name]: value });
+
   return (
-    <Section title="Monto">
-      <div className="field-pair">
-        <AmountField
-          id="filterMinAmount"
-          label="Monto desde"
-          value={draft.minAmountText}
-          onChange={setAmount('minAmountText')}
-        />
-        <AmountField
-          id="filterMaxAmount"
-          label="Monto hasta"
-          value={draft.maxAmountText}
-          onChange={setAmount('maxAmountText')}
-        />
-      </div>
-      <p className="hint filters-hint">Montos en colones. Llena solo uno para buscar mayores o menores.</p>
-      {warnings.map((warning) => (
-        <p className="hint filters-hint warn" key={warning}>
-          {warning}
-        </p>
-      ))}
-    </Section>
+    <>
+      <button type="button" className="fmore" aria-expanded={isOpen} onClick={() => setIsOpen(!isOpen)}>
+        Más filtros
+        <span className="fmore-hint">{isOpen || !hasValues ? 'Banco y monto' : 'Hay filtros puestos'}</span>
+        <Icon name="chevron" />
+      </button>
+      {isOpen && (
+        <div className="fmore-body">
+          <Section title="Banco">
+            <PillGroup label="Banco" options={BANK_OPTIONS} selected={draft.bank} onSelect={setField('bank')} />
+          </Section>
+          <Section title="Monto">
+            <div className="field-pair">
+              <AmountField
+                id="filterMinAmount"
+                label="Monto desde"
+                value={draft.minAmountText}
+                onChange={setField('minAmountText')}
+              />
+              <AmountField
+                id="filterMaxAmount"
+                label="Monto hasta"
+                value={draft.maxAmountText}
+                onChange={setField('maxAmountText')}
+              />
+            </div>
+            {warnings.map((warning) => (
+              <p className="hint filters-hint warn" key={warning}>
+                {warning}
+              </p>
+            ))}
+          </Section>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -157,7 +180,6 @@ export function FiltersModal() {
   const [draft, setDraft] = useState(movementFilters);
   const warnings = rangeWarnings(draft);
   const resultCount = useResultCount(draft, warnings.length > 0);
-  const setField = (name) => (value) => setDraft({ ...draft, [name]: value });
 
   const apply = () => {
     setMovementFilters(draft);
@@ -174,13 +196,10 @@ export function FiltersModal() {
             label="Categoría"
             options={CATEGORY_OPTIONS}
             selected={draft.category}
-            onSelect={setField('category')}
+            onSelect={(value) => setDraft({ ...draft, category: value })}
           />
         </Section>
-        <Section title="Banco">
-          <PillGroup label="Banco" options={BANK_OPTIONS} selected={draft.bank} onSelect={setField('bank')} />
-        </Section>
-        <AmountSection draft={draft} setDraft={setDraft} warnings={warnings} />
+        <MoreFilters draft={draft} setDraft={setDraft} warnings={warnings} />
 
         <div className="fsheet-foot">
           {countSheetFilters(draft) > 0 && (
