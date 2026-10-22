@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon.jsx';
 import { TransactionList } from '../components/TransactionList.jsx';
 import { Direction } from '../../domain/types.js';
 import { useAppData } from '../hooks/useAppData.js';
+import { ExportModal } from '../modals/ExportModal.jsx';
 import { FiltersModal } from '../modals/FiltersModal.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
 import {
@@ -54,6 +55,22 @@ function FiltersButton({ count }) {
   );
 }
 
+/** Botón redondo que exporta a CSV lo que se ve en la lista, con los mismos filtros. */
+function ExportButton({ isDisabled }) {
+  const { openModal } = useModal();
+  return (
+    <button
+      type="button"
+      className="roundbtn"
+      aria-label="Exportar movimientos a CSV"
+      disabled={isDisabled}
+      onClick={() => openModal(<ExportModal />)}
+    >
+      <Icon name="download" />
+    </button>
+  );
+}
+
 /** Tipo de movimiento, con un toque: todos, gastos, ingresos o entre mis cuentas. */
 function DirectionChips({ value, onChange }) {
   return (
@@ -98,9 +115,12 @@ export function MovementsScreen() {
 
   return (
     <section aria-label="Movimientos">
-      <div className="ihead">
-        <h1>Movimientos</h1>
-        <p>{countText}</p>
+      <div className="ihead mv-head">
+        <div>
+          <h1>Movimientos</h1>
+          <p>{countText}</p>
+        </div>
+        <ExportButton isDisabled={visible.length === 0} />
       </div>
       <div className="mv-body">
         <div className="mv-tools">

@@ -289,13 +289,19 @@ describe('movimientos', () => {
     expect(movementRows()).toHaveLength(all);
   });
 
+  /** El botón de abajo de la hoja de filtros: "Ver 12 movimientos" o "Sin resultados". */
+  const applyButton = (filters) => filters.getByRole('button', { name: /^(Ver \d+ movimiento|Sin resultados)/ });
+  const pill = (filters, group, name) =>
+    within(filters.getByRole('group', { name: group })).getByRole('button', { name });
+
   test('filtrar por categoría en la hoja muestra los que cumplen, y se conserva al cambiar de pestaña', async () => {
     const user = await openDemo();
     const all = await openMovements(user);
     const filters = await openFilters(user);
-    await user.selectOptions(filters.getByLabelText('Categoría'), 'ocio');
+    await user.click(pill(filters, 'Categoría', /Ocio/));
+    expect(pill(filters, 'Categoría', /Ocio/)).toHaveAttribute('aria-pressed', 'true');
     expect(movementRows()).toHaveLength(all); // nada cambia hasta aplicar
-    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
+    await user.click(applyButton(filters));
 
     const leisure = movementRows();
     expect(leisure.length).toBeGreaterThan(0);
@@ -311,12 +317,42 @@ describe('movimientos', () => {
     expect(movementRows()).toHaveLength(all);
   });
 
+  test('el botón de la hoja dice cuántos movimientos quedan mientras se eligen los filtros', async () => {
+    const user = await openDemo();
+    const all = await openMovements(user);
+    const filters = await openFilters(user);
+    expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
+
+    await user.click(pill(filters, 'Categoría', /Ocio/));
+    const leisureCount = Number(applyButton(filters).textContent.match(/\d+/)[0]);
+    expect(leisureCount).toBeGreaterThan(0);
+    expect(leisureCount).toBeLessThan(all);
+
+    await user.click(pill(filters, 'Categoría', /Ocio/)); // tocar otra vez la quita
+    expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
+  });
+
+  test('un período rápido llena las fechas, y "Limpiar" deja la hoja sin filtros', async () => {
+    const user = await openDemo();
+    await openMovements(user);
+    const filters = await openFilters(user);
+    expect(filters.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
+
+    await user.click(pill(filters, 'Período', 'Este mes'));
+    expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(filters.getByLabelText('Fecha hasta').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+
+    await user.click(filters.getByRole('button', { name: 'Limpiar' }));
+    expect(filters.getByLabelText('Fecha desde').value).toBe('');
+    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'false');
+  });
+
   test('filtrar por monto: solo "desde" deja los mayores, y un rango al revés avisa', async () => {
     const user = await openDemo();
     await openMovements(user);
     const filters = await openFilters(user);
     await user.type(filters.getByLabelText('Monto desde'), '20000');
-    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
+    await user.click(applyButton(filters));
     const large = movementRows();
     expect(large.length).toBeGreaterThan(0);
     expect(large.every((row) => Number(row.querySelector('.a').textContent.replace(/\D/g, '')) >= 20000)).toBe(true);
@@ -324,7 +360,7 @@ describe('movimientos', () => {
     const again = await openFilters(user);
     await user.type(again.getByLabelText('Monto hasta'), '100');
     expect(again.getByText(/El monto "desde" es mayor que el monto "hasta"/)).toBeInTheDocument();
-    expect(again.getByRole('button', { name: 'Aplicar' })).toBeDisabled();
+    expect(applyButton(again)).toBeDisabled();
   });
 
   test('tocar una categoría del inicio abre Movimientos filtrado por ella en el mes', async () => {
@@ -337,46 +373,63 @@ describe('movimientos', () => {
     expect(screen.getByRole('heading', { name: 'Movimientos', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
     const filters = await openFilters(user);
-    const selected = filters.getByLabelText('Categoría');
-    expect(selected.options[selected.selectedIndex].text).toBe(category);
+    expect(pill(filters, 'Categoría', category)).toHaveAttribute('aria-pressed', 'true');
     expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
-    await user.click(filters.getByRole('button', { name: 'Aplicar' }));
+    await user.click(applyButton(filters));
     expect(movementRows().length).toBeGreaterThan(0);
   });
 });
+
 describe('exportar a CSV', () => {
   beforeEach(() => {
     localStorage.clear();
     downloadTextFile.mockClear();
   });
 
-  test('desde Ajustes se descargan los movimientos del rango elegido', async () => {
+  const openExport = async (user) => {
+    await goToTab(user, 'Movimientos');
+    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+    return within(screen.getByRole('dialog'));
+  };
+
+  test('desde Movimientos se descargan todos los movimientos, y Ajustes ya no ofrece exportar', async () => {
     const user = await openDemo();
     await goToTab(user, 'Ajustes');
-    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+    expect(screen.queryByRole('button', { name: 'Exportar movimientos a CSV' })).not.toBeInTheDocument();
 
-    const dialog = within(screen.getByRole('dialog'));
-    expect(dialog.getByLabelText('Desde').value).toMatch(/^\d{4}-\d{2}-01$/); // por defecto, lo que va del mes
-    await user.clear(dialog.getByLabelText('Desde')); // sin límite al inicio
-    const download = dialog.getByRole('button', { name: /^Descargar \d+ movimiento/ });
-    await user.click(download);
+    const dialog = await openExport(user);
+    expect(dialog.getByText('todos tus movimientos')).toBeInTheDocument();
+    await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
 
     expect(downloadTextFile).toHaveBeenCalledTimes(1);
     const [fileName, content] = downloadTextFile.mock.calls[0];
-    expect(fileName).toMatch(/^movo-movimientos-inicio-a-\d{4}-\d{2}-\d{2}\.csv$/);
-    expect(content.startsWith('\uFEFFFecha;Comercio;Monto;Moneda')).toBe(true);
+    expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.csv$/);
+    expect(content.startsWith('﻿Fecha;Comercio;Monto;Moneda')).toBe(true);
     expect(await screen.findByText(/Se exportaron \d+ movimiento/)).toBeInTheDocument();
   });
 
-  test('un rango al revés no deja descargar', async () => {
+  test('el archivo lleva solo lo que muestran los filtros de la pantalla', async () => {
     const user = await openDemo();
-    await goToTab(user, 'Ajustes');
+    await goToTab(user, 'Movimientos');
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar movimientos' }), 'netflix');
     await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+
     const dialog = within(screen.getByRole('dialog'));
-    await user.clear(dialog.getByLabelText('Hasta'));
-    await user.type(dialog.getByLabelText('Hasta'), '2020-01-01');
-    expect(dialog.getByText('La fecha de inicio es posterior a la fecha final.')).toBeInTheDocument();
-    expect(dialog.getByRole('button', { name: /Descargar|No hay movimientos/ })).toBeDisabled();
+    expect(dialog.getByText('con los filtros que tienes puestos')).toBeInTheDocument();
+    expect(within(dialog.getByRole('list', { name: 'Filtros aplicados' })).getByText('“netflix”')).toBeInTheDocument();
+    await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
+
+    const [, content] = downloadTextFile.mock.calls[0];
+    const rows = content.trimEnd().split('\r\n').slice(1);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.every((row) => /netflix/i.test(row))).toBe(true);
+  });
+
+  test('sin movimientos que cumplan los filtros, no deja descargar', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Movimientos');
+    await user.type(screen.getByRole('searchbox', { name: 'Buscar movimientos' }), 'zzzz');
+    expect(screen.getByRole('button', { name: 'Exportar movimientos a CSV' })).toBeDisabled();
     expect(downloadTextFile).not.toHaveBeenCalled();
   });
 });

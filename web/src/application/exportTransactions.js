@@ -1,10 +1,10 @@
-// Caso de uso: exportar los movimientos de un rango de fechas a un archivo CSV para Excel.
+// Caso de uso: exportar a un archivo CSV para Excel los movimientos que cumplen unos filtros.
 
 import { BANKS } from '../domain/banks.js';
 import { getCategory } from '../domain/categories.js';
 import { toCsv } from '../domain/csv.js';
-import { dayRange } from '../domain/period.js';
 import { Direction, TransactionType } from '../domain/types.js';
+import { toListFilters } from './transactionFilters.js';
 
 /** Separadores que se ofrecen: Excel en español espera punto y coma; en inglés y Google Sheets, coma. */
 export const CsvSeparator = Object.freeze({ SEMICOLON: ';', COMMA: ',' });
@@ -57,13 +57,13 @@ function toRow(transaction, separator) {
 
 export function createExportTransactions({ transactions }) {
   /**
-   * @param {{ fromDay?: string, toDay?: string, separator?: string }} options  Días "AAAA-MM-DD" (los dos se
-   *   incluyen completos); si falta alguno, ese extremo no tiene límite.
+   * @param {{ separator?: string }} options  Además del separador, los mismos filtros que la lista de movimientos
+   *   (`searchTransactions`): fechas, categoría, tipo, banco, montos y texto. Sin filtros, se exporta todo.
    * @returns {{ fileName: string, content: string, count: number }} El archivo, del movimiento más viejo al más nuevo.
    */
-  return function exportTransactions({ fromDay, toDay, separator = CsvSeparator.SEMICOLON } = {}) {
-    const { from, to } = dayRange(fromDay, toDay);
-    const exported = transactions.list({ from, to }, MAX_EXPORTED_TRANSACTIONS).reverse();
+  return function exportTransactions({ separator = CsvSeparator.SEMICOLON, ...filters } = {}) {
+    const { fromDay, toDay } = filters;
+    const exported = transactions.list(toListFilters(filters), MAX_EXPORTED_TRANSACTIONS).reverse();
     return {
       fileName: `movo-movimientos-${fromDay || 'inicio'}-a-${toDay || 'hoy'}.csv`,
       content: toCsv(
