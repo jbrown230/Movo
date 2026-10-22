@@ -1408,3 +1408,119 @@ textarea {
 .seg button {
   white-space: nowrap;
 }
+
+/* Movimientos: botón de exportar junto al título. */
+.mv-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.roundbtn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--field);
+}
+.roundbtn svg {
+  width: 20px;
+  height: 20px;
+}
+.roundbtn:disabled {
+  opacity: 0.4;
+}
+
+/* Hoja "Filtros": secciones con pastillas y un botón fijo abajo que dice cuántos movimientos quedan. */
+.fsec {
+  margin-bottom: 22px;
+}
+.fsec h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px 2px;
+  letter-spacing: -0.01em;
+}
+.fchips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.fsec > .fchips:last-child {
+  margin-bottom: 0;
+}
+.fchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  background: var(--field);
+  font-size: 14px;
+  font-weight: 500;
+}
+.fchip:has(.ic) {
+  padding-left: 8px;
+}
+.fchip .ic svg {
+  width: 14px;
+  height: 14px;
+}
+.fchip[aria-pressed='true'] {
+  background: var(--ink);
+  color: var(--app);
+}
+.fsheet-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 0 2px;
+  background: linear-gradient(to bottom, transparent, var(--card) 22%);
+}
+.fsheet-foot .cta {
+  flex: 1;
+}
+.fsheet-foot .link {
+  flex-shrink: 0;
+  padding: 8px 2px;
+  font-size: 15px;
+}
+
+/* Hoja "Exportar": resumen de lo que se va a descargar. */
+.xsum {
+  background: var(--field);
+  border-radius: 20px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.xsum b {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.xsum > span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.xtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.xtags li {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--line);
+}

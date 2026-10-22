@@ -119,3 +119,20 @@ test('los movimientos eliminados no se exportan, y un rango vacío da un archivo
   assert.equal(services.exportTransactions({ fromDay: '2026-01-15', toDay: '2026-01-15' }).count, 0);
   assert.deepEqual(linesOf(services.exportTransactions({ fromDay: '2027-01-01' }).content).length, 1);
 });
+
+test('exporta solo lo que cumple los mismos filtros que la lista de movimientos', () => {
+  const { services } = sampleApp();
+
+  const byCategory = services.exportTransactions({ category: 'comida' });
+  assert.equal(byCategory.count, 2);
+
+  const byText = services.exportTransactions({ text: 'netflix' });
+  assert.equal(byText.count, 1);
+  assert.match(linesOf(byText.content)[1], /NETFLIX.COM/);
+
+  const combined = services.exportTransactions({ category: 'comida', bank: 'BAC', minCents: 200000 });
+  assert.equal(combined.count, 1);
+  assert.match(linesOf(combined.content)[1], /LA ESQUINA/);
+
+  assert.equal(services.exportTransactions({ text: 'no existe' }).count, 0);
+});

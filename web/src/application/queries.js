@@ -1,6 +1,7 @@
 // Consultas de solo lectura que usa la interfaz.
 
-import { dayRange, monthRange } from '../domain/period.js';
+import { monthRange } from '../domain/period.js';
+import { toListFilters } from './transactionFilters.js';
 
 export function createQueries({ transactions, mails }) {
   return {
@@ -21,10 +22,7 @@ export function createQueries({ transactions, mails }) {
      *           incluyen completos), montos en céntimos de colones y `text`, que se busca en el nombre del comercio
      *           o persona. Lo que falte no filtra.
      */
-    searchTransactions({ fromDay, toDay, minCents, maxCents, ...exact } = {}) {
-      const { from, to } = dayRange(fromDay, toDay);
-      return transactions.list({ ...exact, from, to, minCrcCents: minCents, maxCrcCents: maxCents });
-    },
+    searchTransactions: (filters = {}) => transactions.list(toListFilters(filters)),
     getTransaction: (id) => transactions.get(id),
     countTransactions: () => transactions.countActive(),
 

@@ -1,6 +1,10 @@
 // Filtros de la pantalla de movimientos, tal como los escribe la persona en los campos.
 
+import { BANKS } from '../../domain/banks.js';
+import { getCategory } from '../../domain/categories.js';
 import { textToCents } from '../../domain/money.js';
+import { toDayString } from '../../domain/period.js';
+import { Direction } from '../../domain/types.js';
 
 /** Sin filtros: todos los movimientos. Los montos van como texto, igual que en el campo. */
 export const NO_MOVEMENT_FILTERS = Object.freeze({
@@ -52,4 +56,52 @@ export function rangeWarnings(filters) {
     warnings.push('El monto "desde" es mayor que el monto "hasta".');
   }
   return warnings;
+}
+
+/** Atajos de fecha de la hoja "Filtros": cada uno trae el día de inicio y el de fin ("AAAA-MM-DD"). */
+export function datePresets(today = new Date()) {
+  const year = today.getFullYear();
+  const month = today.getMonth();
+  const thirtyDaysAgo = new Date(year, month, today.getDate() - 29);
+  return [
+    { id: 'thisMonth', label: 'Este mes', fromDay: toDayString(new Date(year, month, 1)), toDay: toDayString(today) },
+    {
+      id: 'lastMonth',
+      label: 'Mes pasado',
+      fromDay: toDayString(new Date(year, month - 1, 1)),
+      toDay: toDayString(new Date(year, month, 0)),
+    },
+    { id: 'last30', label: 'Últimos 30 días', fromDay: toDayString(thirtyDaysAgo), toDay: toDayString(today) },
+    { id: 'thisYear', label: 'Este año', fromDay: toDayString(new Date(year, 0, 1)), toDay: toDayString(today) },
+  ];
+}
+
+const DIRECTION_LABEL = Object.freeze({
+  [Direction.EXPENSE]: 'Gastos',
+  [Direction.INCOME]: 'Ingresos',
+  [Direction.OWN_TRANSFER]: 'Entre mis cuentas',
+});
+
+/** "2026-01-15" -> "15/01/2026". */
+const dayLabelOf = (day) => day.split('-').reverse().join('/');
+
+/** "Desde X", "Hasta Y" o "X – Y" según qué extremos tenga el rango; null si no tiene ninguno. */
+function rangeLabel(from, to, format) {
+  if (from && to) return `${format(from)} – ${format(to)}`;
+  if (from) return `Desde ${format(from)}`;
+  if (to) return `Hasta ${format(to)}`;
+  return null;
+}
+
+/** Los filtros puestos, como frases cortas para mostrar ("Ocio", "Desde 01/10/2026", "Desde ₡20000"). */
+export function describeMovementFilters(filters) {
+  const text = filters.text.trim();
+  return [
+    text && `“${text}”`,
+    filters.direction && (DIRECTION_LABEL[filters.direction] ?? filters.direction),
+    filters.category && getCategory(filters.category).name,
+    filters.bank && (BANKS[filters.bank]?.name ?? filters.bank),
+    rangeLabel(filters.fromDay, filters.toDay, dayLabelOf),
+    rangeLabel(filters.minAmountText, filters.maxAmountText, (amount) => `₡${amount}`),
+  ].filter(Boolean);
 }

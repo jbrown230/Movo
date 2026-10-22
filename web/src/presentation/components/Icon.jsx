@@ -26,6 +26,7 @@ const ICON_PATHS = {
   home: '<path d="M3 11 12 3l9 8v10h-6v-6H9v6H3z"/>',
   filter: '<path d="M3 5h18l-7 8v6l-4 2v-8z"/>',
   search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
   settings:
