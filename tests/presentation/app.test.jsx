@@ -291,15 +291,14 @@ describe('movimientos', () => {
 
   /** El botón de abajo de la hoja de filtros: "Ver 12 movimientos" o "Sin resultados". */
   const applyButton = (filters) => filters.getByRole('button', { name: /^(Ver \d+ movimiento|Sin resultados)/ });
-  const pill = (filters, group, name) =>
-    within(filters.getByRole('group', { name: group })).getByRole('button', { name });
+  /** Elige una opción de una de las listas desplegables de la hoja de filtros. */
+  const choose = (user, filters, label, value) => user.selectOptions(filters.getByLabelText(label), value);
 
   test('filtrar por categoría en la hoja muestra los que cumplen, y se conserva al cambiar de pestaña', async () => {
     const user = await openDemo();
     const all = await openMovements(user);
     const filters = await openFilters(user);
-    await user.click(pill(filters, 'Categoría', /Ocio/));
-    expect(pill(filters, 'Categoría', /Ocio/)).toHaveAttribute('aria-pressed', 'true');
+    await choose(user, filters, 'Categoría', 'ocio');
     expect(movementRows()).toHaveLength(all); // nada cambia hasta aplicar
     await user.click(applyButton(filters));
 
@@ -323,32 +322,33 @@ describe('movimientos', () => {
     const filters = await openFilters(user);
     expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
 
-    await user.click(pill(filters, 'Categoría', /Ocio/));
+    await choose(user, filters, 'Categoría', 'ocio');
     const leisureCount = Number(applyButton(filters).textContent.match(/\d+/)[0]);
     expect(leisureCount).toBeGreaterThan(0);
     expect(leisureCount).toBeLessThan(all);
 
-    await user.click(pill(filters, 'Categoría', /Ocio/)); // tocar otra vez la quita
+    await choose(user, filters, 'Categoría', ''); // "Todas" quita el filtro
     expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
   });
 
-  test('un período rápido llena las fechas, y "Limpiar" deja la hoja sin filtros', async () => {
+  test('el período elige las fechas, "Personalizado" las muestra y "Limpiar" deja la hoja sin filtros', async () => {
     const user = await openDemo();
     await openMovements(user);
     const filters = await openFilters(user);
     expect(filters.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
-
     expect(filters.queryByLabelText('Fecha desde')).not.toBeInTheDocument(); // los campos salen con "Personalizado"
-    await user.click(pill(filters, 'Período', 'Este mes'));
-    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(pill(filters, 'Período', 'Personalizado'));
-    expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
+    await choose(user, filters, 'Período', 'thisMonth');
+    expect(filters.getByLabelText('Período').value).toBe('thisMonth');
+    expect(filters.queryByLabelText('Fecha desde')).not.toBeInTheDocument();
+
+    await choose(user, filters, 'Período', 'custom');
+    expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/); // conserva las del período
     expect(filters.getByLabelText('Fecha hasta').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
     await user.click(filters.getByRole('button', { name: 'Limpiar' }));
     expect(filters.getByLabelText('Fecha desde').value).toBe('');
-    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'false');
+    expect(filters.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
   });
 
   test('filtrar por monto: solo "desde" deja los mayores, y un rango al revés avisa', async () => {
@@ -380,8 +380,9 @@ describe('movimientos', () => {
     expect(screen.getByRole('heading', { name: 'Movimientos', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
     const filters = await openFilters(user);
-    expect(pill(filters, 'Categoría', category)).toHaveAttribute('aria-pressed', 'true');
-    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'true');
+    const selected = filters.getByLabelText('Categoría');
+    expect(selected.options[selected.selectedIndex].text).toBe(category);
+    expect(filters.getByLabelText('Período').value).toBe('thisMonth');
     await user.click(applyButton(filters));
     expect(movementRows().length).toBeGreaterThan(0);
   });
