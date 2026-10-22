@@ -876,7 +876,6 @@ textarea {
   margin: 0 0 6px 4px;
 }
 .field input,
-.field select,
 .field textarea {
   width: 100%;
   border: 1.5px solid transparent;
@@ -887,7 +886,6 @@ textarea {
   outline: none;
 }
 .field input:focus,
-.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
 }
@@ -1358,18 +1356,8 @@ textarea {
   grid-template-columns: repeat(2, minmax(0, 1fr)); /* que un campo de fecha no ensanche la columna */
   gap: 10px;
 }
-.field-pair input,
-.field-pair select {
+.field-pair input {
   min-width: 0;
-}
-.field select {
-  appearance: none;
-  color: inherit;
-  padding-right: 42px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a859c' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 16px;
 }
 
 @media (max-width: 360px) {
@@ -1475,17 +1463,21 @@ textarea {
   bottom: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 10px;
   padding: 14px 0 2px;
   background: linear-gradient(to bottom, transparent, var(--card) 22%);
 }
 .fsheet-foot .cta {
   flex: 1;
 }
-.fsheet-foot .link {
+/* "Limpiar": botón secundario, de la misma altura que el principal. */
+.fsheet-foot .ghost {
+  width: auto;
   flex-shrink: 0;
-  padding: 8px 2px;
-  font-size: 15px;
+  margin-top: 0;
+  padding: 17px 22px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 /* Hoja "Exportar": resumen de lo que se va a descargar. */
@@ -1520,4 +1512,71 @@ textarea {
   font-size: 12px;
   font-weight: 600;
   box-shadow: 0 0 0 1px var(--line);
+}
+
+/* Selector propio (Dropdown): el campo y su lista, con el mismo diseño que el resto de la app. */
+.dd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  background: var(--field);
+  font-size: 16px;
+  text-align: left;
+}
+.dd-btn.empty > span {
+  color: var(--muted);
+}
+.dd-btn[aria-expanded='true'] {
+  border-color: var(--accent);
+}
+.dd-btn svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.dd-btn[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.dd-list {
+  max-height: 232px;
+  overflow-y: auto;
+  margin-top: 6px;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow:
+    0 8px 24px rgba(20, 10, 60, 0.12),
+    0 0 0 1px var(--line);
+}
+.dd-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+}
+.dd-opt:hover,
+.dd-opt:focus-visible {
+  background: var(--field);
+}
+.dd-opt[aria-selected='true'] {
+  font-weight: 700;
+  color: var(--accent);
+}
+.dd-opt svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
 }

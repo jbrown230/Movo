@@ -291,14 +291,17 @@ describe('movimientos', () => {
 
   /** El botón de abajo de la hoja de filtros: "Ver 12 movimientos" o "Sin resultados". */
   const applyButton = (filters) => filters.getByRole('button', { name: /^(Ver \d+ movimiento|Sin resultados)/ });
-  /** Elige una opción de una de las listas desplegables de la hoja de filtros. */
-  const choose = (user, filters, label, value) => user.selectOptions(filters.getByLabelText(label), value);
+  /** Abre una de las listas desplegables de la hoja de filtros y elige una opción por su nombre. */
+  const choose = async (user, filters, label, optionName) => {
+    await user.click(filters.getByRole('button', { name: label }));
+    await user.click(within(filters.getByRole('listbox', { name: label })).getByRole('option', { name: optionName }));
+  };
 
   test('filtrar por categoría en la hoja muestra los que cumplen, y se conserva al cambiar de pestaña', async () => {
     const user = await openDemo();
     const all = await openMovements(user);
     const filters = await openFilters(user);
-    await choose(user, filters, 'Categoría', 'ocio');
+    await choose(user, filters, 'Categoría', 'Ocio');
     expect(movementRows()).toHaveLength(all); // nada cambia hasta aplicar
     await user.click(applyButton(filters));
 
@@ -316,18 +319,40 @@ describe('movimientos', () => {
     expect(movementRows()).toHaveLength(all);
   });
 
+  test('la lista desplegable muestra la opción elegida, y se cierra al elegir y al tocar fuera', async () => {
+    const user = await openDemo();
+    await openMovements(user);
+    const filters = await openFilters(user);
+    const category = filters.getByRole('button', { name: 'Categoría' });
+    expect(category).toHaveAttribute('aria-expanded', 'false');
+    expect(filters.queryByRole('listbox')).not.toBeInTheDocument();
+
+    await user.click(category);
+    expect(category).toHaveAttribute('aria-expanded', 'true');
+    expect(filters.getByRole('option', { name: 'Todas' })).toHaveAttribute('aria-selected', 'true');
+
+    await user.click(filters.getByRole('option', { name: 'Ocio' }));
+    expect(filters.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(category).toHaveTextContent('Ocio');
+
+    await user.click(category);
+    expect(filters.getByRole('option', { name: 'Ocio' })).toHaveAttribute('aria-selected', 'true');
+    await user.click(filters.getByRole('heading', { name: 'Filtros' })); // fuera de la lista
+    expect(filters.queryByRole('listbox')).not.toBeInTheDocument();
+  });
+
   test('el botón de la hoja dice cuántos movimientos quedan mientras se eligen los filtros', async () => {
     const user = await openDemo();
     const all = await openMovements(user);
     const filters = await openFilters(user);
     expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
 
-    await choose(user, filters, 'Categoría', 'ocio');
+    await choose(user, filters, 'Categoría', 'Ocio');
     const leisureCount = Number(applyButton(filters).textContent.match(/\d+/)[0]);
     expect(leisureCount).toBeGreaterThan(0);
     expect(leisureCount).toBeLessThan(all);
 
-    await choose(user, filters, 'Categoría', ''); // "Todas" quita el filtro
+    await choose(user, filters, 'Categoría', 'Todas'); // "Todas" quita el filtro
     expect(applyButton(filters)).toHaveTextContent(`Ver ${all} movimientos`);
   });
 
@@ -338,11 +363,11 @@ describe('movimientos', () => {
     expect(filters.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
     expect(filters.queryByLabelText('Fecha desde')).not.toBeInTheDocument(); // los campos salen con "Personalizado"
 
-    await choose(user, filters, 'Período', 'thisMonth');
-    expect(filters.getByLabelText('Período').value).toBe('thisMonth');
+    await choose(user, filters, 'Período', 'Este mes');
+    expect(filters.getByRole('button', { name: 'Período' })).toHaveTextContent('Este mes');
     expect(filters.queryByLabelText('Fecha desde')).not.toBeInTheDocument();
 
-    await choose(user, filters, 'Período', 'custom');
+    await choose(user, filters, 'Período', 'Personalizado');
     expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/); // conserva las del período
     expect(filters.getByLabelText('Fecha hasta').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -380,9 +405,8 @@ describe('movimientos', () => {
     expect(screen.getByRole('heading', { name: 'Movimientos', level: 1 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
     const filters = await openFilters(user);
-    const selected = filters.getByLabelText('Categoría');
-    expect(selected.options[selected.selectedIndex].text).toBe(category);
-    expect(filters.getByLabelText('Período').value).toBe('thisMonth');
+    expect(filters.getByRole('button', { name: 'Categoría' })).toHaveTextContent(category);
+    expect(filters.getByRole('button', { name: 'Período' })).toHaveTextContent('Este mes');
     await user.click(applyButton(filters));
     expect(movementRows().length).toBeGreaterThan(0);
   });

@@ -3,6 +3,7 @@
 // Edita un borrador: nada se aplica hasta tocar el botón de abajo, que dice cuántos movimientos quedan.
 
 import { useMemo, useState } from 'react';
+import { Dropdown } from '../components/Dropdown.jsx';
 import { Field } from '../components/formControls.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { ModalHeader } from '../components/ModalHeader.jsx';
@@ -23,22 +24,6 @@ const CUSTOM_PERIOD = 'custom';
 const CATEGORY_OPTIONS = Object.entries(CATEGORIES).map(([value, { name }]) => ({ value, label: name }));
 const BANK_OPTIONS = Object.entries(BANKS).map(([value, { name }]) => ({ value, label: name }));
 
-/** Lista desplegable. `emptyLabel` es la primera opción, la que quita el filtro. */
-function SelectField({ id, label, value, options, emptyLabel, onChange }) {
-  return (
-    <Field htmlFor={id} label={label}>
-      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">{emptyLabel}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </Field>
-  );
-}
-
 /** Período: una lista con los atajos y "Personalizado", que muestra los dos campos de fecha. */
 function PeriodFields({ draft, setDraft }) {
   const presets = useMemo(() => datePresets(), []);
@@ -57,7 +42,7 @@ function PeriodFields({ draft, setDraft }) {
 
   return (
     <>
-      <SelectField
+      <Dropdown
         id="filterPeriod"
         label="Período"
         value={selected}
@@ -112,7 +97,7 @@ function MoreFilters({ draft, setDraft, warnings }) {
       </button>
       {isOpen && (
         <div className="fmore-body">
-          <SelectField
+          <Dropdown
             id="filterBank"
             label="Banco"
             value={draft.bank}
@@ -179,7 +164,7 @@ export function FiltersModal() {
       <ModalHeader title="Filtros" />
       <div role="search" aria-label="Filtros de movimientos" className="fsheet">
         <PeriodFields draft={draft} setDraft={setDraft} />
-        <SelectField
+        <Dropdown
           id="filterCategory"
           label="Categoría"
           value={draft.category}
@@ -191,7 +176,7 @@ export function FiltersModal() {
 
         <div className="fsheet-foot">
           {countSheetFilters(draft) > 0 && (
-            <button type="button" className="link" onClick={() => setDraft(clearSheetFilters(draft))}>
+            <button type="button" className="ghost" onClick={() => setDraft(clearSheetFilters(draft))}>
               Limpiar
             </button>
           )}
