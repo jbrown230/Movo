@@ -1,4 +1,4 @@
-// Hoja "Filtros" de la pantalla de movimientos. A la vista quedan lo más usado (fecha y categoría);
+// Hoja "Filtros" de la pantalla de movimientos. A la vista quedan lo más usado (período y categoría);
 // el banco y el monto se despliegan con "Más filtros".
 // Edita un borrador: nada se aplica hasta tocar el botón de abajo, que dice cuántos movimientos quedan.
 
@@ -19,71 +19,56 @@ import {
 import { useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 
-/** Una pastilla que se enciende al tocarla y se apaga al tocarla otra vez. */
-function Pill({ label, isOn, onToggle }) {
-  return (
-    <button type="button" className="fchip" aria-pressed={isOn} onClick={onToggle}>
-      {label}
-    </button>
-  );
-}
-
-function Section({ title, children }) {
-  return (
-    <section className="fsec">
-      <h3>{title}</h3>
-      {children}
-    </section>
-  );
-}
-
-/** Pastillas de una lista de opciones; tocar la que está encendida quita el filtro. */
-function PillGroup({ label, options, selected, onSelect }) {
-  return (
-    <div className="fchips" role="group" aria-label={label}>
-      {options.map((option) => (
-        <Pill
-          key={option.value}
-          label={option.label}
-          isOn={selected === option.value}
-          onToggle={() => onSelect(selected === option.value ? '' : option.value)}
-        />
-      ))}
-    </div>
-  );
-}
-
+const CUSTOM_PERIOD = 'custom';
 const CATEGORY_OPTIONS = Object.entries(CATEGORIES).map(([value, { name }]) => ({ value, label: name }));
 const BANK_OPTIONS = Object.entries(BANKS).map(([value, { name }]) => ({ value, label: name }));
 
-/** Fecha: períodos rápidos y, solo si se pide "Personalizado", los dos campos de fecha. */
-function DateSection({ draft, setDraft }) {
+/** Lista desplegable. `emptyLabel` es la primera opción, la que quita el filtro. */
+function SelectField({ id, label, value, options, emptyLabel, onChange }) {
+  return (
+    <Field htmlFor={id} label={label}>
+      <select id={id} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">{emptyLabel}</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+}
+
+/** Período: una lista con los atajos y "Personalizado", que muestra los dos campos de fecha. */
+function PeriodFields({ draft, setDraft }) {
   const presets = useMemo(() => datePresets(), []);
-  const matches = (preset) => draft.fromDay === preset.fromDay && draft.toDay === preset.toDay;
-  const hasCustomDates = Boolean(draft.fromDay || draft.toDay) && !presets.some(matches);
-  const [isCustomOpen, setIsCustomOpen] = useState(hasCustomDates);
-  const setDays = (fromDay, toDay) => setDraft({ ...draft, fromDay, toDay });
+  const matching = presets.find((preset) => draft.fromDay === preset.fromDay && draft.toDay === preset.toDay);
+  // Si ya hay un rango que no es un atajo, se abre "Personalizado"; si no, el que coincide, o ninguno.
+  const [isCustom, setIsCustom] = useState(Boolean(draft.fromDay || draft.toDay) && !matching);
+  const selected = isCustom ? CUSTOM_PERIOD : (matching?.id ?? '');
+
+  const choose = (value) => {
+    const preset = presets.find((candidate) => candidate.id === value);
+    setIsCustom(value === CUSTOM_PERIOD);
+    if (value === CUSTOM_PERIOD) return;
+    setDraft({ ...draft, fromDay: preset?.fromDay ?? '', toDay: preset?.toDay ?? '' });
+  };
   const setDay = (name) => (event) => setDraft({ ...draft, [name]: event.target.value });
 
-  const togglePreset = (preset) => {
-    setIsCustomOpen(false);
-    if (matches(preset)) setDays('', '');
-    else setDays(preset.fromDay, preset.toDay);
-  };
-  const toggleCustom = () => {
-    if (isCustomOpen && hasCustomDates) setDays('', ''); // al cerrarlo no queda una fecha escondida filtrando
-    setIsCustomOpen(!isCustomOpen);
-  };
-
   return (
-    <Section title="Fecha">
-      <div className="fchips" role="group" aria-label="Período">
-        {presets.map((preset) => (
-          <Pill key={preset.id} label={preset.label} isOn={matches(preset)} onToggle={() => togglePreset(preset)} />
-        ))}
-        <Pill label="Personalizado" isOn={isCustomOpen} onToggle={toggleCustom} />
-      </div>
-      {isCustomOpen && (
+    <>
+      <SelectField
+        id="filterPeriod"
+        label="Período"
+        value={selected}
+        emptyLabel="Cualquier fecha"
+        options={[
+          ...presets.map(({ id, label }) => ({ value: id, label })),
+          { value: CUSTOM_PERIOD, label: 'Personalizado' },
+        ]}
+        onChange={choose}
+      />
+      {selected === CUSTOM_PERIOD && (
         <div className="field-pair">
           <Field htmlFor="filterFromDay" label="Fecha desde">
             <input id="filterFromDay" type="date" value={draft.fromDay} onChange={setDay('fromDay')} />
@@ -93,7 +78,7 @@ function DateSection({ draft, setDraft }) {
           </Field>
         </div>
       )}
-    </Section>
+    </>
   );
 }
 
@@ -127,30 +112,33 @@ function MoreFilters({ draft, setDraft, warnings }) {
       </button>
       {isOpen && (
         <div className="fmore-body">
-          <Section title="Banco">
-            <PillGroup label="Banco" options={BANK_OPTIONS} selected={draft.bank} onSelect={setField('bank')} />
-          </Section>
-          <Section title="Monto">
-            <div className="field-pair">
-              <AmountField
-                id="filterMinAmount"
-                label="Monto desde"
-                value={draft.minAmountText}
-                onChange={setField('minAmountText')}
-              />
-              <AmountField
-                id="filterMaxAmount"
-                label="Monto hasta"
-                value={draft.maxAmountText}
-                onChange={setField('maxAmountText')}
-              />
-            </div>
-            {warnings.map((warning) => (
-              <p className="hint filters-hint warn" key={warning}>
-                {warning}
-              </p>
-            ))}
-          </Section>
+          <SelectField
+            id="filterBank"
+            label="Banco"
+            value={draft.bank}
+            emptyLabel="Todos"
+            options={BANK_OPTIONS}
+            onChange={setField('bank')}
+          />
+          <div className="field-pair">
+            <AmountField
+              id="filterMinAmount"
+              label="Monto desde"
+              value={draft.minAmountText}
+              onChange={setField('minAmountText')}
+            />
+            <AmountField
+              id="filterMaxAmount"
+              label="Monto hasta"
+              value={draft.maxAmountText}
+              onChange={setField('maxAmountText')}
+            />
+          </div>
+          {warnings.map((warning) => (
+            <p className="hint filters-hint warn" key={warning}>
+              {warning}
+            </p>
+          ))}
         </div>
       )}
     </>
@@ -163,7 +151,7 @@ const applyLabel = (count) => {
   return `Ver ${count} movimiento${count === 1 ? '' : 's'}`;
 };
 
-/** Cuántos movimientos quedarían con lo que hay en el borrador; se actualiza al tocar cada filtro. */
+/** Cuántos movimientos quedarían con lo que hay en el borrador; se actualiza al cambiar cada filtro. */
 function useResultCount(draft, hasWarnings) {
   const { services, dataVersion } = useSession();
   return useMemo(
@@ -190,15 +178,15 @@ export function FiltersModal() {
     <>
       <ModalHeader title="Filtros" />
       <div role="search" aria-label="Filtros de movimientos" className="fsheet">
-        <DateSection draft={draft} setDraft={setDraft} />
-        <Section title="Categoría">
-          <PillGroup
-            label="Categoría"
-            options={CATEGORY_OPTIONS}
-            selected={draft.category}
-            onSelect={(value) => setDraft({ ...draft, category: value })}
-          />
-        </Section>
+        <PeriodFields draft={draft} setDraft={setDraft} />
+        <SelectField
+          id="filterCategory"
+          label="Categoría"
+          value={draft.category}
+          emptyLabel="Todas"
+          options={CATEGORY_OPTIONS}
+          onChange={(category) => setDraft({ ...draft, category })}
+        />
         <MoreFilters draft={draft} setDraft={setDraft} warnings={warnings} />
 
         <div className="fsheet-foot">
