@@ -410,7 +410,7 @@ textarea {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 2px 18px 14px;
+  padding: 2px 28px 14px 18px; /* el espacio de la derecha deja que la última tarjeta salga del degradado */
   margin: 0 -16px;
   scrollbar-width: none;
 }
@@ -1591,4 +1591,31 @@ textarea {
 .dd .ic svg {
   width: 16px;
   height: 16px;
+}
+
+/* Sin cortes bruscos: lo que se desplaza hacia un lado se desvanece en el borde, y la lista se
+   desvanece antes de llegar a la barra de abajo. */
+.cats,
+.chips {
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.chips::after {
+  content: '';
+  flex: 0 0 20px; /* con el espacio entre chips, deja el último fuera del degradado */
+}
+.searchbox input::placeholder {
+  text-overflow: ellipsis;
+}
+.app::after {
+  content: '';
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(440px, 100%);
+  height: calc(100px + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(to top, var(--app) 28%, transparent);
+  pointer-events: none;
+  z-index: 19;
 }
