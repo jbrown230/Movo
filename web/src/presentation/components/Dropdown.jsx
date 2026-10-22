@@ -19,8 +19,9 @@ function useCloseOnOutsidePress(ref, isOpen, close) {
 
 /**
  * @param {{ id: string, label: string, value: string, emptyLabel: string,
- *           options: Array<{ value: string, label: string }>, onChange: (value: string) => void }} props
- *   `emptyLabel` es la primera opción: la que quita el filtro (su valor es '').
+ *           options: Array<{ value: string, label: string, icon?: import('react').ReactNode }>,
+ *           onChange: (value: string) => void }} props
+ *   `emptyLabel` es la primera opción: la que quita el filtro (su valor es ''). Cada opción puede traer un `icon`.
  */
 export function Dropdown({ id, label, value, emptyLabel, options, onChange }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,7 +30,7 @@ export function Dropdown({ id, label, value, emptyLabel, options, onChange }) {
   useCloseOnOutsidePress(wrapperRef, isOpen, close);
 
   const all = [{ value: '', label: emptyLabel }, ...options];
-  const selectedLabel = all.find((option) => option.value === value)?.label ?? emptyLabel;
+  const selected = all.find((option) => option.value === value) ?? all[0];
   const pick = (next) => {
     onChange(next);
     close();
@@ -46,7 +47,10 @@ export function Dropdown({ id, label, value, emptyLabel, options, onChange }) {
           aria-expanded={isOpen}
           onClick={() => setIsOpen(!isOpen)}
         >
-          <span>{selectedLabel}</span>
+          <span className="dd-label">
+            {selected.icon}
+            {selected.label}
+          </span>
           <Icon name="chevron" />
         </button>
         {isOpen && (
@@ -60,7 +64,10 @@ export function Dropdown({ id, label, value, emptyLabel, options, onChange }) {
                 className="dd-opt"
                 onClick={() => pick(option.value)}
               >
-                {option.label}
+                <span className="dd-label">
+                  {option.icon}
+                  {option.label}
+                </span>
                 {option.value === value && <Icon name="check" />}
               </button>
             ))}

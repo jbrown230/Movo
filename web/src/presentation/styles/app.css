@@ -1580,3 +1580,15 @@ textarea {
   width: 18px;
   height: 18px;
 }
+
+/* Dropdown: la opción puede llevar un ícono delante del nombre. */
+.dd-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dd .ic svg {
+  width: 16px;
+  height: 16px;
+}
