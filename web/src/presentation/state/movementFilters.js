@@ -62,7 +62,6 @@ export function rangeWarnings(filters) {
 export function datePresets(today = new Date()) {
   const year = today.getFullYear();
   const month = today.getMonth();
-  const thirtyDaysAgo = new Date(year, month, today.getDate() - 29);
   return [
     { id: 'thisMonth', label: 'Este mes', fromDay: toDayString(new Date(year, month, 1)), toDay: toDayString(today) },
     {
@@ -71,7 +70,6 @@ export function datePresets(today = new Date()) {
       fromDay: toDayString(new Date(year, month - 1, 1)),
       toDay: toDayString(new Date(year, month, 0)),
     },
-    { id: 'last30', label: 'Últimos 30 días', fromDay: toDayString(thirtyDaysAgo), toDay: toDayString(today) },
     { id: 'thisYear', label: 'Este año', fromDay: toDayString(new Date(year, 0, 1)), toDay: toDayString(today) },
   ];
 }

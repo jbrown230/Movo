@@ -5,7 +5,7 @@
 import { useMemo, useState } from 'react';
 import { Dropdown } from '../components/Dropdown.jsx';
 import { Field } from '../components/formControls.jsx';
-import { Icon } from '../components/Icon.jsx';
+import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { ModalHeader } from '../components/ModalHeader.jsx';
 import { BANKS } from '../../domain/banks.js';
 import { CATEGORIES } from '../../domain/categories.js';
@@ -21,7 +21,12 @@ import { useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 
 const CUSTOM_PERIOD = 'custom';
-const CATEGORY_OPTIONS = Object.entries(CATEGORIES).map(([value, { name }]) => ({ value, label: name }));
+const CATEGORY_ICON_SIZE = 28;
+const CATEGORY_OPTIONS = Object.entries(CATEGORIES).map(([value, { name }]) => ({
+  value,
+  label: name,
+  icon: <CategoryIcon category={value} size={CATEGORY_ICON_SIZE} />,
+}));
 const BANK_OPTIONS = Object.entries(BANKS).map(([value, { name }]) => ({ value, label: name }));
 
 /** Período: una lista con los atajos y "Personalizado", que muestra los dos campos de fecha. */
