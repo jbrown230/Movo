@@ -338,7 +338,11 @@ describe('movimientos', () => {
     const filters = await openFilters(user);
     expect(filters.queryByRole('button', { name: 'Limpiar' })).not.toBeInTheDocument();
 
+    expect(filters.queryByLabelText('Fecha desde')).not.toBeInTheDocument(); // los campos salen con "Personalizado"
     await user.click(pill(filters, 'Período', 'Este mes'));
+    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(pill(filters, 'Período', 'Personalizado'));
     expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
     expect(filters.getByLabelText('Fecha hasta').value).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
@@ -351,6 +355,8 @@ describe('movimientos', () => {
     const user = await openDemo();
     await openMovements(user);
     const filters = await openFilters(user);
+    expect(filters.queryByLabelText('Monto desde')).not.toBeInTheDocument(); // plegado en "Más filtros"
+    await user.click(filters.getByRole('button', { name: /^Más filtros/ }));
     await user.type(filters.getByLabelText('Monto desde'), '20000');
     await user.click(applyButton(filters));
     const large = movementRows();
@@ -358,6 +364,7 @@ describe('movimientos', () => {
     expect(large.every((row) => Number(row.querySelector('.a').textContent.replace(/\D/g, '')) >= 20000)).toBe(true);
 
     const again = await openFilters(user);
+    expect(again.getByLabelText('Monto desde').value).toBe('20000'); // con un monto puesto, se abre solo
     await user.type(again.getByLabelText('Monto hasta'), '100');
     expect(again.getByText(/El monto "desde" es mayor que el monto "hasta"/)).toBeInTheDocument();
     expect(applyButton(again)).toBeDisabled();
@@ -374,7 +381,7 @@ describe('movimientos', () => {
     expect(screen.getByRole('button', { name: /^Filtros \(3\)/ })).toBeInTheDocument();
     const filters = await openFilters(user);
     expect(pill(filters, 'Categoría', category)).toHaveAttribute('aria-pressed', 'true');
-    expect(filters.getByLabelText('Fecha desde').value).toMatch(/^\d{4}-\d{2}-01$/);
+    expect(pill(filters, 'Período', 'Este mes')).toHaveAttribute('aria-pressed', 'true');
     await user.click(applyButton(filters));
     expect(movementRows().length).toBeGreaterThan(0);
   });
