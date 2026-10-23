@@ -61,14 +61,14 @@ function FiltersButton({ count }) {
   );
 }
 
-/** Botón redondo que exporta a CSV lo que se ve en la lista, con los mismos filtros. */
+/** Botón redondo que exporta (Excel o CSV) lo que se ve en la lista, con los mismos filtros. */
 function ExportButton({ isDisabled }) {
   const { openModal } = useModal();
   return (
     <button
       type="button"
       className="roundbtn"
-      aria-label="Exportar movimientos a CSV"
+      aria-label="Exportar movimientos"
       disabled={isDisabled}
       onClick={() => openModal(<ExportModal />)}
     >

@@ -412,7 +412,7 @@ describe('movimientos', () => {
   });
 });
 
-describe('exportar a CSV', () => {
+describe('exportar movimientos', () => {
   beforeEach(() => {
     localStorage.clear();
     downloadTextFile.mockClear();
@@ -420,35 +420,54 @@ describe('exportar a CSV', () => {
 
   const openExport = async (user) => {
     await goToTab(user, 'Movimientos');
-    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+    await user.click(screen.getByRole('button', { name: 'Exportar movimientos' }));
     return within(screen.getByRole('dialog'));
   };
 
-  test('desde Movimientos se descargan todos los movimientos, y Ajustes ya no ofrece exportar', async () => {
+  const chooseFormat = (user, dialog, name) =>
+    user.click(within(dialog.getByRole('group', { name: 'Formato del archivo' })).getByRole('button', { name }));
+
+  test('por defecto se descarga un Excel con todos los movimientos, y Ajustes ya no ofrece exportar', async () => {
     const user = await openDemo();
     await goToTab(user, 'Ajustes');
-    expect(screen.queryByRole('button', { name: 'Exportar movimientos a CSV' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Exportar movimientos' })).not.toBeInTheDocument();
 
     const dialog = await openExport(user);
     expect(dialog.getByText('todos tus movimientos')).toBeInTheDocument();
-    await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
+    expect(dialog.queryByRole('group', { name: 'Separador' })).not.toBeInTheDocument(); // solo aplica al CSV
+    await user.click(dialog.getByRole('button', { name: 'Descargar Excel' }));
 
     expect(downloadTextFile).toHaveBeenCalledTimes(1);
-    const [fileName, content] = downloadTextFile.mock.calls[0];
-    expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.csv$/);
-    expect(content.startsWith('﻿Fecha;Comercio;Monto;Moneda')).toBe(true);
+    const [fileName, content, mimeType] = downloadTextFile.mock.calls[0];
+    expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.xlsx$/);
+    expect(mimeType).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    expect([content[0], content[1]]).toEqual([0x50, 0x4b]); // "PK": un ZIP, que es lo que es un .xlsx
     expect(await screen.findByText(/Se exportaron \d+ movimiento/)).toBeInTheDocument();
+  });
+
+  test('también se puede elegir CSV, con su separador', async () => {
+    const user = await openDemo();
+    const dialog = await openExport(user);
+    await chooseFormat(user, dialog, 'CSV');
+    expect(dialog.getByRole('group', { name: 'Separador' })).toBeInTheDocument();
+    await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
+
+    const [fileName, content, mimeType] = downloadTextFile.mock.calls[0];
+    expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.csv$/);
+    expect(mimeType).toBe('text/csv;charset=utf-8');
+    expect(content.startsWith('﻿Fecha;Comercio;Monto;Moneda')).toBe(true);
   });
 
   test('el archivo lleva solo lo que muestran los filtros de la pantalla', async () => {
     const user = await openDemo();
     await goToTab(user, 'Movimientos');
     await user.type(screen.getByRole('searchbox', { name: 'Buscar movimientos' }), 'netflix');
-    await user.click(screen.getByRole('button', { name: 'Exportar movimientos a CSV' }));
+    await user.click(screen.getByRole('button', { name: 'Exportar movimientos' }));
 
     const dialog = within(screen.getByRole('dialog'));
     expect(dialog.getByText('con los filtros que tienes puestos')).toBeInTheDocument();
     expect(within(dialog.getByRole('list', { name: 'Filtros aplicados' })).getByText('“netflix”')).toBeInTheDocument();
+    await chooseFormat(user, dialog, 'CSV');
     await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
 
     const [, content] = downloadTextFile.mock.calls[0];
@@ -461,7 +480,7 @@ describe('exportar a CSV', () => {
     const user = await openDemo();
     await goToTab(user, 'Movimientos');
     await user.type(screen.getByRole('searchbox', { name: 'Buscar movimientos' }), 'zzzz');
-    expect(screen.getByRole('button', { name: 'Exportar movimientos a CSV' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Exportar movimientos' })).toBeDisabled();
     expect(downloadTextFile).not.toHaveBeenCalled();
   });
 });

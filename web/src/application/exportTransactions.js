@@ -1,39 +1,22 @@
-// Caso de uso: exportar a un archivo CSV para Excel los movimientos que cumplen unos filtros.
+// Caso de uso: exportar a un archivo los movimientos que cumplen unos filtros: un Excel (.xlsx) con la
+// apariencia de Movo y los totales, o un CSV sencillo.
 
-import { BANKS } from '../domain/banks.js';
-import { getCategory } from '../domain/categories.js';
 import { toCsv } from '../domain/csv.js';
-import { Direction, TransactionType } from '../domain/types.js';
+import { XLSX_MIME_TYPE } from '../domain/xlsx.js';
+import { EXPORT_HEADER, labelsOf, localDateTime } from './exportLabels.js';
+import { buildMovementsWorkbook } from './movementsWorkbook.js';
 import { toListFilters } from './transactionFilters.js';
 
-/** Separadores que se ofrecen: Excel en español espera punto y coma; en inglés y Google Sheets, coma. */
+/** Separadores del CSV: Excel en español espera punto y coma; en inglés y Google Sheets, coma. */
 export const CsvSeparator = Object.freeze({ SEMICOLON: ';', COMMA: ',' });
+
+/** Formatos de archivo que se ofrecen. */
+export const ExportFormat = Object.freeze({ XLSX: 'xlsx', CSV: 'csv' });
+
+const CSV_MIME_TYPE = 'text/csv;charset=utf-8';
 
 /** Tope de movimientos por archivo; muy por encima de lo que acumula una persona. */
 const MAX_EXPORTED_TRANSACTIONS = 100_000;
-
-const HEADER = ['Fecha', 'Comercio', 'Monto', 'Moneda', 'Monto en colones', 'Categoría', 'Tipo', 'Medio', 'Banco'];
-
-const DIRECTION_NAME = Object.freeze({
-  [Direction.EXPENSE]: 'Gasto',
-  [Direction.INCOME]: 'Ingreso',
-  [Direction.OWN_TRANSFER]: 'Entre mis cuentas',
-});
-const TYPE_NAME = Object.freeze({
-  [TransactionType.SINPE]: 'SINPE',
-  [TransactionType.CARD]: 'Tarjeta',
-  [TransactionType.TRANSFER]: 'Transferencia',
-  [TransactionType.CASH]: 'Efectivo',
-});
-
-const twoDigits = (number) => String(number).padStart(2, '0');
-
-/** "2026-01-15 10:30", en la hora del teléfono (la misma que se ve en la app). */
-function localDateTime(iso) {
-  const date = new Date(iso);
-  const day = `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(date.getDate())}`;
-  return `${day} ${twoDigits(date.getHours())}:${twoDigits(date.getMinutes())}`;
-}
 
 /** Monto sin símbolo ni separador de miles. Con punto y coma, la coma decimal que espera Excel en español. */
 function amountText(cents, separator) {
@@ -42,35 +25,48 @@ function amountText(cents, separator) {
 }
 
 function toRow(transaction, separator) {
+  const labels = labelsOf(transaction);
   return [
     localDateTime(transaction.date),
     transaction.counterparty,
     amountText(transaction.amountCents, separator),
     transaction.currency,
     amountText(transaction.crcCents, separator),
-    getCategory(transaction.category).name,
-    DIRECTION_NAME[transaction.direction] ?? '',
-    TYPE_NAME[transaction.type] ?? '',
-    BANKS[transaction.bank]?.name ?? '',
+    labels.category,
+    labels.direction,
+    labels.type,
+    labels.bank,
   ];
 }
 
 export function createExportTransactions({ transactions }) {
   /**
-   * @param {{ separator?: string }} options  Además del separador, los mismos filtros que la lista de movimientos
-   *   (`searchTransactions`): fechas, categoría, tipo, banco, montos y texto. Sin filtros, se exporta todo.
-   * @returns {{ fileName: string, content: string, count: number }} El archivo, del movimiento más viejo al más nuevo.
+   * @param {{ format?: string, separator?: string, filterLabels?: string[], now?: Date }} options
+   *   Además, los mismos filtros que la lista de movimientos (`searchTransactions`): fechas, categoría, tipo,
+   *   banco, montos y texto. Sin filtros, se exporta todo. `filterLabels` se anota en el Excel bajo el título.
+   * @returns {{ fileName: string, content: string|Uint8Array, mimeType: string, count: number }}
+   *   El archivo, del movimiento más viejo al más nuevo.
    */
-  return function exportTransactions({ separator = CsvSeparator.SEMICOLON, ...filters } = {}) {
+  return function exportTransactions({
+    format = ExportFormat.CSV,
+    separator = CsvSeparator.SEMICOLON,
+    filterLabels = [],
+    now = new Date(),
+    ...filters
+  } = {}) {
     const { fromDay, toDay } = filters;
     const exported = transactions.list(toListFilters(filters), MAX_EXPORTED_TRANSACTIONS).reverse();
+    const baseName = `movo-movimientos-${fromDay || 'inicio'}-a-${toDay || 'hoy'}`;
+
+    if (format === ExportFormat.XLSX) {
+      const content = buildMovementsWorkbook({ transactions: exported, filterLabels, now });
+      return { fileName: `${baseName}.xlsx`, content, mimeType: XLSX_MIME_TYPE, count: exported.length };
+    }
+    const rows = exported.map((transaction) => toRow(transaction, separator));
     return {
-      fileName: `movo-movimientos-${fromDay || 'inicio'}-a-${toDay || 'hoy'}.csv`,
-      content: toCsv(
-        HEADER,
-        exported.map((transaction) => toRow(transaction, separator)),
-        separator,
-      ),
+      fileName: `${baseName}.csv`,
+      content: toCsv(EXPORT_HEADER, rows, separator),
+      mimeType: CSV_MIME_TYPE,
       count: exported.length,
     };
   };
