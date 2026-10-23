@@ -466,20 +466,20 @@ textarea {
 .group {
   background: var(--card);
   border-radius: 22px;
-  padding: 6px 0;
-  margin-bottom: 14px;
+  padding: 8px 0;
+  margin-bottom: 16px;
 }
 .group h3 {
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
-  margin: 10px 18px 4px;
+  margin: 12px 18px 6px;
 }
 .tx {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 11px 16px;
+  padding: 13px 16px;
   width: 100%;
   text-align: left;
   border-radius: 16px;
@@ -1277,10 +1277,13 @@ textarea {
 .mv-body {
   padding: 8px 16px 0;
 }
+.mv-body .seg {
+  margin-bottom: 20px;
+}
 .mv-tools {
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 .searchbox {
   flex: 1;
@@ -1421,6 +1424,7 @@ textarea {
 
 /* Movimientos: botón de exportar junto al título. */
 .mv-head {
+  padding-bottom: 16px;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
