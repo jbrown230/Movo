@@ -58,3 +58,55 @@ export function assertWellFormedXml(xml, name = 'xml') {
   assert.deepEqual(stack, [], `${name}: quedaron etiquetas sin cerrar`);
   assert.ok(!/<(?![\w/?])/.test(xml), `${name}: hay un < sin escapar`);
 }
+
+const unescapeXml = (text) =>
+  text
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+
+/** Las celdas de la hoja como { "A1": { value, style } }, con el texto ya sin escapar y los números como número. */
+export function readCells(files) {
+  const cells = {};
+  const pattern = /<c r="([A-Z]+\d+)" s="(\d+)"(?: t="inlineStr")?(?:\/>|>(.*?)<\/c>)/g;
+  for (const [, reference, style, inner = ''] of files['xl/worksheets/sheet1.xml'].matchAll(pattern)) {
+    const text = inner.match(/<t[^>]*>(.*?)<\/t>/s);
+    const number = inner.match(/<v>(.*?)<\/v>/);
+    let value = null;
+    if (text) value = unescapeXml(text[1]);
+    else if (number) value = Number(number[1]);
+    cells[reference] = { value, style: Number(style) };
+  }
+  return cells;
+}
+
+/** Las celdas combinadas de la hoja, por ejemplo ["A1:I1", "A7:B7"]. */
+export const readMerges = (files) =>
+  [...files['xl/worksheets/sheet1.xml'].matchAll(/<mergeCell ref="([A-Z]+\d+:[A-Z]+\d+)"\/>/g)].map(
+    (match) => match[1],
+  );
+
+const sectionItems = (xml, section, item) => {
+  const body = xml.match(new RegExp(`<${section}[^>]*>(.*?)</${section}>`, 's'))?.[1] ?? '';
+  return [...body.matchAll(new RegExp(`<${item}(?:\\s[^>]*)?(?:/>|>(.*?)</${item}>)`, 'gs'))].map((match) => match[0]);
+};
+
+/** Cómo se ve una celda: color y negrita del texto, color de relleno, formato de número y alineación. */
+export function styleOf(files, cell) {
+  const styles = files['xl/styles.xml'];
+  const xf = sectionItems(styles, 'cellXfs', 'xf')[cell.style];
+  const attribute = (name) => Number(xf.match(new RegExp(`${name}="(\\d+)"`))[1]);
+  const font = sectionItems(styles, 'fonts', 'font')[attribute('fontId')];
+  const fill = sectionItems(styles, 'fills', 'fill')[attribute('fillId')];
+  const formatId = attribute('numFmtId');
+  const format = styles.match(new RegExp(`<numFmt numFmtId="${formatId}" formatCode="([^"]*)"`));
+  return {
+    fontColor: font.match(/<color rgb="FF(\w+)"/)?.[1],
+    isBold: font.includes('<b/>'),
+    fillColor: fill.match(/<fgColor rgb="FF(\w+)"/)?.[1] ?? null,
+    numFmt: format ? unescapeXml(format[1]) : formatId,
+    horizontal: xf.match(/horizontal="(\w+)"/)?.[1] ?? null,
+  };
+}
