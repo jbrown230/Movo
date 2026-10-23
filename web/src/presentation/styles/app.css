@@ -64,6 +64,8 @@
 }
 html {
   height: 100%;
+  touch-action: pan-x pan-y; /* se puede desplazar, pero no hacer zoom con los dedos ni con doble toque */
+  -webkit-text-size-adjust: 100%;
 }
 body {
   margin: 0;
@@ -410,10 +412,9 @@ textarea {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 2px 18px 14px;
+  padding: 0 0 14px;
+  border-radius: 20px; /* la fila queda dentro del recuadro, alineada con el resto, y se corta en su borde */
   scroll-snap-type: x proximity; /* las tarjetas se detienen alineadas, nunca a medias */
-  scroll-padding: 0 18px;
-  margin: 0 -16px;
   scrollbar-width: none;
 }
 .cats::-webkit-scrollbar {
@@ -1561,8 +1562,6 @@ textarea {
   transform: rotate(180deg);
 }
 .dd-list {
-  max-height: 232px;
-  overflow-y: auto;
   margin-top: 6px;
   padding: 6px;
   border-radius: 18px;
