@@ -1,6 +1,9 @@
 // Consultas de solo lectura que usa la interfaz.
 
-import { dayRange, monthRange } from '../domain/period.js';
+import { monthRange } from '../domain/period.js';
+import { toListFilters } from './transactionFilters.js';
+
+const COUNT_LIMIT = 100_000;
 
 export function createQueries({ transactions, mails }) {
   return {
@@ -17,13 +20,13 @@ export function createQueries({ transactions, mails }) {
      * Movimientos filtrados para la vista de movimientos.
      *
      * @param {{ fromDay?: string, toDay?: string, category?: string, direction?: string, bank?: string,
-     *           minCents?: number, maxCents?: number }} filters  Días "AAAA-MM-DD" (los dos se incluyen completos)
-     *           y montos en céntimos de colones. Lo que falte no filtra.
+     *           minCents?: number, maxCents?: number, text?: string }} filters  Días "AAAA-MM-DD" (los dos se
+     *           incluyen completos), montos en céntimos de colones y `text`, que se busca en el nombre del comercio
+     *           o persona. Lo que falte no filtra.
      */
-    searchTransactions({ fromDay, toDay, minCents, maxCents, ...exact } = {}) {
-      const { from, to } = dayRange(fromDay, toDay);
-      return transactions.list({ ...exact, from, to, minCrcCents: minCents, maxCrcCents: maxCents });
-    },
+    searchTransactions: (filters = {}) => transactions.list(toListFilters(filters)),
+    /** Cuántos movimientos cumplen los filtros, sin el tope de la lista (para saber cuántos se exportarían). */
+    countMatchingTransactions: (filters = {}) => transactions.list(toListFilters(filters), COUNT_LIMIT).length,
     getTransaction: (id) => transactions.get(id),
     countTransactions: () => transactions.countActive(),
 

@@ -37,9 +37,9 @@ export function AmountInput({ value, onChange, currencySymbol = '₡', hint = ''
 }
 
 /** Botones para elegir una opción. `options` es una lista de { value, label }. */
-export function SegmentedControl({ options, value, onChange, label }) {
+export function SegmentedControl({ options, value, onChange, label, isCompact = false }) {
   return (
-    <div className="seg" role="group" aria-label={label}>
+    <div className={`seg${isCompact ? ' compact' : ''}`} role="group" aria-label={label}>
       {options.map((option) => (
         <button
           key={option.value}

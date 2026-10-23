@@ -6,7 +6,6 @@ import { useThemePreference } from '../hooks/useThemePreference.js';
 import { shortWhen } from '../format/dates.js';
 import { formatColonesShort } from '../format/money.js';
 import { useConfirm } from '../modals/ConfirmModal.jsx';
-import { ExportSettings } from '../modals/ExportModal.jsx';
 import { BudgetModal, GmailQueryModal } from '../modals/SimpleModals.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
@@ -305,7 +304,6 @@ export function SettingsScreen() {
           <p className="hint">{exchangeRateSource}</p>
         </div>
 
-        <ExportSettings />
         <AppearanceSettings />
 
         {profile.demo ? (

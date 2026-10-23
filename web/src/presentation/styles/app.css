@@ -62,8 +62,18 @@
 *::after {
   box-sizing: border-box;
 }
+/* En un celular la barra de desplazamiento sobra: se oculta en toda la app, y el desplazamiento sigue igual. */
+html,
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
 html {
   height: 100%;
+  touch-action: pan-x pan-y; /* se puede desplazar, pero no hacer zoom con los dedos ni con doble toque */
+  -webkit-text-size-adjust: 100%;
 }
 body {
   margin: 0;
@@ -410,14 +420,16 @@ textarea {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 2px 18px 14px;
-  margin: 0 -16px;
+  padding: 0 0 14px;
+  border-radius: 20px; /* la fila queda dentro del recuadro, alineada con el resto, y se corta en su borde */
+  scroll-snap-type: x proximity; /* las tarjetas se detienen alineadas, nunca a medias */
   scrollbar-width: none;
 }
 .cats::-webkit-scrollbar {
   display: none;
 }
 .cat {
+  scroll-snap-align: start;
   text-align: left;
   flex: 0 0 132px;
   background: var(--card);
@@ -462,20 +474,20 @@ textarea {
 .group {
   background: var(--card);
   border-radius: 22px;
-  padding: 6px 0;
-  margin-bottom: 14px;
+  padding: 8px 0;
+  margin-bottom: 16px;
 }
 .group h3 {
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
-  margin: 10px 18px 4px;
+  margin: 12px 18px 6px;
 }
 .tx {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 11px 16px;
+  padding: 13px 16px;
   width: 100%;
   text-align: left;
   border-radius: 16px;
@@ -586,6 +598,18 @@ textarea {
 .nav button svg {
   width: 20px;
   height: 20px;
+}
+/* Con cuatro pestañas, solo la activa muestra su nombre; en las demás queda para lectores de pantalla. */
+.nav button:not([aria-current='page']) span:not(.badge) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.nav button {
+  position: relative;
 }
 .nav button[aria-current='page'] {
   background: var(--ink);
@@ -864,7 +888,6 @@ textarea {
   margin: 0 0 6px 4px;
 }
 .field input,
-.field select,
 .field textarea {
   width: 100%;
   border: 1.5px solid transparent;
@@ -875,7 +898,6 @@ textarea {
   outline: none;
 }
 .field input:focus,
-.field select:focus,
 .field textarea:focus {
   border-color: var(--accent);
 }
@@ -1259,92 +1281,111 @@ textarea {
   font-size: 15px;
   line-height: 1.45;
 }
-/* Vista de movimientos: botón "Filtros" que abre un panel con los campos y "Aplicar". */
-.filters-head {
+/* Pantalla de movimientos: búsqueda, botón "Filtros" (abre una hoja), chips de tipo y la lista. */
+.mv-body {
+  padding: 8px 16px 0;
+}
+.mv-body .seg {
+  margin-bottom: 20px;
+}
+.mv-tools {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.searchbox {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 0 4px 12px;
+  gap: 8px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--field);
+  border: 1.5px solid transparent;
+}
+.searchbox:focus-within {
+  border-color: var(--accent);
+}
+.searchbox > svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+.searchbox input {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: 16px;
+}
+.searchbox input::-webkit-search-cancel-button {
+  display: none;
+}
+.searchbox button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--muted);
+}
+.searchbox button svg {
+  width: 16px;
+  height: 16px;
 }
 .filters-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  border-radius: 999px;
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   background: var(--card);
-  font-weight: 600;
-  font-size: 15px;
   box-shadow: 0 0 0 1px var(--line);
+}
+.fbadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
 }
 .filters-toggle svg {
   width: 18px;
   height: 18px;
 }
-.filters-toggle .chevron {
-  display: grid;
-  transition: transform 0.2s;
+.mv-clear {
+  display: block;
+  margin: -4px 4px 12px;
 }
-.filters-toggle[aria-expanded='true'] .chevron {
-  transform: rotate(180deg);
+.filters-hint {
+  font-size: 13px;
+  color: var(--muted);
+  margin: -2px 4px 10px;
+  line-height: 1.45;
 }
-/* El panel se despliega hacia abajo al abrir y se recoge al cerrar (0,22 s, igual que PANEL_ANIMATION_MS). */
-@keyframes filters-open {
-  from {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-}
-@keyframes filters-close {
-  to {
-    grid-template-rows: 0fr;
-    opacity: 0;
-  }
-}
-.filters-collapse {
-  display: grid;
-  grid-template-rows: 1fr;
-  animation: filters-open 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-.filters-collapse.closing {
-  animation: filters-close 0.22s ease forwards;
-  pointer-events: none;
-}
-.filters-collapse-inner {
-  min-height: 0;
-  overflow: hidden;
-}
-.filters {
-  padding: 14px 14px 4px;
-}
-.filters .cta {
-  margin-bottom: 0;
+.filters-hint.warn {
+  color: var(--warn);
 }
 .field-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr)); /* que un campo de fecha no ensanche la columna */
   gap: 10px;
 }
-.field-pair input,
-.field-pair select {
+.field-pair input {
   min-width: 0;
-}
-.field select {
-  appearance: none;
-  color: inherit;
-}
-.filters .hint {
-  font-size: 13px;
-  color: var(--muted);
-  margin: -2px 4px 10px;
-  line-height: 1.45;
-}
-.filters .hint.warn {
-  color: var(--warn);
-}
-.filters .ghost {
-  margin: 10px 0 10px;
 }
 
 @media (max-width: 360px) {
@@ -1387,4 +1428,204 @@ textarea {
 }
 .seg button {
   white-space: nowrap;
+}
+
+/* Movimientos: botón de exportar junto al título. */
+.mv-head {
+  padding-bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.roundbtn {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--field);
+}
+.roundbtn svg {
+  width: 20px;
+  height: 20px;
+}
+.roundbtn:disabled {
+  opacity: 0.4;
+}
+
+/* Hoja "Filtros": secciones con pastillas y un botón fijo abajo que dice cuántos movimientos quedan. */
+/* "Más filtros": fila que despliega el banco y el monto. */
+.fmore {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-align: left;
+}
+.fmore-hint {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.fmore svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.fmore[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.fmore-body {
+  padding-top: 6px;
+}
+.fsheet-foot {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0 2px;
+  background: linear-gradient(to bottom, transparent, var(--card) 22%);
+}
+.fsheet-foot .cta {
+  flex: 1;
+}
+/* "Limpiar": botón secundario, de la misma altura que el principal. */
+.fsheet-foot .ghost {
+  width: auto;
+  flex-shrink: 0;
+  margin-top: 0;
+  padding: 17px 22px;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* Hoja "Exportar": resumen de lo que se va a descargar. */
+.xsum {
+  background: var(--field);
+  border-radius: 20px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.xsum b {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+.xsum > span {
+  font-size: 14px;
+  color: var(--muted);
+}
+.xtags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0;
+}
+.xtags li {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--card);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+/* Selector propio (Dropdown): el campo y su lista, con el mismo diseño que el resto de la app. */
+.dd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1.5px solid transparent;
+  background: var(--field);
+  font-size: 16px;
+  text-align: left;
+}
+.dd-btn.empty > span {
+  color: var(--muted);
+}
+.dd-btn[aria-expanded='true'] {
+  border-color: var(--accent);
+}
+.dd-btn svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+.dd-btn[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+.dd-list {
+  margin-top: 6px;
+  padding: 6px;
+  border-radius: 18px;
+  background: var(--card);
+  box-shadow:
+    0 8px 24px rgba(20, 10, 60, 0.12),
+    0 0 0 1px var(--line);
+}
+.dd-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 12px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+}
+.dd-opt:hover,
+.dd-opt:focus-visible {
+  background: var(--field);
+}
+.dd-opt[aria-selected='true'] {
+  font-weight: 700;
+  color: var(--accent);
+}
+.dd-opt svg {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* Dropdown: la opción puede llevar un ícono delante del nombre. */
+.dd-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.dd .ic svg {
+  width: 16px;
+  height: 16px;
+}
+
+.searchbox input::placeholder {
+  text-overflow: ellipsis;
+}
+
+/* Control segmentado compacto: cuatro opciones en un teléfono angosto. */
+.seg.compact button {
+  padding: 10px 2px;
+  font-size: 13px;
 }

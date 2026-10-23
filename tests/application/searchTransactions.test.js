@@ -98,3 +98,18 @@ test('un movimiento eliminado no aparece', () => {
   services.deleteTransaction('uber');
   assert.deepEqual(ids(queries.searchTransactions({ bank: 'BAC' })), ['cafe']);
 });
+
+test('la búsqueda de texto encuentra parte del nombre sin importar mayúsculas, y se combina con otros filtros', () => {
+  const { queries } = sampleApp();
+  assert.deepEqual(ids(queries.searchTransactions({ text: 'ub' })), ['uber']);
+  assert.deepEqual(ids(queries.searchTransactions({ text: '  CAF ' })), ['cafe']);
+  assert.deepEqual(ids(queries.searchTransactions({ text: 'u', bank: 'BAC' })), ['uber']);
+  assert.deepEqual(ids(queries.searchTransactions({ text: 'xyz' })), []);
+  assert.deepEqual(ids(queries.searchTransactions({ text: '   ' })), ['cafe', 'salario', 'super', 'uber']);
+});
+
+test('en la búsqueda de texto, % y _ no son comodines', () => {
+  const { queries } = sampleApp();
+  assert.deepEqual(ids(queries.searchTransactions({ text: '%' })), []);
+  assert.deepEqual(ids(queries.searchTransactions({ text: '_' })), []);
+});

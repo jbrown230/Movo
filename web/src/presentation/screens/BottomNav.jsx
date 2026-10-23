@@ -4,6 +4,7 @@ import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 
 const TABS = [
   { view: Views.HOME, label: 'Inicio', icon: 'home' },
+  { view: Views.MOVEMENTS, label: 'Movimientos', icon: 'list' },
   { view: Views.INBOX, label: 'Bandeja', icon: 'mail' },
   { view: Views.SETTINGS, label: 'Ajustes', icon: 'settings' },
 ];

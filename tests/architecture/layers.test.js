@@ -92,7 +92,7 @@ const CLIENT = {
     // Datos de ejemplo: solo conocen el dominio.
     demo: { mayImport: ['domain'], packages: [] },
     // Detalles técnicos (SQLite, Gmail, red, navegador). Puede usar el contrato compartido con el servidor.
-    infrastructure: { mayImport: ['domain', 'shared'], packages: ['sql.js'] },
+    infrastructure: { mayImport: ['domain', 'shared'], packages: ['sql.js', 'exceljs'] },
     // La interfaz React. No toca infrastructure: usa los casos de uso y composition/platform.js.
     presentation: { mayImport: ['domain', 'application', 'composition', 'demo'], packages: ['react'] },
     // Conecta todo. Es el único lugar que conoce a la vez la aplicación y la infraestructura.

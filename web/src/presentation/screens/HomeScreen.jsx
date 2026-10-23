@@ -1,7 +1,5 @@
-import { useMemo } from 'react';
 import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
-import { MovementFilters } from '../components/MovementFilters.jsx';
 import { TransactionList } from '../components/TransactionList.jsx';
 import { getCategory } from '../../domain/categories.js';
 import { toDayString } from '../../domain/period.js';
@@ -14,8 +12,8 @@ import { CashModal, PasteModal } from '../modals/SimpleModals.jsx';
 import { PurchaseSimulatorModal, SinpeSimulatorModal } from '../modals/SimulatorModals.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
-import { NO_MOVEMENT_FILTERS, countActiveFilters, toSearchFilters } from '../state/movementFilters.js';
-import { HOME_MOVEMENTS_ANCHOR_ID, Views, useNavigation } from '../state/NavigationProvider.jsx';
+import { NO_MOVEMENT_FILTERS } from '../state/movementFilters.js';
+import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
 
@@ -187,40 +185,33 @@ function CategoryCards({ summary }) {
   );
 }
 
-/** Lista de movimientos del inicio: todos, o los que cumplen los filtros. */
-function MovementsSection() {
-  const { profile, services, dataVersion } = useSession();
-  const { movementFilters, setMovementFilters, filtersPanelRequest } = useNavigation();
-  const { transactions } = useAppData();
-  const isFiltered = countActiveFilters(movementFilters) > 0;
+const RECENT_MOVEMENTS_COUNT = 5;
 
-  const filtered = useMemo(
-    () => (isFiltered ? services.queries.searchTransactions(toSearchFilters(movementFilters)) : null),
-    // dataVersion hace que se busque de nuevo después de cada cambio en los datos.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [services, dataVersion, movementFilters, isFiltered],
-  );
-  const visible = filtered ?? transactions;
+/** Los últimos movimientos; la lista completa, con búsqueda y filtros, está en la pestaña Movimientos. */
+function RecentMovements() {
+  const { profile } = useSession();
+  const { goTo } = useNavigation();
+  const { transactions } = useAppData();
 
   let emptyText = 'Cuando tu banco te envíe una notificación, aparecerá aquí sola.';
   if (profile.demo) emptyText = 'Usa el simulador de arriba para hacer un SINPE.';
-  if (isFiltered) emptyText = 'Ningún movimiento cumple estos filtros.';
-
-  let countText = transactions.length ? `${transactions.length} en total` : '';
-  if (isFiltered) countText = `${filtered.length} con estos filtros`;
 
   return (
     <>
-      <div className="sec-h" id={HOME_MOVEMENTS_ANCHOR_ID}>
-        <h2>Movimientos</h2>
-        <span>{countText}</span>
+      <div className="sec-h">
+        <h2>Últimos movimientos</h2>
+        {transactions.length > RECENT_MOVEMENTS_COUNT && (
+          <button type="button" className="link" onClick={() => goTo(Views.MOVEMENTS)}>
+            Ver todos ({transactions.length})
+          </button>
+        )}
       </div>
-      <MovementFilters filters={movementFilters} setFilters={setMovementFilters} panelRequest={filtersPanelRequest} />
-      <TransactionList transactions={visible} emptyText={emptyText} />
+      <TransactionList transactions={transactions.slice(0, RECENT_MOVEMENTS_COUNT)} emptyText={emptyText} />
     </>
   );
 }
-/** Pantalla de inicio: gasto del mes, categorías y movimientos (con filtros). */
+
+/** Pantalla de inicio: gasto del mes, categorías y últimos movimientos. */
 export function HomeScreen() {
   const { profile } = useSession();
   const { scan } = useGmail();
@@ -259,7 +250,7 @@ export function HomeScreen() {
           </span>
         </div>
         <CategoryCards summary={summary} />
-        <MovementsSection />
+        <RecentMovements />
       </div>
     </section>
   );
