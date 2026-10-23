@@ -3,6 +3,8 @@
 import { monthRange } from '../domain/period.js';
 import { toListFilters } from './transactionFilters.js';
 
+const COUNT_LIMIT = 100_000;
+
 export function createQueries({ transactions, mails }) {
   return {
     /** Resumen del mes: gastos por categoría, ingresos y dinero movido entre cuentas propias. */
@@ -23,6 +25,8 @@ export function createQueries({ transactions, mails }) {
      *           o persona. Lo que falte no filtra.
      */
     searchTransactions: (filters = {}) => transactions.list(toListFilters(filters)),
+    /** Cuántos movimientos cumplen los filtros, sin el tope de la lista (para saber cuántos se exportarían). */
+    countMatchingTransactions: (filters = {}) => transactions.list(toListFilters(filters), COUNT_LIMIT).length,
     getTransaction: (id) => transactions.get(id),
     countTransactions: () => transactions.countActive(),
 

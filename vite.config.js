@@ -36,7 +36,8 @@ export default defineConfig({
   plugins: [react(), addContentSecurityPolicy],
   server: { port: 5173, proxy: apiProxy },
   preview: { port: 4173, proxy: apiProxy },
-  build: { outDir: 'dist', emptyOutDir: true, target: 'es2022' },
+  // exceljs pesa casi 1 MB, pero va en una pieza aparte que solo se descarga al exportar un Excel.
+  build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', chunkSizeWarningLimit: 1000 },
   test: {
     root: '.',
     environment: 'jsdom',

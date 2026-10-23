@@ -6,6 +6,7 @@ import { createServices } from '../application/createServices.js';
 import { openUserDatabase } from '../infrastructure/sqlite/openUserDatabase.js';
 import { gmailMailSource } from '../infrastructure/gmail/gmailMailSource.js';
 import { backendApi } from '../infrastructure/backend/backendApi.js';
+import { writeMovementsWorkbook } from '../infrastructure/excel/movementsWorkbook.js';
 import { buildDemoSeedMails } from '../demo/seedMails.js';
 
 /**
@@ -19,6 +20,7 @@ export async function openSession(profile) {
     mailSource: gmailMailSource,
     backend: backendApi,
     buildDemoMails: buildDemoSeedMails,
+    writeMovementsWorkbook,
   });
   return { services, flush, wipe };
 }

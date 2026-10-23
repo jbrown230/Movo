@@ -27,34 +27,57 @@ const FORMAT_HINT = {
   [ExportFormat.CSV]: 'Texto simple, sin diseño ni totales. Elige el separador según el programa donde lo vas a abrir.',
 };
 
+/** Arma el archivo y lo descarga. Armar el Excel toma un momento: mientras tanto el botón dice "Preparando…". */
+function useDownload({ services, movementFilters, format, separator }) {
+  const { closeModal } = useModal();
+  const showToast = useToast();
+  const [isPreparing, setIsPreparing] = useState(false);
+
+  const download = async () => {
+    setIsPreparing(true);
+    try {
+      const file = await services.exportTransactions({
+        ...toSearchFilters(movementFilters),
+        format,
+        separator,
+        filterLabels: describeMovementFilters(movementFilters),
+      });
+      downloadTextFile(file.fileName, file.content, file.mimeType);
+      closeModal();
+      showToast(`Se exportaron ${file.count} movimiento(s).`);
+    } catch {
+      setIsPreparing(false);
+      showToast('No se pudo preparar el archivo. Intenta de nuevo.');
+    }
+  };
+  return { download, isPreparing };
+}
+
+function buttonLabel({ count, format, isPreparing }) {
+  if (isPreparing) return 'Preparando…';
+  if (count === 0) return 'No hay movimientos para exportar';
+  return `Descargar ${format === ExportFormat.XLSX ? 'Excel' : 'CSV'}`;
+}
+
 export function ExportModal() {
   const { services } = useSession();
   const { movementFilters } = useNavigation();
-  const { closeModal } = useModal();
-  const showToast = useToast();
   const [format, setFormat] = useState(ExportFormat.XLSX);
   const [separator, setSeparator] = useState(CsvSeparator.SEMICOLON);
+  const { download, isPreparing } = useDownload({ services, movementFilters, format, separator });
 
   const filterLabels = describeMovementFilters(movementFilters);
-  const file = useMemo(
-    () => services.exportTransactions({ ...toSearchFilters(movementFilters), format, separator, filterLabels }),
-    // filterLabels sale de movementFilters: basta con vigilar los filtros.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [services, movementFilters, format, separator],
+  const count = useMemo(
+    () => services.queries.countMatchingTransactions(toSearchFilters(movementFilters)),
+    [services, movementFilters],
   );
-
-  const download = () => {
-    downloadTextFile(file.fileName, file.content, file.mimeType);
-    closeModal();
-    showToast(`Se exportaron ${file.count} movimiento(s).`);
-  };
 
   return (
     <>
       <ModalHeader title="Exportar movimientos" />
       <div className="xsum">
         <b>
-          {file.count} movimiento{file.count === 1 ? '' : 's'}
+          {count} movimiento{count === 1 ? '' : 's'}
         </b>
         <span>{filterLabels.length ? 'con los filtros que tienes puestos' : 'todos tus movimientos'}</span>
         {filterLabels.length > 0 && (
@@ -70,10 +93,8 @@ export function ExportModal() {
         <SegmentedControl label="Separador" options={SEPARATOR_OPTIONS} value={separator} onChange={setSeparator} />
       )}
       <p className="meta">{FORMAT_HINT[format]}</p>
-      <button type="button" className="cta" disabled={file.count === 0} onClick={download}>
-        {file.count === 0
-          ? 'No hay movimientos para exportar'
-          : `Descargar ${format === ExportFormat.XLSX ? 'Excel' : 'CSV'}`}
+      <button type="button" className="cta" disabled={count === 0 || isPreparing} onClick={download}>
+        {buttonLabel({ count, format, isPreparing })}
       </button>
     </>
   );

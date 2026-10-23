@@ -18,8 +18,9 @@ import { createSeedDemoData } from './seedDemoData.js';
  * @param {import('./ports.js').MailSource} dependencies.mailSource
  * @param {import('./ports.js').BackendApi} dependencies.backend
  * @param {(now: Date) => import('../domain/types.js').IncomingMail[]} dependencies.buildDemoMails  Correos de ejemplo del modo demo.
+ * @param {import('./ports.js').WorkbookWriter['writeMovementsWorkbook']} dependencies.writeMovementsWorkbook  Dibuja el Excel.
  */
-export function createServices({ storage, mailSource, backend, buildDemoMails }) {
+export function createServices({ storage, mailSource, backend, buildDemoMails, writeMovementsWorkbook }) {
   const { transactions, mails, rules, settings, localState, backup, atomically } = storage;
 
   const preferences = createPreferences({ settings, localState });
@@ -49,6 +50,6 @@ export function createServices({ storage, mailSource, backend, buildDemoMails })
     refreshExchangeRate: createRefreshExchangeRate({ backend, localState, transactions, atomically }),
     backup: createBackupSync({ backup, localState, backend }),
     seedDemoData: createSeedDemoData({ readMail, preferences, buildDemoMails }),
-    exportTransactions: createExportTransactions({ transactions }),
+    exportTransactions: createExportTransactions({ transactions, writeMovementsWorkbook }),
   };
 }
