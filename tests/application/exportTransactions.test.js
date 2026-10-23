@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createTestApp } from '../helpers/createTestApp.js';
 import { UTF8_BOM } from '../../web/src/domain/csv.js';
-import { assertWellFormedXml, readZipTexts } from '../helpers/readXlsx.js';
+import { assertWellFormedXml, readCells, readMerges, readZipTexts, styleOf } from '../helpers/readXlsx.js';
 
 /** Inserta un movimiento; `date` es la hora local del teléfono. */
 function insert(storage, id, overrides) {
@@ -140,46 +140,107 @@ test('exporta solo lo que cumple los mismos filtros que la lista de movimientos'
 
 // ---------------------------------------------------------------- Excel
 
-const sheetOf = (file) => readZipTexts(file.content)['xl/worksheets/sheet1.xml'];
+const NOW = new Date(2026, 1, 3, 12, 5);
+const PURPLE = '5A33E6';
+const GREEN = '0E9F6E';
+const GRAY = '8A859C';
 
-test('el Excel es un .xlsx válido con la marca de Movo, los totales arriba y una fila por movimiento', () => {
-  const { services } = sampleApp();
-  const file = services.exportTransactions({ format: 'xlsx', now: new Date(2026, 1, 3, 12, 0) });
+/** Exporta un Excel y deja a mano sus celdas, celdas combinadas y una forma de ver el estilo de cada una. */
+function excelOf(services, options = {}) {
+  const file = services.exportTransactions({ format: 'xlsx', now: NOW, ...options });
+  const files = readZipTexts(file.content);
+  return {
+    file,
+    files,
+    cells: readCells(files),
+    merges: readMerges(files),
+    style: (ref, cells) => styleOf(files, cells[ref]),
+  };
+}
+
+test('el Excel es un .xlsx válido, con el nombre y el tipo de archivo correctos', () => {
+  const { file, files } = excelOf(sampleApp().services);
 
   assert.equal(file.fileName, 'movo-movimientos-inicio-a-hoy.xlsx');
   assert.equal(file.mimeType, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   assert.equal(file.count, 4);
   assert.ok(file.content instanceof Uint8Array);
-  for (const [name, xml] of Object.entries(readZipTexts(file.content))) assertWellFormedXml(xml, name);
+  for (const [name, xml] of Object.entries(files)) assertWellFormedXml(xml, name);
+});
 
-  const sheet = sheetOf(file);
-  assert.match(sheet, />Movo</);
-  assert.match(sheet, /Movimientos · 14\/01\/2026 – 01\/02\/2026 · Generado el 03\/02\/2026/);
+test('el Excel abre con la marca de Movo, el rango de fechas y cuándo se generó, y una franja morada', () => {
+  const { cells, merges, style } = excelOf(sampleApp().services);
+
+  assert.equal(cells.A1.value, 'Movo');
+  assert.deepEqual(style('A1', cells), { ...style('A1', cells), fontColor: PURPLE, isBold: true });
+  assert.equal(cells.A2.value, 'REPORTE DE MOVIMIENTOS');
+  assert.equal(cells.A3.value, '14/01/2026 – 01/02/2026 · 4 movimientos');
+  assert.equal(cells.F3.value, 'Generado el 03/02/2026 12:05');
+  assert.equal(style('F3', cells).horizontal, 'right');
+  assert.equal(style('A5', cells).fillColor, PURPLE); // la franja
+  assert.ok(['A1:I1', 'A2:I2', 'A3:E3', 'F3:I3', 'A5:I5'].every((range) => merges.includes(range)));
+});
+
+test('el Excel trae cuatro tarjetas con los totales: gastos, ingresos, entre mis cuentas y balance', () => {
+  const { cells, merges, style } = excelOf(sampleApp().services);
+
   // Gastos: ₡2 500,50 + ₡3 640,24 + ₡1 800,00. Ingresos: ₡500 000. Balance: la resta.
-  assert.match(sheet, /<c r="A4"[^>]*><is><t[^>]*>Gastos<\/t><\/is><\/c><c r="B4" s="4"><v>7940.74<\/v><\/c>/);
-  assert.match(sheet, /<c r="B5" s="14"><v>500000<\/v><\/c>/);
-  assert.match(sheet, /<c r="B6" s="4"><v>0<\/v><\/c>/);
-  assert.match(sheet, /<c r="B7" s="4"><v>492059.26<\/v><\/c>/);
-  assert.match(sheet, /<c r="B8" s="5"><v>4<\/v><\/c>/);
-  assert.match(sheet, /<autoFilter ref="A10:I14"\/>/);
-  assert.equal((sheet.match(/<row /g) ?? []).length, 14); // 9 de encabezado y totales + 4 movimientos + el encabezado de la tabla
+  assert.deepEqual(
+    ['A7', 'C7', 'F7', 'H7'].map((ref) => cells[ref].value),
+    ['GASTOS', 'INGRESOS', 'ENTRE MIS CUENTAS', 'BALANCE'],
+  );
+  assert.deepEqual(
+    ['A8', 'C8', 'F8', 'H8'].map((ref) => cells[ref].value),
+    [7940.74, 500000, 0, 492059.26],
+  );
+  assert.deepEqual(['A7:B7', 'C7:E7', 'F7:G7', 'H7:I7'].filter((range) => merges.includes(range)).length, 4);
+  assert.equal(style('C8', cells).fontColor, GREEN);
+  assert.equal(style('H8', cells).fontColor, PURPLE);
+  assert.equal(style('A8', cells).numFmt, '"₡"#,##0.00');
+  assert.equal(style('A8', cells).fillColor, 'F6F5FA');
 });
 
-test('en el Excel el comercio es texto aunque parezca una fórmula, y los montos son números', () => {
-  const { services, storage } = sampleApp();
-  insert(storage, 'raro', {
-    date: new Date(2026, 0, 20, 9, 0),
-    amountCents: 1000,
-    counterparty: '=HYPERLINK("x") & <Co>',
-  });
-  const sheet = sheetOf(services.exportTransactions({ format: 'xlsx' }));
+test('un balance negativo se ve en rojo', () => {
+  const { storage, services } = sampleApp();
+  insert(storage, 'gasto-grande', { date: new Date(2026, 1, 2, 9, 0), amountCents: 90000000, counterparty: 'TIENDA' });
+  const { cells, style } = excelOf(services);
 
-  assert.match(sheet, /<t xml:space="preserve">=HYPERLINK\(&quot;x&quot;\) &amp; &lt;Co&gt;<\/t>/);
-  assert.match(sheet, /<c r="C11" s="10"><v>2500.5<\/v><\/c>/); // el café, el primero (el más viejo)
-  assert.match(sheet, /<c r="E11" s="11"><v>2500.5<\/v><\/c>/);
+  assert.ok(cells.H8.value < 0);
+  assert.equal(style('H8', cells).fontColor, 'DC2626');
 });
 
-test('el Excel pinta los ingresos en verde y lo que se mueve entre mis cuentas en gris', () => {
+test('el Excel trae el encabezado oscuro y una fila por movimiento, del más viejo al más nuevo', () => {
+  const { cells, style } = excelOf(sampleApp().services);
+
+  assert.deepEqual(
+    ['A10', 'B10', 'C10', 'D10', 'E10', 'F10', 'G10', 'H10', 'I10'].map((ref) => cells[ref].value),
+    ['Fecha', 'Comercio', 'Monto', 'Moneda', 'Monto en colones', 'Categoría', 'Tipo', 'Medio', 'Banco'],
+  );
+  assert.equal(style('A10', cells).fillColor, '14111F');
+  assert.equal(style('A10', cells).fontColor, 'FFFFFF');
+  assert.equal(style('C10', cells).horizontal, 'right');
+  assert.deepEqual(
+    ['B11', 'B12', 'B13', 'B14'].map((ref) => cells[ref].value),
+    ['CAFÉ "LA ESQUINA", SAN JOSÉ', 'NETFLIX.COM', 'PAN DULCE', 'EMPRESA PRUEBA'],
+  );
+});
+
+test('en las filas, la fecha es una fecha real, los montos son números y las filas se alternan de color', () => {
+  const { cells, style } = excelOf(sampleApp().services);
+
+  assert.equal(style('A11', cells).numFmt, 'dd/mm/yyyy\\ hh:mm');
+  assert.equal(cells.A11.value, (Date.UTC(2026, 0, 14, 8, 5) - Date.UTC(1899, 11, 30)) / 86_400_000);
+  assert.equal(cells.C11.value, 2500.5);
+  assert.equal(cells.C12.value, 7.99); // el monto original, en dólares
+  assert.equal(cells.D12.value, 'USD');
+  assert.equal(cells.E12.value, 3640.24); // y convertido a colones
+  assert.deepEqual(
+    ['A11', 'A12', 'A13', 'A14'].map((ref) => style(ref, cells).fillColor),
+    ['FFFFFF', 'F5F3FF', 'FFFFFF', 'F5F3FF'],
+  );
+});
+
+test('el monto en colones va en negrita: verde si es ingreso, gris si es entre mis cuentas y oscuro si es gasto', () => {
   const { services, storage } = sampleApp();
   insert(storage, 'propio', {
     date: new Date(2026, 0, 25, 9, 0),
@@ -187,34 +248,62 @@ test('el Excel pinta los ingresos en verde y lo que se mueve entre mis cuentas e
     counterparty: 'MI OTRA CUENTA',
     direction: 'self',
   });
-  const sheet = sheetOf(services.exportTransactions({ format: 'xlsx' }));
+  const { cells, style } = excelOf(services);
 
-  assert.match(sheet, /<c r="E15" s="12"><v>500000<\/v><\/c>/); // el salario, en verde
-  assert.match(sheet, /<c r="E14" s="13"><v>50<\/v><\/c>/); // el movimiento propio, en gris
+  assert.equal(cells.B14.value, 'MI OTRA CUENTA');
+  assert.equal(style('E11', cells).fontColor, '14111F'); // gasto
+  assert.equal(style('E14', cells).fontColor, GRAY); // entre mis cuentas
+  assert.equal(style('E15', cells).fontColor, GREEN); // ingreso
+  assert.equal(style('E15', cells).isBold, true);
+});
+
+test('el Excel cierra con el balance en una franja morada', () => {
+  const { cells, merges, style } = excelOf(sampleApp().services);
+
+  assert.equal(cells.A15.value, 'BALANCE DEL PERÍODO');
+  assert.equal(cells.E15.value, 492059.26);
+  assert.equal(style('A15', cells).fillColor, PURPLE);
+  assert.equal(style('E15', cells).numFmt, '"₡"#,##0.00');
+  assert.ok(merges.includes('A15:D15'));
+});
+
+test('en el Excel el comercio es texto aunque parezca una fórmula', () => {
+  const { storage, services } = sampleApp();
+  insert(storage, 'raro', {
+    date: new Date(2026, 0, 20, 9, 0),
+    amountCents: 1000,
+    counterparty: '=HYPERLINK("x") & <Co>',
+  });
+  const { files, cells } = excelOf(services);
+
+  assert.equal(cells.B14.value, '=HYPERLINK("x") & <Co>');
+  assert.match(
+    files['xl/worksheets/sheet1.xml'],
+    /<t xml:space="preserve">=HYPERLINK\(&quot;x&quot;\) &amp; &lt;Co&gt;<\/t>/,
+  );
 });
 
 test('el Excel anota los filtros puestos y respeta los mismos filtros que la lista', () => {
-  const { services } = sampleApp();
-  const file = services.exportTransactions({
-    format: 'xlsx',
+  const { file, cells, merges } = excelOf(sampleApp().services, {
     category: 'comida',
     filterLabels: ['Comida', 'Este mes'],
   });
-  const sheet = sheetOf(file);
 
   assert.equal(file.count, 2);
-  assert.match(sheet, /Filtros: Comida · Este mes/);
-  assert.match(sheet, /<c r="B8" s="5"><v>2<\/v><\/c>/);
+  assert.equal(cells.A4.value, 'Filtros: Comida · Este mes');
+  assert.ok(merges.includes('A4:I4'));
+  assert.equal(cells.A3.value, '14/01/2026 – 16/01/2026 · 2 movimientos');
 });
 
-test('el Excel sin movimientos sigue siendo un archivo válido, sin filtro de tabla', () => {
-  const { services } = sampleApp();
-  const file = services.exportTransactions({ format: 'xlsx', text: 'no existe' });
+test('el Excel sin movimientos sigue siendo un archivo válido, con un aviso en lugar de la tabla', () => {
+  const { file, files, cells, merges } = excelOf(sampleApp().services, { text: 'no existe' });
 
   assert.equal(file.count, 0);
-  for (const [name, xml] of Object.entries(readZipTexts(file.content))) assertWellFormedXml(xml, name);
-  assert.doesNotMatch(sheetOf(file), /autoFilter/);
-  assert.match(sheetOf(file), /<c r="B8" s="5"><v>0<\/v><\/c>/);
+  for (const [name, xml] of Object.entries(files)) assertWellFormedXml(xml, name);
+  assert.equal(cells.A3.value, 'Sin movimientos');
+  assert.equal(cells.A8.value, 0);
+  assert.equal(cells.A11.value, 'No hay movimientos con estos filtros.');
+  assert.ok(merges.includes('A11:I11'));
 });
 
 test('sin pedir un formato se sigue exportando CSV', () => {
