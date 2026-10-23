@@ -20,7 +20,7 @@ export const RECORD_KIND_BY_LIST = Object.freeze({
 export const CHANGE_LIST_NAMES = Object.freeze(Object.keys(RECORD_KIND_BY_LIST));
 
 /** Valores permitidos en un movimiento. Deben coincidir con web/src/domain/types.js (lo verifica una prueba). */
-export const ALLOWED_CURRENCIES = Object.freeze(['CRC', 'USD', 'EUR']);
+export const ALLOWED_CURRENCIES = Object.freeze(['CRC', 'USD', 'EUR', 'NIO']);
 export const ALLOWED_TRANSACTION_TYPES = Object.freeze(['sinpe', 'tarjeta', 'transferencia', 'efectivo']);
 export const ALLOWED_DIRECTIONS = Object.freeze(['in', 'out', 'self']);
 
@@ -65,7 +65,7 @@ export const MAX_TEXT_LENGTH = Object.freeze({
  * @typedef {Object} WireTransactionData
  * @property {string|null} date
  * @property {number} amountCents
- * @property {'CRC'|'USD'|'EUR'} currency
+ * @property {'CRC'|'USD'|'EUR'|'NIO'} currency
  * @property {number} crcCents
  * @property {number|null} exchangeRate
  * @property {string} counterparty

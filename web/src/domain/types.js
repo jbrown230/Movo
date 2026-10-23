@@ -22,6 +22,7 @@ export const Currency = Object.freeze({
   CRC: 'CRC',
   USD: 'USD',
   EUR: 'EUR',
+  NIO: 'NIO', // córdoba nicaragüense
 });
 
 /** Qué pasó con un correo después de leerlo. */
@@ -48,7 +49,7 @@ export const CategoryOrigin = Object.freeze({
  * @property {string} id
  * @property {string} date             Fecha y hora en formato ISO (UTC).
  * @property {number} amountCents      Monto original, en céntimos de su moneda.
- * @property {'CRC'|'USD'|'EUR'} currency
+ * @property {'CRC'|'USD'|'EUR'|'NIO'} currency
  * @property {number} crcCents         Monto convertido a colones, en céntimos.
  * @property {number|null} exchangeRate Colones por unidad de la moneda (solo si no fue en colones). 0 = aún sin tipo de cambio.
  * @property {string} counterparty     Comercio o persona con quien fue el movimiento.

@@ -63,6 +63,23 @@ test('devuelve el tipo de cambio de hoy y el de cada día, con el euro del últi
   ]);
 });
 
+test('con los córdobas por dólar, también se devuelven los colones por córdoba de cada día', async () => {
+  const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: okResponse(EURO_IN_DOLLARS_BODY) });
+  const rates = await createBccrExchangeRateSource({ token: 't', nioPerUsd: 50, httpFetch }).fetchLatestRate();
+
+  assert.deepEqual(rates.nio, { rate: 10.12, date: '2026-01-19' }); // 506 colones por dólar / 50 córdobas por dólar
+  assert.deepEqual(
+    rates.history.map((day) => day.nio),
+    [10.1, 10.1, 10.1, 10.12],
+  );
+});
+
+test('sin los córdobas por dólar, no se inventa un tipo de cambio del córdoba', async () => {
+  const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: okResponse(EURO_IN_DOLLARS_BODY) });
+  const rates = await createBccrExchangeRateSource({ token: 't', httpFetch }).fetchLatestRate();
+  assert.equal(rates.nio, null);
+});
+
 test('si falla el euro, se responde solo el dólar', async () => {
   const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: failedResponse(500) });
   const rates = await createBccrExchangeRateSource({ token: 't', httpFetch }).fetchLatestRate();

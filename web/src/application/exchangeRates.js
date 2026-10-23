@@ -4,7 +4,7 @@
 import { Currency } from '../domain/types.js';
 
 const COSTA_RICA_OFFSET_MS = 6 * 60 * 60 * 1000; // los bancos y el BCCR usan hora de Costa Rica (UTC−6)
-const HISTORY_FIELD = Object.freeze({ [Currency.USD]: 'usd', [Currency.EUR]: 'eur' });
+const HISTORY_FIELD = Object.freeze({ [Currency.USD]: 'usd', [Currency.EUR]: 'eur', [Currency.NIO]: 'nio' });
 
 /** Día en Costa Rica ("2026-01-15") de un instante ISO, o null si la fecha no es válida. */
 function costaRicaDay(dateIso) {
@@ -16,7 +16,7 @@ function costaRicaDay(dateIso) {
  * Colones por unidad de esa moneda el día del movimiento, o null si el historial no llega hasta ese día.
  * Un día posterior al último publicado usa el último: se corrige cuando llegue el de ese día.
  *
- * @param {{ history?: Array<{ date: string, usd: number, eur: number|null }> }|null} info  Lo que respondió /api/fx.
+ * @param {{ history?: Array<{ date: string, usd: number, eur: number|null, nio?: number }> }|null} info  Lo que respondió /api/fx.
  */
 export function rateOfTheDay(info, currency, dateIso) {
   const history = info?.history ?? [];
@@ -33,11 +33,17 @@ export function rateOfTheDay(info, currency, dateIso) {
 
 /** Colones por unidad de esa moneda según el tipo de cambio más reciente, o null. */
 export function latestRate(info, currency) {
-  return (currency === Currency.EUR ? info?.euro?.rate : info?.rate) || null;
+  if (currency === Currency.EUR) return info?.euro?.rate || null;
+  if (currency === Currency.NIO) return info?.nio?.rate || null;
+  return info?.rate || null;
 }
 
-/** Colones por dólar y por euro para un movimiento de esa fecha: los de su día o, si no se conocen, los más recientes. */
+/** Colones por dólar, euro y córdoba para un movimiento de esa fecha: los de su día o, si no se conocen, los más recientes. */
 export function exchangeRatesOn(info, dateIso) {
   const rateFor = (currency) => rateOfTheDay(info, currency, dateIso) ?? latestRate(info, currency);
-  return { [Currency.USD]: rateFor(Currency.USD), [Currency.EUR]: rateFor(Currency.EUR) };
+  return {
+    [Currency.USD]: rateFor(Currency.USD),
+    [Currency.EUR]: rateFor(Currency.EUR),
+    [Currency.NIO]: rateFor(Currency.NIO),
+  };
 }

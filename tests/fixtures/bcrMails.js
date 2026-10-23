@@ -37,6 +37,19 @@ Importante:`,
 };
 
 // Tal como queda el HTML de la tabla al convertirlo (celdas separadas por tabulador).
+// Compra en córdobas nicaragüenses: el BCR escribe la moneda como "CORDOBA ORO".
+export const BCR_TARJETA_CORDOBAS = {
+  from: 'BCR Tarjetas <bcrtarjestcta@bancobcr.com>',
+  subject: 'Notificación de Transacciones BCR',
+  body: `Transacciones en su tarjeta BCR: ****-****-****-0000
+Estimado (a) cliente:
+Le informamos la siguiente transacción realizada con su tarjeta BCR :
+Detalle de Transacciones
+Fecha\tAutorización\tNo.Referencia\tMonto\tMoneda\tComercio\tEstado
+20/10/2026 14:50:14\t00000000\t000000000002\t300.00\tCORDOBA ORO\tCOMERCIO NICARAGUA PRUEBA Rivas NI\tAprobada
+En caso de dudas respecto a las transacciones notificadas, escribir al WhatsApp y utilice las opciones disponibles.`,
+};
+
 export const BCR_TARJETA_NEGADA = {
   from: 'BCR Tarjetas <bcrtarjestcta@bancobcr.com>',
   subject: 'Notificación de Transacciones BCR',
