@@ -410,7 +410,9 @@ textarea {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding: 2px 28px 14px 18px; /* el espacio de la derecha deja que la última tarjeta salga del degradado */
+  padding: 2px 18px 14px;
+  scroll-snap-type: x proximity; /* las tarjetas se detienen alineadas, nunca a medias */
+  scroll-padding: 0 18px;
   margin: 0 -16px;
   scrollbar-width: none;
 }
@@ -418,6 +420,7 @@ textarea {
   display: none;
 }
 .cat {
+  scroll-snap-align: start;
   text-align: left;
   flex: 0 0 132px;
   background: var(--card);
@@ -1323,16 +1326,29 @@ textarea {
   height: 16px;
 }
 .filters-toggle {
+  position: relative;
   flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 16px;
-  border-radius: 999px;
+  width: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
   background: var(--card);
-  font-weight: 600;
-  font-size: 15px;
   box-shadow: 0 0 0 1px var(--line);
+}
+.fbadge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 20px;
+  text-align: center;
 }
 .filters-toggle svg {
   width: 18px;
@@ -1593,29 +1609,12 @@ textarea {
   height: 16px;
 }
 
-/* Sin cortes bruscos: lo que se desplaza hacia un lado se desvanece en el borde, y la lista se
-   desvanece antes de llegar a la barra de abajo. */
-.cats,
-.chips {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
-}
-.chips::after {
-  content: '';
-  flex: 0 0 20px; /* con el espacio entre chips, deja el último fuera del degradado */
-}
 .searchbox input::placeholder {
   text-overflow: ellipsis;
 }
-.app::after {
-  content: '';
-  position: fixed;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: min(440px, 100%);
-  height: calc(100px + env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, var(--app) 28%, transparent);
-  pointer-events: none;
-  z-index: 19;
+
+/* Control segmentado compacto: cuatro opciones en un teléfono angosto. */
+.seg.compact button {
+  padding: 10px 2px;
+  font-size: 13px;
 }

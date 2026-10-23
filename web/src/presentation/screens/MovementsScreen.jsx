@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { SegmentedControl } from '../components/formControls.jsx';
 import { Icon } from '../components/Icon.jsx';
 import { TransactionList } from '../components/TransactionList.jsx';
 import { Direction } from '../../domain/types.js';
@@ -15,11 +16,11 @@ import {
 import { useNavigation } from '../state/NavigationProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 
-const DIRECTION_CHIPS = [
+const DIRECTION_OPTIONS = [
   { value: '', label: 'Todos' },
   { value: Direction.EXPENSE, label: 'Gastos' },
   { value: Direction.INCOME, label: 'Ingresos' },
-  { value: Direction.OWN_TRANSFER, label: 'Entre mis cuentas' },
+  { value: Direction.OWN_TRANSFER, label: 'Mis cuentas' },
 ];
 
 /** Campo de búsqueda por comercio o persona, con botón para borrar lo escrito. */
@@ -31,7 +32,7 @@ function SearchBox({ value, onChange }) {
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder="Buscar comercio"
+        placeholder="Buscar comercio o persona"
         aria-label="Buscar movimientos"
         autoComplete="off"
       />
@@ -48,9 +49,14 @@ function SearchBox({ value, onChange }) {
 function FiltersButton({ count }) {
   const { openModal } = useModal();
   return (
-    <button type="button" className="filters-toggle" onClick={() => openModal(<FiltersModal />)}>
+    <button
+      type="button"
+      className="filters-toggle"
+      aria-label={`Filtros${count ? ` (${count})` : ''}`}
+      onClick={() => openModal(<FiltersModal />)}
+    >
       <Icon name="filter" />
-      Filtros{count ? ` (${count})` : ''}
+      {count > 0 && <span className="fbadge">{count}</span>}
     </button>
   );
 }
@@ -68,25 +74,6 @@ function ExportButton({ isDisabled }) {
     >
       <Icon name="download" />
     </button>
-  );
-}
-
-/** Tipo de movimiento, con un toque: todos, gastos, ingresos o entre mis cuentas. */
-function DirectionChips({ value, onChange }) {
-  return (
-    <div className="chips" role="group" aria-label="Tipo de movimiento">
-      {DIRECTION_CHIPS.map((chip) => (
-        <button
-          key={chip.value}
-          type="button"
-          className="chip plain"
-          aria-pressed={chip.value === value}
-          onClick={() => onChange(chip.value)}
-        >
-          {chip.label}
-        </button>
-      ))}
-    </div>
   );
 }
 
@@ -127,7 +114,13 @@ export function MovementsScreen() {
           <SearchBox value={movementFilters.text} onChange={setFilter('text')} />
           <FiltersButton count={countSheetFilters(movementFilters)} />
         </div>
-        <DirectionChips value={movementFilters.direction} onChange={setFilter('direction')} />
+        <SegmentedControl
+          label="Tipo de movimiento"
+          options={DIRECTION_OPTIONS}
+          value={movementFilters.direction}
+          onChange={setFilter('direction')}
+          isCompact
+        />
         {isFiltered && (
           <button type="button" className="link mv-clear" onClick={() => setMovementFilters(NO_MOVEMENT_FILTERS)}>
             Quitar filtros
