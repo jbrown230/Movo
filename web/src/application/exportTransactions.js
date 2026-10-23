@@ -2,9 +2,8 @@
 // apariencia de Movo y los totales, o un CSV sencillo.
 
 import { toCsv } from '../domain/csv.js';
-import { XLSX_MIME_TYPE } from '../domain/xlsx.js';
 import { EXPORT_HEADER, labelsOf, localDateTime } from './exportLabels.js';
-import { buildMovementsWorkbook } from './movementsWorkbook.js';
+import { buildMovementsReport } from './movementsReport.js';
 import { toListFilters } from './transactionFilters.js';
 
 /** Separadores del CSV: Excel en español espera punto y coma; en inglés y Google Sheets, coma. */
@@ -14,9 +13,10 @@ export const CsvSeparator = Object.freeze({ SEMICOLON: ';', COMMA: ',' });
 export const ExportFormat = Object.freeze({ XLSX: 'xlsx', CSV: 'csv' });
 
 const CSV_MIME_TYPE = 'text/csv;charset=utf-8';
+const XLSX_MIME_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** Tope de movimientos por archivo; muy por encima de lo que acumula una persona. */
-const MAX_EXPORTED_TRANSACTIONS = 100_000;
+export const MAX_EXPORTED_TRANSACTIONS = 100_000;
 
 /** Monto sin símbolo ni separador de miles. Con punto y coma, la coma decimal que espera Excel en español. */
 function amountText(cents, separator) {
@@ -39,15 +39,21 @@ function toRow(transaction, separator) {
   ];
 }
 
-export function createExportTransactions({ transactions }) {
+/**
+ * @param {Object} dependencies
+ * @param {{ list: Function }} dependencies.transactions
+ * @param {(report: import('./movementsReport.js').MovementsReport) => Promise<Uint8Array>} dependencies.writeMovementsWorkbook
+ *   Dibuja el reporte como un libro de Excel (ver application/ports.js).
+ */
+export function createExportTransactions({ transactions, writeMovementsWorkbook }) {
   /**
    * @param {{ format?: string, separator?: string, filterLabels?: string[], now?: Date }} options
    *   Además, los mismos filtros que la lista de movimientos (`searchTransactions`): fechas, categoría, tipo,
    *   banco, montos y texto. Sin filtros, se exporta todo. `filterLabels` se anota en el Excel bajo el título.
-   * @returns {{ fileName: string, content: string|Uint8Array, mimeType: string, count: number }}
+   * @returns {Promise<{ fileName: string, content: string|Uint8Array, mimeType: string, count: number }>}
    *   El archivo, del movimiento más viejo al más nuevo.
    */
-  return function exportTransactions({
+  return async function exportTransactions({
     format = ExportFormat.CSV,
     separator = CsvSeparator.SEMICOLON,
     filterLabels = [],
@@ -59,7 +65,7 @@ export function createExportTransactions({ transactions }) {
     const baseName = `movo-movimientos-${fromDay || 'inicio'}-a-${toDay || 'hoy'}`;
 
     if (format === ExportFormat.XLSX) {
-      const content = buildMovementsWorkbook({ transactions: exported, filterLabels, now });
+      const content = await writeMovementsWorkbook(buildMovementsReport({ transactions: exported, filterLabels, now }));
       return { fileName: `${baseName}.xlsx`, content, mimeType: XLSX_MIME_TYPE, count: exported.length };
     }
     const rows = exported.map((transaction) => toRow(transaction, separator));

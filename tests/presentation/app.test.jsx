@@ -424,6 +424,9 @@ describe('exportar movimientos', () => {
     return within(screen.getByRole('dialog'));
   };
 
+  /** Espera a que termine de armarse el archivo: el aviso "Se exportaron N movimientos" sale después de descargarlo. */
+  const waitForDownload = () => screen.findByText(/Se exportaron \d+ movimiento/, {}, { timeout: 15_000 });
+
   const chooseFormat = (user, dialog, name) =>
     user.click(within(dialog.getByRole('group', { name: 'Formato del archivo' })).getByRole('button', { name }));
 
@@ -436,13 +439,13 @@ describe('exportar movimientos', () => {
     expect(dialog.getByText('todos tus movimientos')).toBeInTheDocument();
     expect(dialog.queryByRole('group', { name: 'Separador' })).not.toBeInTheDocument(); // solo aplica al CSV
     await user.click(dialog.getByRole('button', { name: 'Descargar Excel' }));
+    expect(await waitForDownload()).toBeInTheDocument();
 
     expect(downloadTextFile).toHaveBeenCalledTimes(1);
     const [fileName, content, mimeType] = downloadTextFile.mock.calls[0];
     expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.xlsx$/);
     expect(mimeType).toBe('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     expect([content[0], content[1]]).toEqual([0x50, 0x4b]); // "PK": un ZIP, que es lo que es un .xlsx
-    expect(await screen.findByText(/Se exportaron \d+ movimiento/)).toBeInTheDocument();
   });
 
   test('también se puede elegir CSV, con su separador', async () => {
@@ -451,6 +454,7 @@ describe('exportar movimientos', () => {
     await chooseFormat(user, dialog, 'CSV');
     expect(dialog.getByRole('group', { name: 'Separador' })).toBeInTheDocument();
     await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
+    await waitForDownload();
 
     const [fileName, content, mimeType] = downloadTextFile.mock.calls[0];
     expect(fileName).toMatch(/^movo-movimientos-inicio-a-hoy\.csv$/);
@@ -469,6 +473,7 @@ describe('exportar movimientos', () => {
     expect(within(dialog.getByRole('list', { name: 'Filtros aplicados' })).getByText('“netflix”')).toBeInTheDocument();
     await chooseFormat(user, dialog, 'CSV');
     await user.click(dialog.getByRole('button', { name: 'Descargar CSV' }));
+    await waitForDownload();
 
     const [, content] = downloadTextFile.mock.calls[0];
     const rows = content.trimEnd().split('\r\n').slice(1);

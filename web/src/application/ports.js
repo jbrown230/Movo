@@ -21,4 +21,11 @@
  * @property {(options: {token: string}) => Promise<void>} deleteMyData
  */
 
+/**
+ * Quien dibuja el reporte de movimientos como un libro de Excel.
+ * @typedef {Object} WorkbookWriter
+ * @property {(report: import('./movementsReport.js').MovementsReport) => Promise<Uint8Array>} writeMovementsWorkbook
+ *           Devuelve el contenido de un archivo .xlsx. Ver infrastructure/excel.
+ */
+
 export {};

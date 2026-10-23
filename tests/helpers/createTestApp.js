@@ -7,6 +7,7 @@ import initSqlJs from 'sql.js';
 import { createSqliteStorage } from '../../web/src/infrastructure/sqlite/createSqliteStorage.js';
 import { createServices } from '../../web/src/application/createServices.js';
 import { buildDemoSeedMails } from '../../web/src/demo/seedMails.js';
+import { writeMovementsWorkbook } from '../../web/src/infrastructure/excel/movementsWorkbook.js';
 
 // Se le entrega el archivo .wasm directamente: así funciona también en el entorno de navegador simulado de las pruebas de interfaz.
 const wasmBinary = readFileSync(createRequire(import.meta.url).resolve('sql.js/dist/sql-wasm.wasm'));
@@ -38,7 +39,13 @@ const NO_MAIL_SOURCE = {
 export function createTestApp({ backend = OFFLINE_BACKEND, mailSource = NO_MAIL_SOURCE, database } = {}) {
   const db = database ?? new SQL.Database();
   const storage = createSqliteStorage(db);
-  const services = createServices({ storage, mailSource, backend, buildDemoMails: buildDemoSeedMails });
+  const services = createServices({
+    storage,
+    mailSource,
+    backend,
+    buildDemoMails: buildDemoSeedMails,
+    writeMovementsWorkbook,
+  });
   return { db, storage, services, queries: services.queries };
 }
 
