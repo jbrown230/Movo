@@ -11,7 +11,14 @@ import { NO_MOVEMENT_FILTERS } from './movementFilters.js';
  */
 const NavigationContext = createContext(null);
 
-export const Views = Object.freeze({ HOME: 'home', MOVEMENTS: 'movements', INBOX: 'inbox', SETTINGS: 'settings' });
+/** Pantallas de la app. Metas no tiene pestaña: se abre desde el inicio y cuenta como parte de él. */
+export const Views = Object.freeze({
+  HOME: 'home',
+  MOVEMENTS: 'movements',
+  INBOX: 'inbox',
+  SETTINGS: 'settings',
+  GOALS: 'goals',
+});
 
 const FLASH_DURATION_MS = 2600;
 

@@ -1,11 +1,13 @@
-// Sección del inicio con las metas de ahorro y cómo va cada una.
+// Pantalla de metas de ahorro: cómo va cada una. Se abre desde el botón "Metas" del inicio.
 
+import { Icon } from '../components/Icon.jsx';
 import { GoalStatus } from '../../domain/savingsGoals.js';
 import { useAppData } from '../hooks/useAppData.js';
 import { goalDayLabel, monthName } from '../format/dates.js';
 import { formatColonesShort } from '../format/money.js';
 import { SavingsGoalModal } from '../modals/SavingsGoalModal.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
+import { Views, useNavigation } from '../state/NavigationProvider.jsx';
 
 /** "Este mes ahorraste ₡45 000" o "En octubre gastaste ₡12 000 más de lo que entró". */
 function monthNetText(summary) {
@@ -51,32 +53,41 @@ function GoalCard({ goal }) {
   );
 }
 
-export function SavingsGoals() {
+/** Metas de ahorro: el saldo del mes y una tarjeta por meta. */
+export function GoalsScreen() {
   const { openModal } = useModal();
+  const { goTo } = useNavigation();
   const { savingsGoals, summary } = useAppData();
   const createGoal = () => openModal(<SavingsGoalModal />);
 
   return (
     <section aria-label="Metas de ahorro">
-      <div className="sec-h">
-        <h2>Metas de ahorro</h2>
-        <button type="button" className="link" onClick={createGoal}>
-          Nueva meta
+      <div className="ihead goals-head">
+        <button type="button" className="roundbtn" aria-label="Volver al inicio" onClick={() => goTo(Views.HOME)}>
+          <Icon name="back" />
+        </button>
+        <div>
+          <h1>Metas</h1>
+          <p>{monthNetText(summary)}</p>
+        </div>
+        <button type="button" className="roundbtn" aria-label="Nueva meta" onClick={createGoal}>
+          <Icon name="plus" />
         </button>
       </div>
-      {savingsGoals.length ? (
-        <div className="goals">
-          <p className="goals-month">{monthNetText(summary)}</p>
-          {savingsGoals.map((goal) => (
-            <GoalCard goal={goal} key={goal.id} />
-          ))}
-        </div>
-      ) : (
-        <button type="button" className="goal empty" onClick={createGoal}>
-          <b>Crea tu primera meta</b>
-          <p>Elige cuánto quieres ahorrar y para cuándo. Movo te dice cuánto apartar cada mes.</p>
-        </button>
-      )}
+      <div className="goals-body">
+        {savingsGoals.length ? (
+          <div className="goals">
+            {savingsGoals.map((goal) => (
+              <GoalCard goal={goal} key={goal.id} />
+            ))}
+          </div>
+        ) : (
+          <button type="button" className="goal empty" onClick={createGoal}>
+            <b>Crea tu primera meta</b>
+            <p>Elige cuánto quieres ahorrar y para cuándo. Movo te dice cuánto apartar cada mes.</p>
+          </button>
+        )}
+      </div>
     </section>
   );
 }

@@ -367,7 +367,7 @@ textarea {
 .actions {
   display: flex;
   justify-content: center;
-  gap: 26px;
+  gap: 18px;
   margin-top: 26px;
 }
 .act {
@@ -1441,6 +1441,9 @@ textarea {
   .nav button span:not(.badge) {
     display: none;
   }
+  .actions {
+    gap: 8px;
+  }
   .big {
     font-size: 44px;
   }
@@ -1718,17 +1721,28 @@ textarea {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
-/* Metas de ahorro en el inicio. */
+/* Metas de ahorro: pantalla que se abre desde el inicio. */
+.goals-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+.goals-head > div {
+  flex: 1;
+  min-width: 0;
+}
+.goals-head p {
+  font-size: 14px;
+}
+.goals-body {
+  padding: 8px 16px 0;
+}
 .goals {
   display: flex;
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
-}
-.goals-month {
-  font-size: 13px;
-  color: var(--muted);
-  margin: -4px 4px 2px;
 }
 .goal {
   display: flex;
@@ -1741,7 +1755,6 @@ textarea {
   padding: 14px 16px;
 }
 .goal.empty {
-  margin-bottom: 20px;
   border: 1.5px dashed color-mix(in srgb, var(--muted) 45%, transparent);
   background: transparent;
 }

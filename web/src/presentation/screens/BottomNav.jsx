@@ -9,9 +9,13 @@ const TABS = [
   { view: Views.SETTINGS, label: 'Ajustes', icon: 'settings' },
 ];
 
+/** Pantallas sin pestaña propia y la pestaña que queda marcada mientras se ven. */
+const TAB_OF_VIEW = { [Views.GOALS]: Views.HOME };
+
 /** Barra de navegación de abajo. La bandeja muestra cuántos correos hay. */
 export function BottomNav() {
   const { view, goTo } = useNavigation();
+  const activeTab = TAB_OF_VIEW[view] ?? view;
   const { mails } = useAppData();
 
   return (
@@ -20,7 +24,7 @@ export function BottomNav() {
         <button
           key={tab.view}
           type="button"
-          aria-current={tab.view === view ? 'page' : 'false'}
+          aria-current={tab.view === activeTab ? 'page' : 'false'}
           onClick={() => goTo(tab.view)}
         >
           <Icon name={tab.icon} />

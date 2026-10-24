@@ -269,6 +269,12 @@ describe('metas de ahorro', () => {
   /** Un día del año siguiente: siempre en el futuro. */
   const nextYearDay = () => `${new Date().getFullYear() + 1}-01-15`;
 
+  /** Abre la pantalla de metas con el botón del inicio. */
+  async function openGoals(user) {
+    await user.click(screen.getByRole('button', { name: 'Metas' }));
+    return within(screen.getByRole('region', { name: 'Metas de ahorro' }));
+  }
+
   async function createGoal(user, { amount, name }) {
     const form = within(screen.getByRole('dialog'));
     await user.type(form.getByLabelText('Monto'), amount);
@@ -278,9 +284,22 @@ describe('metas de ahorro', () => {
     await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Crear meta' }));
   }
 
-  test('crear una meta la muestra en el inicio con su avance', async () => {
+  test('el inicio abre las metas con un botón, sin pestaña nueva, y se vuelve con la flecha', async () => {
     const user = await openDemo();
-    const goals = within(screen.getByRole('region', { name: 'Metas de ahorro' }));
+    const navigation = screen.getByRole('navigation', { name: 'Navegación principal' });
+    expect(within(navigation).queryByRole('button', { name: /Metas/ })).not.toBeInTheDocument();
+
+    await openGoals(user);
+    expect(screen.getByRole('heading', { name: 'Metas' })).toBeVisible();
+    expect(within(navigation).getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'page');
+
+    await user.click(screen.getByRole('button', { name: 'Volver al inicio' }));
+    expect(screen.getByText(/Gastado en/)).toBeVisible();
+  });
+
+  test('crear una meta la muestra con su avance', async () => {
+    const user = await openDemo();
+    const goals = await openGoals(user);
     await user.click(goals.getByRole('button', { name: /Crea tu primera meta/ }));
 
     const form = within(screen.getByRole('dialog'));
@@ -290,11 +309,12 @@ describe('metas de ahorro', () => {
 
     expect(await screen.findByRole('button', { name: /^Meta Viaje a la playa: \d+ %$/ })).toBeInTheDocument();
     expect(goals.getByText(/de ₡500\s000/)).toBeInTheDocument();
-    expect(goals.getByText(/llevas .* ahorrados|gastaste .* más de lo que entró/)).toBeInTheDocument();
+    expect(goals.getByText(/llevas .* ahorrados|gastaste .* más de lo que entró/)).toBeVisible();
   });
 
   test('una fecha que ya pasó no deja crear la meta y explica por qué', async () => {
     const user = await openDemo();
+    await openGoals(user);
     await user.click(screen.getByRole('button', { name: 'Nueva meta' }));
 
     const form = within(screen.getByRole('dialog'));
@@ -308,6 +328,7 @@ describe('metas de ahorro', () => {
 
   test('una meta se puede cambiar y eliminar, con confirmación', async () => {
     const user = await openDemo();
+    await openGoals(user);
     await user.click(screen.getByRole('button', { name: 'Nueva meta' }));
     await createGoal(user, { amount: '500000', name: 'Viaje' });
 

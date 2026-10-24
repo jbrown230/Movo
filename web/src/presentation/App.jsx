@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BottomNav } from './screens/BottomNav.jsx';
+import { GoalsScreen } from './screens/GoalsScreen.jsx';
 import { HomeScreen } from './screens/HomeScreen.jsx';
 import { InboxScreen } from './screens/InboxScreen.jsx';
 import { MovementsScreen } from './screens/MovementsScreen.jsx';
@@ -27,7 +28,7 @@ function useSharedTextFromOtherApps() {
   }, [openModal]);
 }
 
-/** Las cuatro pantallas principales; solo la activa se ve, las otras quedan ocultas pero conservan su estado. */
+/** Las pantallas principales; solo la activa se ve, las otras quedan ocultas pero conservan su estado. */
 function MainScreens() {
   const { view } = useNavigation();
   useSharedTextFromOtherApps();
@@ -46,6 +47,9 @@ function MainScreens() {
         </div>
         <div hidden={view !== Views.SETTINGS}>
           <SettingsScreen />
+        </div>
+        <div hidden={view !== Views.GOALS}>
+          <GoalsScreen />
         </div>
       </div>
       <BottomNav />
