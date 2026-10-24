@@ -104,7 +104,7 @@ El costo es que la lectura ocurre solo con la app abierta, porque el token dura 
 
 ## Modelo de datos local (SQLite)
 
-Cinco tablas, con nombres completos (el esquema está documentado también al inicio de `infrastructure/sqlite/migrations.js`):
+Seis tablas, con nombres completos (el esquema está documentado también al inicio de `infrastructure/sqlite/migrations.js`):
 
 | Tabla | Qué guarda |
 |---|---|
@@ -112,6 +112,7 @@ Cinco tablas, con nombres completos (el esquema está documentado también al in
 | `mails` | Cada correo del banco que Movo leyó |
 | `category_rules` | Reglas de la persona: "este comercio va en Comida" |
 | `settings` | Ajustes que se sincronizan con el respaldo (presupuesto, búsqueda de Gmail) |
+| `savings_goals` | Metas de ahorro: nombre, monto, fecha límite y desde cuándo se cuenta (migración 2) |
 | `local_state` | Estado que solo importa en este teléfono: cursores, caché del tipo de cambio |
 
 **`transactions`**
@@ -133,6 +134,8 @@ Los montos van siempre en céntimos, sin decimales flotantes.
 **`mails`** guarda el correo leído: `message_id` con índice único, cuerpo, estado (`registrado`, `sin_movimiento`, `negada` o `descartado`), la plantilla usada (`template`), el movimiento resultante (`transaction_id`) y una nota con el resultado. Un correo puede producir varios movimientos (tabla de tarjeta del BCR).
 
 **`category_rules`** relaciona el nombre de un comercio ya normalizado (`counterparty_key`) con una `category`.
+
+**`savings_goals`** guarda cada meta de ahorro: `name`, `target_cents`, `target_date` (fecha límite) y `start_date` (primer día del mes en que se creó), más las columnas de sincronización. Lo ahorrado no se guarda: se calcula con SQL sobre `transactions` (ingresos menos gastos entre `start_date` y hoy, sin pasar de `target_date`), así siempre coincide con los movimientos aunque se corrija uno.
 
 En el código, las filas se traducen a entidades con nombres claros (por ejemplo `amount_crc_cents` es `crcCents` y `mail_key` es `mailKey`): ver `infrastructure/sqlite/*Repository.js` y los tipos en `domain/types.js`. Las claves de `local_state` están en `application/localStateKeys.js`.
 

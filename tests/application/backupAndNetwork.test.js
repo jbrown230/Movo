@@ -7,7 +7,7 @@ import { buildBankMail } from '../../web/src/demo/mailBuilder.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
 import { BCR_TARJETA_CORDOBAS } from '../fixtures/bcrMails.js';
 
-const NO_CHANGES = { transactions: [], categoryRules: [], settings: [] };
+const NO_CHANGES = { transactions: [], categoryRules: [], settings: [], savingsGoals: [] };
 
 const cardMail = (overrides = {}) =>
   buildBankMail({ bank: 'BAC', type: 'tarjeta', counterparty: 'CAFE CORDILLERA', amount: 2900, ...overrides });

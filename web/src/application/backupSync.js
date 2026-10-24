@@ -1,5 +1,5 @@
 // Casos de uso del respaldo opcional en la nube.
-// Solo viajan los movimientos ya extraídos, las reglas y los ajustes; los correos se quedan en el teléfono.
+// Solo viajan los movimientos ya extraídos, las reglas, los ajustes y las metas de ahorro; los correos se quedan en el teléfono.
 // Protocolo: se sube lo pendiente y se baja lo que cambió desde el último cursor.
 
 import { LocalStateKey } from './localStateKeys.js';
@@ -7,7 +7,7 @@ import { LocalStateKey } from './localStateKeys.js';
 const MAX_ROUNDS = 20; // tope de seguridad contra bucles
 
 export function createBackupSync({ backup, localState, backend }) {
-  const countOf = (changes) => changes.transactions.length + changes.categoryRules.length + changes.settings.length;
+  const countOf = (changes) => Object.values(changes).reduce((sum, list) => sum + list.length, 0);
 
   /**
    * Sincroniza hasta que no quede nada pendiente.

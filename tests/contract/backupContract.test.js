@@ -57,8 +57,8 @@ function createInProcessServer(userId) {
 }
 
 const TOKEN = 'token-de-prueba-0123456789';
-const NO_CHANGES = { transactions: [], categoryRules: [], settings: [] };
-const countOf = (changes) => changes.transactions.length + changes.categoryRules.length + changes.settings.length;
+const NO_CHANGES = { transactions: [], categoryRules: [], settings: [], savingsGoals: [] };
+const countOf = (changes) => Object.values(changes).reduce((sum, list) => sum + list.length, 0);
 
 test('dos teléfonos de la misma persona se sincronizan a través del contrato', async () => {
   const server = createInProcessServer('ana');
@@ -101,6 +101,48 @@ test('los presupuestos por categoría y el umbral del aviso pasan al otro teléf
 
   assert.deepEqual(phoneB.services.preferences.categoryBudgets(), { comida: 5_000_000, ocio: 2_000_000 });
   assert.equal(phoneB.services.preferences.budgetAlertPercent(), 70);
+});
+
+test('las metas de ahorro pasan al otro teléfono, y también cuando se eliminan', async () => {
+  const server = createInProcessServer('ana');
+  const phoneA = createTestApp({ backend: server.backendForPhone() });
+  const phoneB = createTestApp({ backend: server.backendForPhone() });
+  const now = new Date(2026, 9, 24, 12);
+
+  const goal = phoneA.services.savingsGoals.create(
+    { name: 'Viaje', targetCents: 30_000_000, targetDay: '2026-12-31' },
+    now,
+  );
+  await phoneA.services.backup.syncNow(TOKEN);
+  await phoneB.services.backup.syncNow(TOKEN);
+
+  const [copy] = phoneB.services.savingsGoals.list(now);
+  assert.deepEqual(
+    { id: copy.id, name: copy.name, targetCents: copy.targetCents, targetDay: copy.targetDay, startDay: copy.startDay },
+    { id: goal.id, name: 'Viaje', targetCents: 30_000_000, targetDay: '2026-12-31', startDay: '2026-10-01' },
+  );
+
+  phoneB.services.savingsGoals.remove(goal.id);
+  await phoneB.services.backup.syncNow(TOKEN);
+  await phoneA.services.backup.syncNow(TOKEN);
+  assert.deepEqual(phoneA.services.savingsGoals.list(now), []);
+});
+
+test('el servidor limpia una meta de ahorro mal formada', () => {
+  const { records } = parseSyncRequest({
+    since: 0,
+    changes: {
+      savingsGoals: [
+        {
+          id: 'g1',
+          updatedAt: 1,
+          data: { name: 'x'.repeat(500), targetCents: -5, targetDay: 7, startDay: null, $where: 'hack' },
+        },
+      ],
+    },
+  });
+  assert.equal(records[0].kind, 'savings_goal');
+  assert.deepEqual(records[0].data, { name: 'x'.repeat(60), targetCents: 0, targetDay: '7', startDay: '' });
 });
 
 test('eliminar en un teléfono se refleja en el otro', async () => {
@@ -163,7 +205,7 @@ test('un valor fuera de lo permitido se corrige en el servidor y la app lo acept
 
   // Se simula un cambio con un tipo inventado: el servidor lo reemplaza por uno válido.
   const [pending] = phone.storage.backup.collectPending().transactions;
-  const tampered = { transactions: [{ ...pending, type: 'robo' }], categoryRules: [], settings: [] };
+  const tampered = { ...NO_CHANGES, transactions: [{ ...pending, type: 'robo' }] };
   const response = await server.backendForPhone().syncBackup({ since: 0, changes: tampered });
 
   assert.equal(response.changes.transactions[0].type, 'transferencia');

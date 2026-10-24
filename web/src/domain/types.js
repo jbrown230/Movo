@@ -91,6 +91,7 @@ export const CategoryOrigin = Object.freeze({
  * @property {Transaction[]} transactions
  * @property {CategoryRule[]} categoryRules
  * @property {Setting[]} settings
+ * @property {import('./savingsGoals.js').SavingsGoal[]} savingsGoals
  */
 
 /**

@@ -10,6 +10,7 @@
 //   mails             Cada correo del banco que Movo leyó.
 //   category_rules    Reglas que crea la persona ("este comercio va en Comida").
 //   settings          Ajustes que se sincronizan con el respaldo (presupuesto, búsqueda de Gmail).
+//   savings_goals     Metas de ahorro de la persona (desde la migración 2).
 //   local_state       Estado que solo importa en este teléfono (cursores, caché del tipo de cambio).
 //
 // Las columnas `needs_backup` e `is_deleted` sirven para el respaldo en la nube:
@@ -75,6 +76,18 @@ const MIGRATIONS = {
     CREATE TABLE local_state (
       name TEXT PRIMARY KEY,
       value TEXT                                      -- JSON
+    );
+  `,
+  2: `
+    CREATE TABLE savings_goals (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      target_cents INTEGER NOT NULL,                  -- monto a ahorrar, en céntimos de colones
+      target_date TEXT NOT NULL,                      -- fecha límite, "AAAA-MM-DD" (incluida)
+      start_date TEXT NOT NULL,                       -- primer día del mes en que se creó, "AAAA-MM-01"
+      updated_at INTEGER NOT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      needs_backup INTEGER NOT NULL DEFAULT 1
     );
   `,
 };

@@ -11,6 +11,7 @@ import { createRefreshExchangeRate } from './refreshExchangeRate.js';
 import { createBackupSync } from './backupSync.js';
 import { createScanInbox } from './scanInbox.js';
 import { createSeedDemoData } from './seedDemoData.js';
+import { createSavingsGoals } from './savingsGoals.js';
 
 /**
  * @param {Object} dependencies
@@ -21,7 +22,7 @@ import { createSeedDemoData } from './seedDemoData.js';
  * @param {import('./ports.js').WorkbookWriter['writeMovementsWorkbook']} dependencies.writeMovementsWorkbook  Dibuja el Excel.
  */
 export function createServices({ storage, mailSource, backend, buildDemoMails, writeMovementsWorkbook }) {
-  const { transactions, mails, rules, settings, localState, backup, atomically } = storage;
+  const { transactions, mails, rules, settings, savingsGoals, localState, backup, atomically } = storage;
 
   const preferences = createPreferences({ settings, localState });
   const queries = createQueries({ transactions, mails });
@@ -51,5 +52,6 @@ export function createServices({ storage, mailSource, backend, buildDemoMails, w
     backup: createBackupSync({ backup, localState, backend }),
     seedDemoData: createSeedDemoData({ readMail, preferences, buildDemoMails }),
     exportTransactions: createExportTransactions({ transactions, writeMovementsWorkbook }),
+    savingsGoals: createSavingsGoals({ savingsGoals, transactions }),
   };
 }

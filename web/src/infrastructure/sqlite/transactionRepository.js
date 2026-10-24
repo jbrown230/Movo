@@ -177,5 +177,7 @@ export function createTransactionRepository(sql) {
     },
 
     summarizeMonth: (range) => summarizeMonth(sql, range),
+    /** Ingresos menos gastos, en céntimos de colones, dentro de un periodo. Lo movido entre cuentas propias no cuenta. */
+    netSavings: (range) => sumByDirection(sql, Direction.INCOME, range) - sumByDirection(sql, Direction.EXPENSE, range),
   };
 }

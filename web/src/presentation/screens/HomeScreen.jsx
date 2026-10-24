@@ -1,5 +1,6 @@
 import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
+import { SavingsGoals } from '../components/SavingsGoals.jsx';
 import { TransactionList } from '../components/TransactionList.jsx';
 import { BudgetLevel, TOTAL_BUDGET_SCOPE, budgetStatus } from '../../domain/budget.js';
 import { getCategory } from '../../domain/categories.js';
@@ -275,7 +276,7 @@ function RecentMovements() {
   );
 }
 
-/** Pantalla de inicio: gasto del mes, categorías y últimos movimientos. */
+/** Pantalla de inicio: gasto del mes, categorías, metas de ahorro y últimos movimientos. */
 export function HomeScreen() {
   const { profile } = useSession();
   const { scan } = useGmail();
@@ -315,6 +316,7 @@ export function HomeScreen() {
           </span>
         </div>
         <CategoryCards summary={summary} categoryBudgets={categoryBudgets} alertPercent={budgetAlertPercent} />
+        <SavingsGoals />
         <RecentMovements />
       </div>
     </section>

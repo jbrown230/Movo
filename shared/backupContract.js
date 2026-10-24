@@ -8,13 +8,14 @@
 // contrato (tests/contract) comprueban que el teléfono y el servidor sigan entendiéndose.
 
 /**
- * Los tres tipos de registro que se respaldan. La clave es el nombre de la lista dentro de
+ * Los tipos de registro que se respaldan. La clave es el nombre de la lista dentro de
  * `changes` (en la petición y en la respuesta) y el valor es el tipo que guarda el servidor.
  */
 export const RECORD_KIND_BY_LIST = Object.freeze({
   transactions: 'transaction',
   categoryRules: 'category_rule',
   settings: 'setting',
+  savingsGoals: 'savings_goal',
 });
 
 export const CHANGE_LIST_NAMES = Object.freeze(Object.keys(RECORD_KIND_BY_LIST));
@@ -52,6 +53,7 @@ export const MAX_TEXT_LENGTH = Object.freeze({
   MAIL_KEY: 300,
   NOTE: 300,
   SETTING_TEXT: 2000,
+  GOAL_NAME: 60,
 });
 
 /**
@@ -92,6 +94,16 @@ export const MAX_TEXT_LENGTH = Object.freeze({
  */
 
 /**
+ * `data` de una meta de ahorro.
+ *
+ * @typedef {Object} WireSavingsGoalData
+ * @property {string} name
+ * @property {number} targetCents  Monto a ahorrar, en céntimos de colones.
+ * @property {string} targetDay    Fecha límite "AAAA-MM-DD".
+ * @property {string} startDay     Primer día del mes en que se creó la meta.
+ */
+
+/**
  * `data` de un ajuste.
  *
  * @typedef {Object} WireSettingData
@@ -103,7 +115,7 @@ export const MAX_TEXT_LENGTH = Object.freeze({
  *
  * @typedef {Object} SyncRequest
  * @property {number} since  Cursor que el servidor entregó la última vez (0 la primera vez).
- * @property {{transactions?: WireRecord[], categoryRules?: WireRecord[], settings?: WireRecord[]}} changes
+ * @property {{transactions?: WireRecord[], categoryRules?: WireRecord[], settings?: WireRecord[], savingsGoals?: WireRecord[]}} changes
  */
 
 /**
@@ -112,5 +124,5 @@ export const MAX_TEXT_LENGTH = Object.freeze({
  * @typedef {Object} SyncResponse
  * @property {number} cursor   Para la próxima petición.
  * @property {boolean} hasMore Si es true, hay más cambios: se pide otra vez con el nuevo cursor.
- * @property {{transactions: WireRecord[], categoryRules: WireRecord[], settings: WireRecord[]}} changes
+ * @property {{transactions: WireRecord[], categoryRules: WireRecord[], settings: WireRecord[], savingsGoals: WireRecord[]}} changes
  */

@@ -15,10 +15,18 @@ const categoryRuleToWire = ({ id, updatedAt, isDeleted, counterpartyKey, categor
 
 const settingToWire = ({ name, value, updatedAt }) => ({ id: name, updatedAt, isDeleted: false, data: { value } });
 
+const savingsGoalToWire = ({ id, updatedAt, isDeleted, name, targetCents, targetDay, startDay }) => ({
+  id,
+  updatedAt,
+  isDeleted,
+  data: { name, targetCents, targetDay, startDay },
+});
+
 const TO_WIRE_BY_LIST = {
   transactions: transactionToWire,
   categoryRules: categoryRuleToWire,
   settings: settingToWire,
+  savingsGoals: savingsGoalToWire,
 };
 
 // ---- de la red hacia la app ----
@@ -34,10 +42,21 @@ const categoryRuleFromWire = ({ id, updatedAt, isDeleted, data }) => ({
 
 const settingFromWire = ({ id, updatedAt, data }) => ({ name: id, value: data.value, updatedAt });
 
+const savingsGoalFromWire = ({ id, updatedAt, isDeleted, data }) => ({
+  id,
+  updatedAt,
+  isDeleted,
+  name: data.name,
+  targetCents: data.targetCents,
+  targetDay: data.targetDay,
+  startDay: data.startDay,
+});
+
 const FROM_WIRE_BY_LIST = {
   transactions: transactionFromWire,
   categoryRules: categoryRuleFromWire,
   settings: settingFromWire,
+  savingsGoals: savingsGoalFromWire,
 };
 
 function mapEachList(changes, mappers) {

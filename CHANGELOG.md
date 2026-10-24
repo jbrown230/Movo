@@ -4,6 +4,7 @@
 
 ### Funciones de la app
 
+- **Metas de ahorro.** En el inicio se crea una meta con nombre, monto y fecha límite. Lo ahorrado es lo que entra menos lo que se gasta (los movimientos entre cuentas propias no cuentan), desde el primer día del mes en que se crea la meta hasta su fecha límite. Cada meta muestra lo ahorrado, el porcentaje y cuánto hay que ahorrar al mes para llegar a tiempo, o si ya se logró o venció; arriba se ve cuánto se lleva ahorrado este mes. Las metas se pueden cambiar y eliminar, con confirmación. Se guardan en una tabla nueva de SQLite (`savings_goals`, migración 2) y en el respaldo como un tipo de registro nuevo (`savingsGoals` / `savings_goal`), validado por la API y por MongoDB.
 - **Alertas de presupuesto.** El inicio avisa cuando lo gastado en el mes llega al 80 % del presupuesto ("Cerca del límite") y cuando llega al 100 % ("Presupuesto agotado"), y la barra del presupuesto cambia de color. En Ajustes se puede dar un presupuesto propio a cada categoría de gasto (las que quedan en blanco no tienen límite): avisan igual que el global y su tarjeta en el inicio muestra cuánto llevan de él. El umbral del aviso se elige en Ajustes ("Avisar al llegar al": 50 %, 60 %, 70 %, 80 % o 90 %) y vale para todos los presupuestos. El porcentaje se redondea hacia abajo, así el 79,9 % no avisa del 80 % ni el 99,9 % del 100 %. Los presupuestos por categoría y el umbral se sincronizan con el respaldo (`category_budgets` y `budget_alert_percent`).
 
 ## v0.2.0

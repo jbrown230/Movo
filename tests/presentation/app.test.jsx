@@ -1,7 +1,7 @@
 // Pruebas de la interfaz: se dibuja la app completa y se usa como lo haría una persona.
 // La base de datos es SQLite real en memoria; el servidor no responde (la app debe funcionar igual).
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Se reemplaza solo la apertura de la base (IndexedDB no existe en las pruebas). Todo lo demás es real.
@@ -260,6 +260,73 @@ describe('alertas de presupuesto', () => {
     await user.click(confirmation.getByRole('button', { name: 'Cambiar aviso' }));
 
     expect(await screen.findByRole('button', { name: /Avisar al llegar al\s*60 %/ })).toBeInTheDocument();
+  });
+});
+
+describe('metas de ahorro', () => {
+  beforeEach(() => localStorage.clear());
+
+  /** Un día del año siguiente: siempre en el futuro. */
+  const nextYearDay = () => `${new Date().getFullYear() + 1}-01-15`;
+
+  async function createGoal(user, { amount, name }) {
+    const form = within(screen.getByRole('dialog'));
+    await user.type(form.getByLabelText('Monto'), amount);
+    await user.type(form.getByLabelText('¿Para qué ahorras?'), name);
+    fireEvent.change(form.getByLabelText('¿Para cuándo?'), { target: { value: nextYearDay() } });
+    await user.click(form.getByRole('button', { name: 'Crear meta' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Crear meta' }));
+  }
+
+  test('crear una meta la muestra en el inicio con su avance', async () => {
+    const user = await openDemo();
+    const goals = within(screen.getByRole('region', { name: 'Metas de ahorro' }));
+    await user.click(goals.getByRole('button', { name: /Crea tu primera meta/ }));
+
+    const form = within(screen.getByRole('dialog'));
+    expect(form.getByRole('button', { name: 'Crear meta' })).toBeDisabled();
+
+    await createGoal(user, { amount: '500000', name: 'Viaje a la playa' });
+
+    expect(await screen.findByRole('button', { name: /^Meta Viaje a la playa: \d+ %$/ })).toBeInTheDocument();
+    expect(goals.getByText(/de ₡500\s000/)).toBeInTheDocument();
+    expect(goals.getByText(/llevas .* ahorrados|gastaste .* más de lo que entró/)).toBeInTheDocument();
+  });
+
+  test('una fecha que ya pasó no deja crear la meta y explica por qué', async () => {
+    const user = await openDemo();
+    await user.click(screen.getByRole('button', { name: 'Nueva meta' }));
+
+    const form = within(screen.getByRole('dialog'));
+    await user.type(form.getByLabelText('Monto'), '1000');
+    await user.type(form.getByLabelText('¿Para qué ahorras?'), 'Algo');
+    fireEvent.change(form.getByLabelText('¿Para cuándo?'), { target: { value: '2000-01-01' } });
+
+    expect(form.getByText('La fecha límite no puede haber pasado.')).toBeInTheDocument();
+    expect(form.getByRole('button', { name: 'Crear meta' })).toBeDisabled();
+  });
+
+  test('una meta se puede cambiar y eliminar, con confirmación', async () => {
+    const user = await openDemo();
+    await user.click(screen.getByRole('button', { name: 'Nueva meta' }));
+    await createGoal(user, { amount: '500000', name: 'Viaje' });
+
+    await user.click(await screen.findByRole('button', { name: /^Meta Viaje:/ }));
+    const form = within(screen.getByRole('dialog'));
+    await user.clear(form.getByLabelText('¿Para qué ahorras?'));
+    await user.type(form.getByLabelText('¿Para qué ahorras?'), 'Carro');
+    await user.click(form.getByRole('button', { name: 'Guardar cambios' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar cambios' }));
+    expect(await screen.findByRole('button', { name: /^Meta Carro:/ })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^Meta Carro:/ }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar meta' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancelar' }));
+    expect(within(screen.getByRole('dialog')).getByLabelText('¿Para qué ahorras?')).toHaveValue('Carro');
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar meta' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Eliminar meta' }));
+    expect(await screen.findByRole('button', { name: /Crea tu primera meta/ })).toBeInTheDocument();
   });
 });
 
