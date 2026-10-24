@@ -1,8 +1,9 @@
 // Ajustes de la persona y estado local de la app.
 //
-// Los ajustes (presupuesto, búsqueda de Gmail) se sincronizan con el respaldo.
+// Los ajustes (presupuestos, aviso del presupuesto, búsqueda de Gmail) se sincronizan con el respaldo.
 // El resto es estado de este teléfono: cuándo se leyó el correo, si el respaldo está activo, etc.
 
+import { DEFAULT_ALERT_PERCENT, sanitizeCategoryBudgets, toAlertPercent } from '../domain/budget.js';
 import { Currency } from '../domain/types.js';
 import { exchangeRatesOn, latestRate } from './exchangeRates.js';
 import { LocalStateKey } from './localStateKeys.js';
@@ -20,7 +21,24 @@ export const DEFAULT_GMAIL_QUERY =
   '(from:baccr.com OR from:baccredomatic.cr OR (from:bncr.fi.cr subject:"Voucher Digital") OR from:bancobcr.com OR from:bancavirtual@davivienda.cr OR from:promerica OR subject:SINPE)';
 
 /** Nombres de los ajustes que se sincronizan. Deben coincidir con SYNCED_SETTING_NAMES de shared/backupContract.js. */
-export const SettingName = Object.freeze({ BUDGET: 'budget', GMAIL_QUERY: 'gmail_query' });
+export const SettingName = Object.freeze({
+  BUDGET: 'budget',
+  CATEGORY_BUDGETS: 'category_budgets',
+  BUDGET_ALERT_PERCENT: 'budget_alert_percent',
+  GMAIL_QUERY: 'gmail_query',
+});
+
+/**
+ * Los presupuestos por categoría se guardan como texto JSON: el respaldo solo acepta ajustes de texto,
+ * número o booleano. Si el texto está dañado, se lee como "sin presupuestos por categoría".
+ */
+function parseCategoryBudgets(text) {
+  try {
+    return sanitizeCategoryBudgets(JSON.parse(text));
+  } catch {
+    return {};
+  }
+}
 
 export function createPreferences({ settings, localState }) {
   const exchangeRateInfo = () => localState.get(LocalStateKey.EXCHANGE_RATE_INFO);
@@ -29,6 +47,15 @@ export function createPreferences({ settings, localState }) {
     // ---- ajustes que se sincronizan ----
     budgetCents: () => settings.get(SettingName.BUDGET, DEFAULT_MONTHLY_BUDGET_CENTS),
     setBudgetCents: (cents) => settings.set(SettingName.BUDGET, cents),
+
+    /** Presupuesto de cada categoría que tiene uno, en céntimos: `{ comida: 5000000 }`. */
+    categoryBudgets: () => parseCategoryBudgets(settings.get(SettingName.CATEGORY_BUDGETS, '{}')),
+    setCategoryBudgets: (budgets) =>
+      settings.set(SettingName.CATEGORY_BUDGETS, JSON.stringify(sanitizeCategoryBudgets(budgets))),
+
+    /** Porcentaje del presupuesto al que se avisa (el 100 % siempre avisa). */
+    budgetAlertPercent: () => toAlertPercent(settings.get(SettingName.BUDGET_ALERT_PERCENT, DEFAULT_ALERT_PERCENT)),
+    setBudgetAlertPercent: (percent) => settings.set(SettingName.BUDGET_ALERT_PERCENT, toAlertPercent(percent)),
 
     gmailQuery: () => settings.get(SettingName.GMAIL_QUERY, DEFAULT_GMAIL_QUERY),
     /** Al cambiar la búsqueda, la próxima lectura vuelve a revisar los últimos 45 días. */

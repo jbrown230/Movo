@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { budgetAlerts } from '../../domain/budget.js';
 import { Currency } from '../../domain/types.js';
 import { useSession } from '../state/SessionProvider.jsx';
 
@@ -11,9 +12,16 @@ export function useAppData() {
 
   return useMemo(() => {
     const { queries, preferences } = services;
+    const summary = queries.getMonthSummary();
+    const budgetCents = preferences.budgetCents();
+    const categoryBudgets = preferences.categoryBudgets();
+    const budgetAlertPercent = preferences.budgetAlertPercent();
     return {
-      summary: queries.getMonthSummary(),
-      budgetCents: preferences.budgetCents(),
+      summary,
+      budgetCents,
+      categoryBudgets,
+      budgetAlertPercent,
+      budgetAlerts: budgetAlerts({ summary, budgetCents, categoryBudgets, alertPercent: budgetAlertPercent }),
       transactions: queries.listTransactions(),
       mails: queries.listMails(),
       exchangeRate: preferences.exchangeRate(),

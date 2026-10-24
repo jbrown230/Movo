@@ -174,9 +174,9 @@ Estado: hecho, issue de GitHub #59 (rama `59-releer-gmail-en-un-telefono-limpio-
 
 ### 23. Alertas de presupuesto · 2 pts
 `frontend` · Hito: Funciones de usuario
-- [ ] Aviso visible al llegar al 80 % y al 100 % del presupuesto mensual (global y por categoría).
-- [ ] Umbral configurable en Ajustes.
-- [ ] Prueba del cálculo del porcentaje en el cliente.
+- [x] Aviso visible al llegar al 80 % y al 100 % del presupuesto mensual (global y por categoría).
+- [x] Umbral configurable en Ajustes.
+- [x] Prueba del cálculo del porcentaje en el cliente.
 
 ### 24. Metas de ahorro · 3 pts
 `frontend` · Hito: Funciones de usuario

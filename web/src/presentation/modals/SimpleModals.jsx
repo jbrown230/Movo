@@ -1,4 +1,4 @@
-// Modales cortos: pegar un aviso, gasto en efectivo, presupuesto y búsqueda de Gmail.
+// Modales cortos: pegar un aviso, gasto en efectivo y búsqueda de Gmail. Los del presupuesto están en BudgetModals.jsx.
 
 import { useState } from 'react';
 import { AmountInput, CategoryPicker, Field } from '../components/formControls.jsx';
@@ -143,45 +143,6 @@ export function CashModal({ draft = {} }) {
       <CategoryPicker selected={category} onSelect={setCategory} hidden={['transfer']} />
       <button type="button" className="cta" disabled={!canSave} onClick={askToSave}>
         Guardar gasto
-      </button>
-    </>
-  );
-}
-
-/** Cambiar el presupuesto mensual. */
-export function BudgetModal() {
-  const { services, refresh } = useSession();
-  const { closeModal } = useModal();
-  const confirm = useConfirm();
-  const showToast = useToast();
-  const currentCents = services.preferences.budgetCents();
-  const [amountText, setAmountText] = useState(String(Math.round(currentCents / 100)));
-
-  const save = () => {
-    const cents = textToCents(amountText);
-    if (!(cents > 0) || cents === currentCents) {
-      closeModal();
-      return;
-    }
-    confirm({
-      title: 'Cambiar presupuesto',
-      text: `Tu presupuesto mensual pasa de ${formatColonesShort(currentCents)} a ${formatColonesShort(cents)}.`,
-      confirmLabel: 'Cambiar presupuesto',
-      danger: false,
-      onConfirm: () => {
-        services.preferences.setBudgetCents(cents);
-        refresh();
-        showToast('Presupuesto actualizado');
-      },
-    });
-  };
-
-  return (
-    <>
-      <ModalHeader title="Presupuesto mensual" />
-      <AmountInput value={amountText} onChange={setAmountText} />
-      <button type="button" className="cta" onClick={save}>
-        Guardar
       </button>
     </>
   );

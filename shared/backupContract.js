@@ -25,7 +25,12 @@ export const ALLOWED_TRANSACTION_TYPES = Object.freeze(['sinpe', 'tarjeta', 'tra
 export const ALLOWED_DIRECTIONS = Object.freeze(['in', 'out', 'self']);
 
 /** Los únicos ajustes que se sincronizan. Los demás se ignoran. */
-export const SYNCED_SETTING_NAMES = Object.freeze(['budget', 'gmail_query']);
+export const SYNCED_SETTING_NAMES = Object.freeze([
+  'budget',
+  'category_budgets',
+  'budget_alert_percent',
+  'gmail_query',
+]);
 
 /** Máximo de cambios que el teléfono puede enviar en una petición. */
 export const MAX_CHANGES_PER_REQUEST = 500;
