@@ -1,6 +1,7 @@
 import { CategoryIcon, Icon } from '../components/Icon.jsx';
 import { Logo } from '../components/Logo.jsx';
 import { TransactionList } from '../components/TransactionList.jsx';
+import { BudgetLevel, TOTAL_BUDGET_SCOPE, budgetStatus } from '../../domain/budget.js';
 import { getCategory } from '../../domain/categories.js';
 import { toDayString } from '../../domain/period.js';
 import { useAnimatedNumber } from '../hooks/useAnimatedNumber.js';
@@ -51,12 +52,20 @@ function LiveStatusChip() {
   );
 }
 
+/** Clase de la barra según cómo va el presupuesto: normal, cerca del límite o agotado. */
+const BAR_CLASS_BY_LEVEL = Object.freeze({
+  [BudgetLevel.OK]: 'bar',
+  [BudgetLevel.WARNING]: 'bar warn',
+  [BudgetLevel.EXCEEDED]: 'bar over',
+});
+
 /** Lo gastado en el mes, con la barra del presupuesto. */
-function SpentSummary({ summary, budgetCents }) {
+function SpentSummary({ summary, budgetCents, alertPercent }) {
   const animatedSpent = useAnimatedNumber(summary.spentCents);
   const [wholePart, decimalPart] = splitColonesDecimals(animatedSpent);
   const barWidth = Math.min(100, (summary.spentCents / budgetCents) * 100).toFixed(1) + '%';
   const isOverBudget = summary.spentCents > budgetCents;
+  const { level } = budgetStatus({ spentCents: summary.spentCents, budgetCents, alertPercent });
 
   const budgetText = isOverBudget
     ? `Te pasaste ${formatColonesShort(summary.spentCents - budgetCents)} del presupuesto`
@@ -77,7 +86,7 @@ function SpentSummary({ summary, budgetCents }) {
         <small>{decimalPart}</small>
       </div>
       <div className="budget">
-        <div className="bar">
+        <div className={BAR_CLASS_BY_LEVEL[level]}>
           <i style={{ width: barWidth }} />
         </div>
         <p>{budgetText}</p>
@@ -149,7 +158,61 @@ function monthFiltersFor(category) {
   };
 }
 
-function CategoryCards({ summary }) {
+const ALERT_TITLE_BY_LEVEL = Object.freeze({
+  [BudgetLevel.WARNING]: 'Cerca del límite',
+  [BudgetLevel.EXCEEDED]: 'Presupuesto agotado',
+});
+
+/** "Presupuesto del mes: llevas el 82 % (₡287 000 de ₡350 000)." */
+function budgetAlertText({ scope, percent, spentCents, budgetCents }) {
+  const subject =
+    scope === TOTAL_BUDGET_SCOPE ? `Presupuesto de ${monthName()}` : `Presupuesto de ${getCategory(scope).name}`;
+  return `${subject}: llevas el ${percent} % (${formatColonesShort(spentCents)} de ${formatColonesShort(budgetCents)}).`;
+}
+
+/** Avisos del presupuesto: al llegar al umbral elegido en Ajustes y al llegar al 100 %. */
+function BudgetAlerts({ alerts }) {
+  if (!alerts.length) return null;
+  return (
+    <div className="budget-alerts" role="status" aria-label="Avisos del presupuesto">
+      {alerts.map((alert) => (
+        <div className={`budget-alert ${alert.level}`} key={alert.scope}>
+          <Icon name={alert.level === BudgetLevel.EXCEEDED ? 'alert' : 'bell'} />
+          <div>
+            <b>{ALERT_TITLE_BY_LEVEL[alert.level]}</b>
+            <span>{budgetAlertText(alert)}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const MINI_BAR_COLOR_BY_LEVEL = Object.freeze({
+  [BudgetLevel.WARNING]: 'var(--warn)',
+  [BudgetLevel.EXCEEDED]: 'var(--danger)',
+});
+
+/**
+ * La barrita de una tarjeta de categoría. Con presupuesto propio muestra cuánto lleva de él;
+ * sin presupuesto, qué parte del gasto del mes es de esa categoría.
+ */
+function categoryBar({ row, summary, categoryBudgets, alertPercent }) {
+  const { color } = getCategory(row.category);
+  const budgetCents = categoryBudgets[row.category];
+  if (!budgetCents) {
+    const share = summary.spentCents ? ((row.totalCents / summary.spentCents) * 100).toFixed(0) : 0;
+    return { width: `${share}%`, color, budgetText: '' };
+  }
+  const { percent, level } = budgetStatus({ spentCents: row.totalCents, budgetCents, alertPercent });
+  return {
+    width: `${Math.min(100, percent)}%`,
+    color: MINI_BAR_COLOR_BY_LEVEL[level] ?? color,
+    budgetText: `${percent} % de ${formatColonesShort(budgetCents)}`,
+  };
+}
+
+function CategoryCards({ summary, categoryBudgets, alertPercent }) {
   const { filterMovements } = useNavigation();
   if (!summary.byCategory.length)
     return (
@@ -160,8 +223,8 @@ function CategoryCards({ summary }) {
   return (
     <div className="cats">
       {summary.byCategory.map((row) => {
-        const { name, color } = getCategory(row.category);
-        const share = summary.spentCents ? ((row.totalCents / summary.spentCents) * 100).toFixed(0) : 0;
+        const { name } = getCategory(row.category);
+        const bar = categoryBar({ row, summary, categoryBudgets, alertPercent });
         return (
           <button
             type="button"
@@ -176,8 +239,9 @@ function CategoryCards({ summary }) {
               <div className="nm">{name}</div>
             </div>
             <div className="mini">
-              <i style={{ width: `${share}%`, background: color }} />
+              <i style={{ width: bar.width, background: bar.color }} />
             </div>
+            {bar.budgetText && <div className="lim">{bar.budgetText}</div>}
           </button>
         );
       })}
@@ -216,7 +280,7 @@ export function HomeScreen() {
   const { profile } = useSession();
   const { scan } = useGmail();
   const showToast = useToast();
-  const { summary, budgetCents } = useAppData();
+  const { summary, budgetCents, categoryBudgets, budgetAlertPercent, budgetAlerts } = useAppData();
 
   const refreshInbox = () => {
     if (profile.demo) showToast('En el modo demo, usa el simulador para generar correos.');
@@ -235,11 +299,12 @@ export function HomeScreen() {
             <Icon name="refresh" />
           </button>
         </div>
-        <SpentSummary summary={summary} budgetCents={budgetCents} />
+        <SpentSummary summary={summary} budgetCents={budgetCents} alertPercent={budgetAlertPercent} />
         <QuickActions />
       </header>
 
       <div className="body">
+        <BudgetAlerts alerts={budgetAlerts} />
         {profile.demo && <BankSimulatorCard />}
         <div className="sec-h">
           <h2>Por categoría</h2>
@@ -249,7 +314,7 @@ export function HomeScreen() {
               : ''}
           </span>
         </div>
-        <CategoryCards summary={summary} />
+        <CategoryCards summary={summary} categoryBudgets={categoryBudgets} alertPercent={budgetAlertPercent} />
         <RecentMovements />
       </div>
     </section>

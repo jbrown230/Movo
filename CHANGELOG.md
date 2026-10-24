@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+### Funciones de la app
+
+- **Alertas de presupuesto.** El inicio avisa cuando lo gastado en el mes llega al 80 % del presupuesto ("Cerca del límite") y cuando llega al 100 % ("Presupuesto agotado"), y la barra del presupuesto cambia de color. En Ajustes se puede dar un presupuesto propio a cada categoría de gasto (las que quedan en blanco no tienen límite): avisan igual que el global y su tarjeta en el inicio muestra cuánto llevan de él. El umbral del aviso se elige en Ajustes ("Avisar al llegar al": 50 %, 60 %, 70 %, 80 % o 90 %) y vale para todos los presupuestos. El porcentaje se redondea hacia abajo, así el 79,9 % no avisa del 80 % ni el 99,9 % del 100 %. Los presupuestos por categoría y el umbral se sincronizan con el respaldo (`category_budgets` y `budget_alert_percent`).
+
 ## v0.2.0
 
 Núcleo funcional: más bancos reales, funciones para revisar y exportar los movimientos, y un respaldo que resiste caídas y conflictos entre teléfonos.

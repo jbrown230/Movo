@@ -89,6 +89,20 @@ test('dos teléfonos de la misma persona se sincronizan a través del contrato',
   assert.equal(phoneB.services.backup.pendingCount(), 0, 'lo recibido no se vuelve a subir');
 });
 
+test('los presupuestos por categoría y el umbral del aviso pasan al otro teléfono', async () => {
+  const server = createInProcessServer('ana');
+  const phoneA = createTestApp({ backend: server.backendForPhone() });
+  const phoneB = createTestApp({ backend: server.backendForPhone() });
+
+  phoneA.services.preferences.setCategoryBudgets({ comida: 5_000_000, ocio: 2_000_000 });
+  phoneA.services.preferences.setBudgetAlertPercent(70);
+  await phoneA.services.backup.syncNow(TOKEN);
+  await phoneB.services.backup.syncNow(TOKEN);
+
+  assert.deepEqual(phoneB.services.preferences.categoryBudgets(), { comida: 5_000_000, ocio: 2_000_000 });
+  assert.equal(phoneB.services.preferences.budgetAlertPercent(), 70);
+});
+
 test('eliminar en un teléfono se refleja en el otro', async () => {
   const server = createInProcessServer('ana');
   const phoneA = createTestApp({ backend: server.backendForPhone() });

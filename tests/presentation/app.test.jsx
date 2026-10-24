@@ -202,6 +202,67 @@ describe('confirmaciones', () => {
   });
 });
 
+describe('alertas de presupuesto', () => {
+  beforeEach(() => localStorage.clear());
+
+  /** Cambia el presupuesto mensual desde Ajustes y vuelve al inicio. */
+  async function setMonthlyBudget(user, amount) {
+    await goToTab(user, 'Ajustes');
+    await user.click(screen.getByRole('button', { name: /Presupuesto mensual/ }));
+    const amountField = within(screen.getByRole('dialog')).getByLabelText('Monto');
+    await user.clear(amountField);
+    await user.type(amountField, amount);
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cambiar presupuesto' }));
+    await goToTab(user, 'Inicio');
+  }
+
+  test('con un presupuesto que no alcanza, el inicio avisa que se agotó', async () => {
+    const user = await openDemo();
+    expect(screen.queryByRole('status', { name: 'Avisos del presupuesto' })).not.toBeInTheDocument();
+
+    await setMonthlyBudget(user, '1000');
+
+    const alerts = within(await screen.findByRole('status', { name: 'Avisos del presupuesto' }));
+    expect(alerts.getByText('Presupuesto agotado')).toBeInTheDocument();
+    expect(alerts.getByText(/de ₡1\s000\)\./)).toBeInTheDocument();
+  });
+
+  test('un presupuesto por categoría avisa y se ve en su tarjeta', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Ajustes');
+    expect(screen.getByRole('button', { name: /Presupuesto por categoría\s*Sin definir/ })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /Presupuesto por categoría/ }));
+
+    const form = within(screen.getByRole('dialog'));
+    await user.type(form.getByLabelText('Presupuesto de Súper'), '1000');
+    await user.click(form.getByRole('button', { name: 'Guardar' }));
+    const confirmation = within(screen.getByRole('dialog'));
+    expect(confirmation.getByText(/Súper ₡1\s000/)).toBeInTheDocument();
+    await user.click(confirmation.getByRole('button', { name: 'Guardar presupuestos' }));
+    expect(await screen.findByRole('button', { name: /Presupuesto por categoría\s*1 categoría/ })).toBeInTheDocument();
+
+    await goToTab(user, 'Inicio');
+    const alerts = within(await screen.findByRole('status', { name: 'Avisos del presupuesto' }));
+    expect(alerts.getByText(/Presupuesto de Súper: llevas el \d+ %/)).toBeInTheDocument();
+    expect(screen.getByText(/% de ₡1\s000$/, { selector: '.cat .lim' })).toBeInTheDocument();
+  });
+
+  test('el umbral del aviso se cambia en Ajustes', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Ajustes');
+    await user.click(screen.getByRole('button', { name: /Avisar al llegar al\s*80 %/ }));
+
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '60 %' }));
+    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Guardar' }));
+    const confirmation = within(screen.getByRole('dialog'));
+    expect(confirmation.getByText(/al llegar al 60 % de cada presupuesto/)).toBeInTheDocument();
+    await user.click(confirmation.getByRole('button', { name: 'Cambiar aviso' }));
+
+    expect(await screen.findByRole('button', { name: /Avisar al llegar al\s*60 %/ })).toBeInTheDocument();
+  });
+});
+
 describe('apariencia', () => {
   async function openSettings() {
     const user = await openDemo();

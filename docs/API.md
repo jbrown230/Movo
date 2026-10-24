@@ -152,7 +152,7 @@ Los mismos nombres que la entidad `Transaction` de la app.
 { "value": 40000000 }
 ```
 
-Solo se sincronizan los ajustes `budget` y `gmail_query`. El `id` es el nombre del ajuste. Cualquier otro se ignora sin dar error.
+Solo se sincronizan los ajustes `budget` (presupuesto mensual en céntimos), `category_budgets` (presupuesto de cada categoría: texto JSON como `"{\"comida\":5000000}"`), `budget_alert_percent` (porcentaje del presupuesto al que se avisa, por ejemplo `80`) y `gmail_query`. El `id` es el nombre del ajuste. Cualquier otro se ignora sin dar error.
 
 ### Qué valida el servidor
 

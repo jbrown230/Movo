@@ -1,34 +1,18 @@
 import { getSavedToken, ThemePreference } from '../../composition/platform.js';
 import { SegmentedControl } from '../components/formControls.jsx';
+import { SettingsRow as Row } from '../components/SettingsRow.jsx';
 import { useAppData } from '../hooks/useAppData.js';
 import { useInstallPrompt } from '../hooks/useInstallPrompt.js';
 import { useThemePreference } from '../hooks/useThemePreference.js';
 import { shortWhen } from '../format/dates.js';
 import { formatColonesShort } from '../format/money.js';
 import { useConfirm } from '../modals/ConfirmModal.jsx';
-import { BudgetModal, GmailQueryModal } from '../modals/SimpleModals.jsx';
+import { BudgetAlertModal, BudgetModal, CategoryBudgetsModal } from '../modals/BudgetModals.jsx';
+import { GmailQueryModal } from '../modals/SimpleModals.jsx';
 import { useGmail } from '../state/GmailProvider.jsx';
 import { useModal } from '../state/ModalProvider.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 import { useToast } from '../state/ToastProvider.jsx';
-
-/** Una fila de una lista de ajustes: botón si tiene `onClick`, texto si no. */
-function Row({ label, value, onClick, danger = false }) {
-  const className = `row${danger ? ' danger' : ''}`;
-  const content = (
-    <>
-      <span>{label}</span>
-      {value !== undefined && <b>{value}</b>}
-    </>
-  );
-  return onClick ? (
-    <button type="button" className={className} onClick={onClick}>
-      {content}
-    </button>
-  ) : (
-    <div className={className}>{content}</div>
-  );
-}
 
 function ProfileHeader({ profile }) {
   const picture = profile.picture ? (
@@ -275,11 +259,18 @@ function InstallSettings() {
   );
 }
 
+function categoryBudgetsText(categoryBudgets) {
+  const count = Object.keys(categoryBudgets).length;
+  if (!count) return 'Sin definir';
+  return count === 1 ? '1 categoría' : `${count} categorías`;
+}
+
 /** Ajustes: presupuesto, Gmail, respaldo en la nube y cuenta. */
 export function SettingsScreen() {
   const { profile, config } = useSession();
   const { openModal } = useModal();
-  const { budgetCents, exchangeRate, euroExchangeRate, exchangeRateInfo } = useAppData();
+  const { budgetCents, categoryBudgets, budgetAlertPercent, exchangeRate, euroExchangeRate, exchangeRateInfo } =
+    useAppData();
 
   const euroRateText = euroExchangeRate ? `₡${euroExchangeRate.toFixed(2)}` : 'Sin dato';
   const exchangeRateSource = exchangeRateInfo?.source
@@ -298,6 +289,16 @@ export function SettingsScreen() {
             label="Presupuesto mensual"
             value={formatColonesShort(budgetCents)}
             onClick={() => openModal(<BudgetModal />)}
+          />
+          <Row
+            label="Presupuesto por categoría"
+            value={categoryBudgetsText(categoryBudgets)}
+            onClick={() => openModal(<CategoryBudgetsModal />)}
+          />
+          <Row
+            label="Avisar al llegar al"
+            value={`${budgetAlertPercent} %`}
+            onClick={() => openModal(<BudgetAlertModal />)}
           />
           <Row label="Tipo de cambio del dólar" value={`₡${exchangeRate.toFixed(2)}`} />
           <Row label="Tipo de cambio del euro" value={euroRateText} />
