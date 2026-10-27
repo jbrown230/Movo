@@ -20,6 +20,7 @@ Usuarios: personas en Costa Rica que pagan con tarjeta y SINPE Móvil, con cuent
 2. El banco te envía el correo de notificación.
 3. Al abrir Movo, el teléfono consulta Gmail con permiso de solo lectura, lee los correos nuevos de remitentes bancarios y los convierte en movimientos.
 4. Ves el gasto del mes, el presupuesto y el detalle por categoría. Si corriges una categoría, se guarda como regla.
+5. En la pestaña Movimientos buscas y filtras tus movimientos y exportas lo que ves a un Excel (o a un CSV).
 
 Los SINPE recibidos cuentan como ingreso, las compras negadas por el banco no se registran, y los SINPE entre tus propias cuentas (mismo titular en origen y destino) no cuentan ni como gasto ni como ingreso.
 
@@ -65,7 +66,7 @@ flowchart TB
 |---|---|---|
 | `domain` | Reglas del negocio, sin base de datos ni pantalla | `emailParser/` lee un correo del banco |
 | `application` | Lo que la app puede hacer (casos de uso) | `ingestMail.js` registra los movimientos de un correo |
-| `infrastructure` | Conexión con el mundo exterior | `sqlite/`, `gmail/`, `backend/` |
+| `infrastructure` | Conexión con el mundo exterior | `sqlite/`, `gmail/`, `backend/`, `excel/` |
 | `presentation` | React: pantallas, ventanas y estilos | `screens/HomeScreen.jsx` |
 | `composition` | Arma las capas entre sí | `openSession.js` |
 
@@ -137,13 +138,16 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 ## Limitaciones conocidas
 
 - Bancos soportados con formato real: **BCR** (SINPE Móvil enviado y recibido, y la tabla de transacciones con tarjeta, incluido el estado "Negada"), **BN** (comprobante de compra con tarjeta, "Voucher Digital"; el BN no notifica los SINPE Móvil por correo), **BAC** (compra con tarjeta, incluida la rechazada, y SINPE enviado y recibido) y **Davivienda** (débitos y créditos en la cuenta, compra con tarjeta y transferencia recibida). Los avisos de débito y crédito de Davivienda dicen el monto y el concepto, pero no a quién se envió el dinero: un SINPE desde Davivienda a otra cuenta propia se cuenta como gasto hasta que se marque como "Entre mis cuentas" en "¿Cómo contarlo?"; todavía no hemos visto una compra rechazada de Davivienda. **Promerica** aún no tiene plantilla. El SINPE Móvil del BN usa por ahora un formato sintético en la demo. Sin una plantilla oficial el correo se ignora, para no leer publicidad como gasto. Lo que no se reconoce queda como "Sin movimiento" y se puede registrar a mano. Cuando el lector mejora, la app vuelve a leer sola esos correos.
+- Monedas: colones, dólares, euros y córdobas nicaragüenses. El BCCR no publica el córdoba, así que se convierte pasando por el dólar con la tasa oficial del Banco Central de Nicaragua (`NIO_PER_USD`, fija en 36,6243 durante 2026; si cambia, se actualiza en el `.env` del servidor). En las tarjetas del BCR, una compra en otra moneda no se lee: queda como "Sin movimiento" para registrarla a mano. Los lectores de BAC, BN y Davivienda todavía leen una moneda que no conocen como colones.
+- El Excel se dibuja con ExcelJS, que se descarga la primera vez que exportas (unos 270 KB comprimidos): esa primera exportación necesita conexión.
+- La app no permite zoom con los dedos, a propósito: es una app de celular (issue #74). Quien necesite letra más grande no tiene cómo agrandarla desde la app.
 - Con la app de Google en modo "Prueba", solo pueden entrar hasta 100 cuentas invitadas, y Google muestra la advertencia de app no verificada.
 - La lectura ocurre al abrir la app (el token de Google dura una hora). No hay lectura en segundo plano.
 - En iPhone, el inicio de sesión dentro de la PWA instalada puede abrirse en una ventana aparte; en Android funciona dentro de la app.
 
 ## Roadmap
 
-En 1 mes: plantilla real de Promerica (BCR, BN, BAC y Davivienda ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)); exportar CSV. En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
+En 1 mes: plantilla real de Promerica (BCR, BN, BAC y Davivienda ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)). En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
 
 ## Equipo
 

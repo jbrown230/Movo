@@ -114,10 +114,11 @@ Si falla con un dato real, anonimízalo. Si falla con un dato inventado, agréga
 ## 6. Ramas, commits y pull requests
 
 - Una rama por tarea, con el número del issue: `feat/18-plantilla-bn`, `fix/22-redondeo`.
-- Commits pequeños, con un mensaje que diga qué cambió y por qué.
+- Commits pequeños, con un mensaje que diga qué cambió y por qué. Si el commit pertenece a un issue, termina el título con su número, por ejemplo `Metas de ahorro (#26)`: así GitHub lo enlaza con el issue. No reescribas commits que ya están en `main` para añadirlo; si se te pasó, deja los commits listados en el issue y el pull request enlazado en un comentario.
 - Todo entra a `main` por pull request, y lo revisa otra persona del equipo (ver el reparto de revisiones en [BACKLOG.md](BACKLOG.md)).
 - Antes de abrir el pull request: `npm run check` sin errores.
 - Escribe `Closes #número` en la descripción para que el issue se cierre solo.
+- Todo cambio de la app (por pequeño que sea) debe tener un issue, y el cambio debe quedar en el `CHANGELOG.md` (sección "Sin publicar") y en `docs/BACKLOG.md`. Los issues se crean con `npm run issues` a partir del backlog (ver "Cómo crearlos en GitHub").
 
 ## 7. Cambiar el logo
 
