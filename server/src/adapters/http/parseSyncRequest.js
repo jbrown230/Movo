@@ -59,10 +59,18 @@ const sanitizeSettingData = (data) => {
   return { value: isNumberOrBoolean ? data.value : toBoundedText(data.value, MaxLength.SETTING_TEXT) };
 };
 
+const sanitizeSavingsGoalData = (data) => ({
+  name: toBoundedText(data.name, MaxLength.GOAL_NAME) || '',
+  targetCents: Math.max(0, toInteger(data.targetCents)),
+  targetDay: toBoundedText(data.targetDay, MaxLength.DATE) || '',
+  startDay: toBoundedText(data.startDay, MaxLength.DATE) || '',
+});
+
 const SANITIZER_BY_LIST = {
   transactions: sanitizeTransactionData,
   categoryRules: sanitizeCategoryRuleData,
   settings: sanitizeSettingData,
+  savingsGoals: sanitizeSavingsGoalData,
 };
 
 /** Un ajuste que el servidor no conoce se ignora (no es un error). */

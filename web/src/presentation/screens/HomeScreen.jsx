@@ -119,6 +119,12 @@ function QuickActions() {
         </span>
         Bandeja
       </button>
+      <button type="button" className="act" onClick={() => goTo(Views.GOALS)}>
+        <span className="c">
+          <Icon name="goal" />
+        </span>
+        Metas
+      </button>
     </div>
   );
 }

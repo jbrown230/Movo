@@ -8,6 +8,7 @@ import { createMailRepository } from './mailRepository.js';
 import { createRuleRepository } from './ruleRepository.js';
 import { createSettingsStore, createLocalStateStore } from './keyValueStores.js';
 import { createBackupRepository } from './backupRepository.js';
+import { createSavingsGoalRepository } from './savingsGoalRepository.js';
 
 /**
  * @param {import('sql.js').Database} db
@@ -22,6 +23,7 @@ export function createSqliteStorage(db, { onChange } = {}) {
     mails: createMailRepository(sql),
     rules: createRuleRepository(sql),
     settings: createSettingsStore(sql),
+    savingsGoals: createSavingsGoalRepository(sql),
     localState: createLocalStateStore(sql),
     backup: createBackupRepository(sql),
     /** Ejecuta varias escrituras como una sola: o se aplican todas o ninguna. */

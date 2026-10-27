@@ -29,6 +29,9 @@ const ICON_PATHS = {
   download: '<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>',
   list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
+  back: '<path d="m15 18-6-6 6-6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  goal: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
   bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
   alert: '<circle cx="12" cy="12" r="10"/><path d="M12 7v6M12 16.5h.01"/>',
   settings:

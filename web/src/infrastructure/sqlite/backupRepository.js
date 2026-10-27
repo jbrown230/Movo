@@ -8,6 +8,7 @@
 // Este repositorio habla con entidades de la app (ver BackupChanges en domain/types.js).
 // Cómo viajan por la red lo decide infrastructure/backend/backupWireFormat.js.
 
+import { toSavingsGoal } from './savingsGoalRepository.js';
 import { toTransaction } from './transactionRepository.js';
 
 const PUSH_LIMIT = 500;
@@ -131,13 +132,46 @@ function applyRemoteSetting(sql, remote) {
   return true;
 }
 
+function applyRemoteSavingsGoal(sql, remote) {
+  const columns = {
+    name: remote.name,
+    target_cents: remote.targetCents,
+    target_date: remote.targetDay,
+    start_date: remote.startDay,
+    is_deleted: remote.isDeleted ? 1 : 0,
+  };
+  if (keepsLocal(sql, { table: 'savings_goals', keyColumn: 'id', key: remote.id }, remote.updatedAt, columns))
+    return false;
+  sql.execute(
+    `INSERT INTO savings_goals(id, name, target_cents, target_date, start_date, updated_at, is_deleted, needs_backup)
+     VALUES(?,?,?,?,?,?,?,0)
+     ON CONFLICT(id) DO UPDATE SET name=excluded.name, target_cents=excluded.target_cents,
+       target_date=excluded.target_date, start_date=excluded.start_date, updated_at=excluded.updated_at,
+       is_deleted=excluded.is_deleted, needs_backup=0`,
+    [
+      remote.id,
+      columns.name,
+      columns.target_cents,
+      columns.target_date,
+      columns.start_date,
+      remote.updatedAt,
+      columns.is_deleted,
+    ],
+  );
+  return true;
+}
+
 // ---- marcar como subido ----
 
 const MARK_SYNCED_SQL = {
   transactions: 'UPDATE transactions SET needs_backup=0 WHERE id=? AND updated_at=?',
   categoryRules: 'UPDATE category_rules SET needs_backup=0 WHERE id=? AND updated_at=?',
   settings: 'UPDATE settings SET needs_backup=0 WHERE name=? AND updated_at=?',
+  savingsGoals: 'UPDATE savings_goals SET needs_backup=0 WHERE id=? AND updated_at=?',
 };
+
+/** Tablas que se respaldan. */
+const BACKED_UP_TABLES = ['transactions', 'category_rules', 'settings', 'savings_goals'];
 const keyOf = (listName, item) => (listName === 'settings' ? item.name : item.id);
 
 export function createBackupRepository(sql) {
@@ -151,6 +185,7 @@ export function createBackupRepository(sql) {
         transactions: selectPending('transactions', toTransaction, limit),
         categoryRules: selectPending('category_rules', toCategoryRule, limit),
         settings: selectPending('settings', toSetting, limit),
+        savingsGoals: selectPending('savings_goals', toSavingsGoal, limit),
       };
     },
 
@@ -158,7 +193,7 @@ export function createBackupRepository(sql) {
     markSynced(sent) {
       sql.inTransaction(() => {
         for (const [listName, markSql] of Object.entries(MARK_SYNCED_SQL)) {
-          for (const item of sent[listName]) sql.execute(markSql, [keyOf(listName, item), item.updatedAt]);
+          for (const item of sent[listName] ?? []) sql.execute(markSql, [keyOf(listName, item), item.updatedAt]);
         }
       });
     },
@@ -173,6 +208,7 @@ export function createBackupRepository(sql) {
         applyAll(changes.transactions, applyRemoteTransaction);
         applyAll(changes.categoryRules, applyRemoteCategoryRule);
         applyAll(changes.settings, applyRemoteSetting);
+        applyAll(changes.savingsGoals ?? [], applyRemoteSavingsGoal);
       });
       return appliedCount;
     },
@@ -180,17 +216,13 @@ export function createBackupRepository(sql) {
     /** Vuelve a marcar todo lo local para subirlo (tras borrar el respaldo). No cambia `updated_at`. */
     markAllForBackup() {
       sql.inTransaction(() => {
-        for (const table of ['transactions', 'category_rules', 'settings'])
-          sql.execute(`UPDATE ${table} SET needs_backup=1 WHERE needs_backup=0`);
+        for (const table of BACKED_UP_TABLES) sql.execute(`UPDATE ${table} SET needs_backup=1 WHERE needs_backup=0`);
       });
     },
 
     pendingCount() {
-      return sql.queryOne(
-        `SELECT (SELECT COUNT(*) FROM transactions WHERE needs_backup=1)
-              + (SELECT COUNT(*) FROM category_rules WHERE needs_backup=1)
-              + (SELECT COUNT(*) FROM settings WHERE needs_backup=1) AS count`,
-      ).count;
+      const counts = BACKED_UP_TABLES.map((table) => `(SELECT COUNT(*) FROM ${table} WHERE needs_backup=1)`);
+      return sql.queryOne(`SELECT ${counts.join(' + ')} AS count`).count;
     },
   };
 }

@@ -83,13 +83,14 @@ Sube los cambios del teléfono y baja lo que cambió desde la última vez.
   "changes": {
     "transactions": [],
     "categoryRules": [],
-    "settings": []
+    "settings": [],
+    "savingsGoals": []
   }
 }
 ```
 
 - `since`: el cursor que devolvió el servidor la vez anterior (`0` la primera vez).
-- `changes`: tres listas, todas opcionales. Máximo **500 registros** en total.
+- `changes`: cuatro listas, todas opcionales. Máximo **500 registros** en total.
 
 **Respuesta** (`SyncResponse`):
 
@@ -97,7 +98,7 @@ Sube los cambios del teléfono y baja lo que cambió desde la última vez.
 {
   "cursor": 1767000000000123,
   "hasMore": false,
-  "changes": { "transactions": [], "categoryRules": [], "settings": [] }
+  "changes": { "transactions": [], "categoryRules": [], "settings": [], "savingsGoals": [] }
 }
 ```
 
@@ -154,6 +155,21 @@ Los mismos nombres que la entidad `Transaction` de la app.
 
 Solo se sincronizan los ajustes `budget` (presupuesto mensual en céntimos), `category_budgets` (presupuesto de cada categoría: texto JSON como `"{\"comida\":5000000}"`), `budget_alert_percent` (porcentaje del presupuesto al que se avisa, por ejemplo `80`) y `gmail_query`. El `id` es el nombre del ajuste. Cualquier otro se ignora sin dar error.
 
+### `data` de una meta de ahorro (`savingsGoals`)
+
+```json
+{ "name": "Viaje", "targetCents": 30000000, "targetDay": "2026-12-31", "startDay": "2026-10-01" }
+```
+
+| Campo | Tipo | Notas |
+|---|---|---|
+| `name` | texto | máximo 60 |
+| `targetCents` | entero | monto a ahorrar, en céntimos de colones; uno negativo se guarda como 0 |
+| `targetDay` | texto | fecha límite `AAAA-MM-DD` (incluida) |
+| `startDay` | texto | primer día del mes en que se creó la meta; desde ahí se cuenta lo ahorrado |
+
+El avance (ingresos menos gastos desde `startDay`) no viaja: cada teléfono lo calcula con sus movimientos.
+
 ### Qué valida el servidor
 
 El servidor **no confía** en lo que llega: solo acepta los campos de arriba (el resto se descarta), recorta los textos al máximo, reemplaza los valores fuera de lo permitido por uno seguro y rechaza con `400` ids que no cumplan `^[A-Za-z0-9_\- .*:@]{1,120}$`, listas que no sean listas, `updatedAt` inválido o más de 500 cambios.
@@ -184,7 +200,7 @@ En MongoDB, una colección `backup_records`:
 }
 ```
 
-- `kind` es `transaction`, `category_rule` o `setting`.
+- `kind` es `transaction`, `category_rule`, `setting` o `savings_goal`.
 - `serverSequence` es el número creciente que se usa de cursor.
 - Toda consulta lleva `userId` en el filtro: los datos de cada persona están separados.
 - Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`.

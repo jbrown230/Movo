@@ -52,10 +52,18 @@ const settingData = exactObject({
   value: { bsonType: ['string', 'number', 'bool', 'null'], maxLength: MAX_TEXT_LENGTH.SETTING_TEXT },
 });
 
+const savingsGoalData = exactObject({
+  name: text(MAX_TEXT_LENGTH.GOAL_NAME),
+  targetCents: { bsonType: 'number', minimum: 0 },
+  targetDay: text(MAX_TEXT_LENGTH.DATE),
+  startDay: text(MAX_TEXT_LENGTH.DATE),
+});
+
 /** Lo que debe cumplir `data` según el tipo de registro. Un ajuste, además, tiene que ser uno de los conocidos. */
 const kindRules = [
   { properties: { kind: { enum: [RECORD_KIND_BY_LIST.transactions] }, data: transactionData } },
   { properties: { kind: { enum: [RECORD_KIND_BY_LIST.categoryRules] }, data: categoryRuleData } },
+  { properties: { kind: { enum: [RECORD_KIND_BY_LIST.savingsGoals] }, data: savingsGoalData } },
   {
     properties: {
       kind: { enum: [RECORD_KIND_BY_LIST.settings] },

@@ -30,6 +30,7 @@ export function useAppData() {
       isCloudBackupEnabled: preferences.isCloudBackupEnabled(),
       lastSyncAt: preferences.lastSyncAt(),
       pendingBackupCount: services.backup.pendingCount(),
+      savingsGoals: services.savingsGoals.list(),
     };
     // dataVersion hace que se lea de nuevo después de cada cambio.
     // eslint-disable-next-line react-hooks/exhaustive-deps

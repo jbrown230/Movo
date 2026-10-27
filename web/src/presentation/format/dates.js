@@ -32,3 +32,13 @@ export function shortWhen(iso) {
 export const longWhen = (iso) => new Date(iso).toLocaleString(LOCALE, { dateStyle: 'medium', timeStyle: 'short' });
 
 export const monthName = (date = new Date()) => date.toLocaleDateString(LOCALE, { month: 'long' });
+
+/** "30 de abril de 2027", a partir de un día "AAAA-MM-DD". */
+export function goalDayLabel(day) {
+  const [year, month, dayOfMonth] = day.split('-').map(Number);
+  return new Date(year, month - 1, dayOfMonth).toLocaleDateString(LOCALE, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}

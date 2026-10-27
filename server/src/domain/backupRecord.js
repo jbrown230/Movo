@@ -4,7 +4,7 @@
  * Un registro guardado en el servidor para una persona.
  *
  * @typedef {Object} BackupRecord
- * @property {'transaction'|'category_rule'|'setting'} kind
+ * @property {'transaction'|'category_rule'|'setting'|'savings_goal'} kind
  * @property {string} id
  * @property {number} updatedAt     Milisegundos; lo fija el teléfono al hacer el cambio.
  * @property {boolean} isDeleted

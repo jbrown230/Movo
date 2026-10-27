@@ -180,9 +180,9 @@ Estado: hecho, issue de GitHub #59 (rama `59-releer-gmail-en-un-telefono-limpio-
 
 ### 24. Metas de ahorro · 3 pts
 `frontend` · Hito: Funciones de usuario
-- [ ] Crear una meta con monto y fecha.
-- [ ] Mostrar avance según ingresos menos gastos del mes.
-- [ ] Guardar en SQLite local y en el respaldo.
+- [x] Crear una meta con monto y fecha.
+- [x] Mostrar avance según ingresos menos gastos del mes.
+- [x] Guardar en SQLite local y en el respaldo.
 
 ### 25. Accesibilidad y revisión en iPhone · 2 pts
 `frontend`, `bug` · Hito: Funciones de usuario
