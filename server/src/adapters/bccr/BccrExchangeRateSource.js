@@ -13,6 +13,8 @@ const BCCR_URL = 'https://apim.bccr.fi.cr/SDDE/api/Bccr.GE.SDDE.Publico.Indicado
 const DOLLAR_SELLING_INDICATOR = '318'; // colones por dólar, venta (se publica todos los días)
 const EURO_IN_DOLLARS_INDICATOR = '333'; // dólares por euro (no se publica los fines de semana)
 const SOURCE_TEXT = 'BCCR, tipo de cambio de venta';
+const NIO_AUTOMATIC_SOURCE_TEXT = 'ExchangeRate-API, referencia de mercado';
+const NIO_RESERVE_SOURCE_TEXT = 'valor de reserva del servidor (tasa oficial del Banco Central de Nicaragua)';
 const REQUEST_TIMEOUT_MS = 6000;
 const DAYS_OF_HISTORY = 60; // cubre los 45 días que revisa la primera lectura de Gmail
 const EXTRA_DAYS = 7; // para tener un euro anterior al primer día aunque caiga en fin de semana
@@ -47,11 +49,21 @@ function buildHistory(dollarSeries, euroInDollarsSeries, nioPerUsd) {
 /**
  * @param {Object} options
  * @param {string} options.token  Token generado en el sitio de Indicadores Económicos del BCCR (Mi Perfil).
- * @param {number} [options.nioPerUsd]  Córdobas por dólar (oficial del Banco Central de Nicaragua). Sin él, no se convierte el córdoba.
+ * @param {() => Promise<number>} [options.fetchNioPerUsd]  Pide los córdobas por dólar de hoy. Es lo que se usa; si falla,
+ *   se usa `nioPerUsd`.
+ * @param {number} [options.nioPerUsd]  Córdobas por dólar de reserva (la tasa oficial del Banco Central de Nicaragua), para
+ *   cuando `fetchNioPerUsd` falla o no está. Sin ninguno de los dos, no se convierte el córdoba.
+ * @param {{ warn?: (...args: unknown[]) => void }} [options.log]
  * @param {typeof fetch} [options.httpFetch]  Solo para pruebas.
  * @returns {import('../../application/ports.js').ExchangeRateSource}
  */
-export function createBccrExchangeRateSource({ token, nioPerUsd = 0, httpFetch = fetch }) {
+export function createBccrExchangeRateSource({
+  token,
+  fetchNioPerUsd = null,
+  nioPerUsd = 0,
+  log = {},
+  httpFetch = fetch,
+}) {
   /** Valores publicados de un indicador en los últimos días. */
   async function fetchSeries(indicator) {
     const today = new Date();
@@ -74,21 +86,34 @@ export function createBccrExchangeRateSource({ token, nioPerUsd = 0, httpFetch =
     return parseSeries(await response.json());
   }
 
+  /** Los córdobas por dólar de hoy y de dónde salen, o null si no hay forma de saberlos. */
+  async function resolveNioPerUsd() {
+    if (fetchNioPerUsd) {
+      try {
+        return { value: await fetchNioPerUsd(), source: NIO_AUTOMATIC_SOURCE_TEXT };
+      } catch (error) {
+        log.warn?.('[córdoba]', error.message);
+      }
+    }
+    return nioPerUsd > 0 ? { value: nioPerUsd, source: NIO_RESERVE_SOURCE_TEXT } : null;
+  }
+
   return {
     async fetchLatestRate() {
       // Sin dólar no hay respuesta; sin euro, se responde solo el dólar.
-      const [dollarSeries, euroInDollarsSeries] = await Promise.all([
+      const [dollarSeries, euroInDollarsSeries, nio] = await Promise.all([
         fetchSeries(DOLLAR_SELLING_INDICATOR),
         fetchSeries(EURO_IN_DOLLARS_INDICATOR).catch(() => []),
+        resolveNioPerUsd(),
       ]);
-      const history = buildHistory(dollarSeries, euroInDollarsSeries, nioPerUsd);
+      const history = buildHistory(dollarSeries, euroInDollarsSeries, nio?.value ?? 0);
       const today = history.at(-1);
       return {
         rate: today.usd,
         date: today.date,
         source: SOURCE_TEXT,
         euro: today.eur ? { rate: today.eur, date: today.date } : null,
-        nio: today.nio ? { rate: today.nio, date: today.date } : null,
+        nio: today.nio ? { rate: today.nio, date: today.date, source: nio.source } : null,
         history,
       };
     },

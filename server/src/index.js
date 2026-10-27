@@ -7,6 +7,7 @@ import { createInMemoryCache } from './adapters/cache/InMemoryCache.js';
 import { createRedisCache } from './adapters/cache/RedisCache.js';
 import { createResilientCache } from './adapters/cache/ResilientCache.js';
 import { createGoogleTokenVerifier } from './adapters/google/GoogleTokenVerifier.js';
+import { createExchangeRateApiNioRate } from './adapters/nio/ExchangeRateApiNioRate.js';
 import { createHttpApp } from './adapters/http/createHttpApp.js';
 import { createMongoBackupStore } from './adapters/mongo/MongoBackupStore.js';
 import { config } from './config.js';
@@ -19,7 +20,12 @@ const cache = createResilientCache({
 });
 const backupStore = config.cloudSync && config.mongoUrl ? createMongoBackupStore(config.mongoUrl, log) : null;
 const exchangeRateSource = config.bccrToken
-  ? createBccrExchangeRateSource({ token: config.bccrToken, nioPerUsd: config.nioPerUsd })
+  ? createBccrExchangeRateSource({
+      token: config.bccrToken,
+      fetchNioPerUsd: createExchangeRateApiNioRate(),
+      nioPerUsd: config.nioPerUsd,
+      log,
+    })
   : null;
 
 const useCases = createUseCases({

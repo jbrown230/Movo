@@ -125,6 +125,7 @@ const SERVER = {
     'adapters/cache': { mayImport: [], packages: ['redis'] },
     'adapters/bccr': { mayImport: [], packages: [] },
     'adapters/google': { mayImport: [], packages: [] },
+    'adapters/nio': { mayImport: [], packages: [] },
     config: { mayImport: [], packages: [] },
     // Punto de arranque: conoce todas las capas.
     index: {
@@ -135,6 +136,7 @@ const SERVER = {
         'adapters/cache',
         'adapters/bccr',
         'adapters/google',
+        'adapters/nio',
         'config',
       ],
       packages: [],
