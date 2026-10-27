@@ -71,6 +71,7 @@ server/src/
     cache/            Redis, memoria del proceso, y una caché que usa Redis si responde y memoria si no
     bccr/             Tipo de cambio del Banco Central
     google/           Validación del token de Google
+    nio/              Tasa oficial del córdoba: servicio web del Banco Central de Nicaragua (solo acepta TLS 1.0)
   config.js         Lee las variables de entorno
   index.js          Arranque: elige las piezas reales y las conecta
 ```
@@ -95,6 +96,16 @@ Todo esto corre en el CI en cada cambio.
 ### Service worker
 
 `web/public/sw.js` hace que la app abra sin Internet: guarda las páginas y los archivos de la app la primera vez que se piden. Nunca guarda `/api` ni lo de Google.
+
+## Decisión: el córdoba se lee del servicio web del Banco Central de Nicaragua
+
+El BCCR no publica el córdoba nicaragüense, y una compra en córdobas no se puede registrar como colones. El servidor lo convierte pasando por el dólar: colones por dólar del BCCR entre los córdobas por dólar de cada día.
+
+- **De dónde sale.** `adapters/nio/BcnNioRate.js` llama al servicio web SOAP del BCN (`RecuperaTC_Mes`) para el mes actual y los dos anteriores (unos 90 días, más que los 60 del historial). Devuelve la tasa oficial de cada día, así cada compra usa la de su día, y también los días futuros del mes, porque el BCN la publica con un mes de anticipación.
+- **TLS 1.0.** El servidor del BCN solo acepta TLS 1.0, un protocolo que Node rechaza por defecto. Se permite únicamente para esa conexión (`minVersion` y `maxVersion` en la llamada, nunca globales). Se aceptó porque lo que viaja es una tasa pública, el certificado (DigiCert, `*.bcn.gob.ni`) sí se verifica, y un valor fuera de 20–100 córdobas por dólar se descarta. Aun así, quien intercepte la conexión podría alterar el valor dentro de ese rango: el efecto es una conversión algo distinta en las compras en córdobas, no un riesgo para los datos de nadie.
+- **Si falla.** Si el mes actual no responde, se usa `NIO_PER_USD` (36,6243, la tasa oficial fija de 2026) y se avisa en el registro. Un mes anterior que falle solo deja esos días con la reserva. Sin servicio ni reserva, no se inventa un tipo de cambio.
+- **Alternativa descartada.** Un servicio público de mercado (ExchangeRate-API) era más fácil de llamar, pero da una referencia de mercado ~0,5 % por encima de la tasa oficial y no tiene historial por día.
+- **Capas.** `adapters/nio` es el único adaptador que puede usar `node:https` (`tests/architecture/layers.test.js`), y `index.js` se lo entrega a `BccrExchangeRateSource`, porque un adaptador no importa a otro.
 
 ## Decisión: el Excel se dibuja con ExcelJS, cargado solo al exportar
 

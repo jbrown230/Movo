@@ -3,7 +3,7 @@
 const DEFAULT_PORT = 3000;
 const DEFAULT_REQUESTS_PER_MINUTE = 60;
 const DEFAULT_FALLBACK_EXCHANGE_RATE = 510;
-const DEFAULT_NIO_PER_USD = 36.6243; // reserva: la tasa oficial del Banco Central de Nicaragua, fija durante todo 2026
+const DEFAULT_NIO_PER_USD = 36.6243; // reserva si el servicio del BCN no responde: la tasa oficial, fija durante todo 2026
 
 const TRUE_WORDS = /^(1|true|yes|si|sí)$/i;
 const readBoolean = (value, defaultValue) =>
