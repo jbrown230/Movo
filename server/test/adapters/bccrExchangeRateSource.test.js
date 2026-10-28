@@ -63,20 +63,74 @@ test('devuelve el tipo de cambio de hoy y el de cada día, con el euro del últi
   ]);
 });
 
-test('con los córdobas por dólar, también se devuelven los colones por córdoba de cada día', async () => {
-  const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: okResponse(EURO_IN_DOLLARS_BODY) });
-  const rates = await createBccrExchangeRateSource({ token: 't', nioPerUsd: 50, httpFetch }).fetchLatestRate();
+const OFFICIAL_SOURCE = 'Banco Central de Nicaragua, tasa de cambio oficial';
+const RESERVE_SOURCE = 'valor de reserva del servidor (tasa oficial fija del Banco Central de Nicaragua)';
 
-  assert.deepEqual(rates.nio, { rate: 10.12, date: '2026-01-19' }); // 506 colones por dólar / 50 córdobas por dólar
+/** Un origen del BCCR con el dólar y el euro de la prueba, y las opciones del córdoba que se quieran probar. */
+function sourceWith(options) {
+  const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: okResponse(EURO_IN_DOLLARS_BODY) });
+  return createBccrExchangeRateSource({ token: 't', httpFetch, ...options });
+}
+
+const failingNioRates = async () => {
+  throw new Error('sin respuesta');
+};
+
+test('el córdoba usa la tasa oficial de cada día: los colones por córdoba cambian cuando cambia la tasa', async () => {
+  const fetchNioRates = async () => [
+    { date: '2026-01-16', value: 36 },
+    { date: '2026-01-19', value: 40 },
+  ];
+  const rates = await sourceWith({ fetchNioRates }).fetchLatestRate();
+
+  assert.deepEqual(rates.nio, { rate: 12.65, date: '2026-01-19', source: OFFICIAL_SOURCE }); // 506 / 40
+  assert.deepEqual(
+    rates.history.map((day) => day.nio),
+    [14.0278, 14.0278, 14.0278, 12.65], // 505 / 36 hasta el 18 (la tasa del 16 sigue vigente) y 506 / 40 el 19
+  );
+});
+
+test('los días que la tasa oficial no cubre usan el valor de reserva', async () => {
+  const fetchNioRates = async () => [{ date: '2026-01-18', value: 40 }];
+  const rates = await sourceWith({ fetchNioRates, nioPerUsd: 50 }).fetchLatestRate();
+
+  assert.deepEqual(
+    rates.history.map((day) => day.nio),
+    [10.1, 10.1, 12.625, 12.65], // 16 y 17 con la reserva (505 / 50); 18 y 19 con la oficial
+  );
+  assert.equal(rates.nio.source, OFFICIAL_SOURCE);
+});
+
+test('si el servicio del BCN falla, se usa el valor de reserva y se avisa en el registro', async () => {
+  const warnings = [];
+  const rates = await sourceWith({
+    fetchNioRates: failingNioRates,
+    nioPerUsd: 50,
+    log: { warn: (...args) => warnings.push(args.join(' ')) },
+  }).fetchLatestRate();
+
+  assert.deepEqual(rates.nio, { rate: 10.12, date: '2026-01-19', source: RESERVE_SOURCE }); // 506 / 50
+  assert.deepEqual(warnings, ['[córdoba] sin respuesta']);
+});
+
+test('sin servicio del BCN, se usa el valor de reserva', async () => {
+  const rates = await sourceWith({ nioPerUsd: 50 }).fetchLatestRate();
+
+  assert.deepEqual(rates.nio, { rate: 10.12, date: '2026-01-19', source: RESERVE_SOURCE });
   assert.deepEqual(
     rates.history.map((day) => day.nio),
     [10.1, 10.1, 10.1, 10.12],
   );
 });
 
-test('sin los córdobas por dólar, no se inventa un tipo de cambio del córdoba', async () => {
-  const { httpFetch } = fakeFetch({ 318: okResponse(DOLLAR_BODY), 333: okResponse(EURO_IN_DOLLARS_BODY) });
-  const rates = await createBccrExchangeRateSource({ token: 't', httpFetch }).fetchLatestRate();
+test('si falla el servicio del BCN y no hay reserva, no se inventa un tipo de cambio', async () => {
+  const rates = await sourceWith({ fetchNioRates: failingNioRates }).fetchLatestRate();
+  assert.equal(rates.nio, null);
+  assert.equal(rates.rate, 506); // el dólar y el euro siguen
+});
+
+test('sin los córdobas por dólar de ninguna parte, no se inventa un tipo de cambio del córdoba', async () => {
+  const rates = await sourceWith({}).fetchLatestRate();
   assert.equal(rates.nio, null);
 });
 

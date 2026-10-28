@@ -71,7 +71,7 @@ Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "C
 
 Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica. Regístrate en el sitio de Indicadores Económicos del BCCR y genera un token en Mi Perfil → Generar token. Luego coloca ese token en `BCCR_TOKEN` en el `.env`. Si no lo haces, o si el token vence, se usa `FX_FALLBACK`.
 
-Para las compras en córdobas nicaragüenses el BCCR no publica tipo de cambio: el servidor divide los colones por dólar del BCCR entre los córdobas por dólar oficiales del Banco Central de Nicaragua. Ese valor es `NIO_PER_USD` (por defecto 36,6243, que el Banco Central de Nicaragua mantiene fijo durante todo 2026). Si cambia, actualízalo en el `.env` y reinicia la API. Después de cambiar el `.env`, el tipo de cambio guardado en Redis puede tardar hasta 6 horas en renovarse; para verlo de inmediato, borra esa clave con `docker compose exec redis redis-cli DEL fx:usd`.
+Las compras en córdobas nicaragüenses se convierten solas. El BCCR no publica el córdoba, así que el servidor lee la tasa oficial de cada día del [servicio web del Banco Central de Nicaragua](https://www.bcn.gob.ni/servicio-web-tipo-de-cambio) y divide los colones por dólar del BCCR entre ese valor. Ese servicio solo acepta TLS 1.0, un protocolo antiguo, y el servidor lo permite únicamente para esa conexión. Si el servicio no responde, se usa `NIO_PER_USD` (por defecto 36,6243, la tasa oficial que el Banco Central de Nicaragua mantiene fija durante todo 2026); no hace falta tocarlo. El valor se guarda en Redis, hasta 6 horas, junto con el resto del tipo de cambio, y `GET /api/fx` dice en `nio.source` de dónde salió.
 
 ## 4. VPS con Docker
 

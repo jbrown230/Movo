@@ -125,6 +125,8 @@ const SERVER = {
     'adapters/cache': { mayImport: [], packages: ['redis'] },
     'adapters/bccr': { mayImport: [], packages: [] },
     'adapters/google': { mayImport: [], packages: [] },
+    // Habla con el servicio web del Banco Central de Nicaragua, que solo acepta TLS 1.0: por eso usa node:https.
+    'adapters/nio': { mayImport: [], packages: ['node:https'] },
     config: { mayImport: [], packages: [] },
     // Punto de arranque: conoce todas las capas.
     index: {
@@ -135,6 +137,7 @@ const SERVER = {
         'adapters/cache',
         'adapters/bccr',
         'adapters/google',
+        'adapters/nio',
         'config',
       ],
       packages: [],
