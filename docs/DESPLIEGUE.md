@@ -71,6 +71,8 @@ Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "C
 
 Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica. Regístrate en el sitio de Indicadores Económicos del BCCR y genera un token en Mi Perfil → Generar token. Luego coloca ese token en `BCCR_TOKEN` en el `.env`. Si no lo haces, o si el token vence, se usa `FX_FALLBACK`.
 
+Para las compras en córdobas nicaragüenses el BCCR no publica tipo de cambio: el servidor divide los colones por dólar del BCCR entre los córdobas por dólar oficiales del Banco Central de Nicaragua. Ese valor es `NIO_PER_USD` (por defecto 36,6243, que el Banco Central de Nicaragua mantiene fijo durante todo 2026). Si cambia, actualízalo en el `.env` y reinicia la API. Después de cambiar el `.env`, el tipo de cambio guardado en Redis puede tardar hasta 6 horas en renovarse; para verlo de inmediato, borra esa clave con `docker compose exec redis redis-cli DEL fx:usd`.
+
 ## 4. VPS con Docker
 
 ```bash
@@ -164,6 +166,8 @@ En iPhone con Safari:
 2. Toca Compartir y luego "Agregar a pantalla de inicio".
 
 Si el inicio de sesión se abre en una ventana aparte, termina ahí y vuelve a la app.
+
+Si la app instalada muestra otro nombre o un ícono viejo, es porque el teléfono guarda el nombre y el ícono al instalar y no los actualiza. Desinstala la app, borra los datos del sitio en el navegador e instálala de nuevo. Los datos de Movo viven en el navegador: si no tienes el respaldo en la nube activado, exporta tus movimientos antes de borrarlos.
 
 ## 6. Verificar
 

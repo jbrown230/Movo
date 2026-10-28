@@ -21,16 +21,20 @@ web/src/
     reparseMails.js   Vuelve a leer correos cuando mejora el lector
     transactionActions.js  Cambiar categoría o cómo se cuenta, agregar a mano, eliminar
     scanInbox.js, backupSync.js, refreshExchangeRate.js, seedDemoData.js
+    exportTransactions.js  Exporta los movimientos filtrados a Excel o CSV (recibe quien dibuja el Excel)
+    movementsReport.js     Los datos del reporte: totales, fechas y una fila por movimiento
+    transactionFilters.js  Los filtros de la lista y de la exportación, convertidos para la consulta
     queries.js, preferences.js, ports.js, createServices.js
   infrastructure/   Conexión con el exterior. Implementa los puertos.
     sqlite/           Esquema, migraciones y un repositorio por tabla (sql.js)
     gmail/            Inicio de sesión con Google, API de Gmail, conversión de HTML a texto
     backend/          Cliente de la API de Movo
+    excel/            Dibuja el Excel de los movimientos con ExcelJS (se carga solo al exportar)
     browser/          IndexedDB y almacenamiento del perfil
   presentation/     Interfaz React.
-    screens/          Inicio, Bandeja, Ajustes, Bienvenida
+    screens/          Inicio, Movimientos, Bandeja, Ajustes, Metas, Bienvenida
     modals/           Las hojas que suben desde abajo
-    components/       Piezas pequeñas: íconos, campos de formulario
+    components/       Piezas pequeñas: íconos, campos de formulario, selector (Dropdown)
     state/            Proveedores: sesión, navegación, avisos, Gmail
     hooks/, format/, styles/
   composition/      Arma las capas entre sí (openSession.js) y expone lo del navegador (platform.js)
@@ -91,6 +95,16 @@ Todo esto corre en el CI en cada cambio.
 ### Service worker
 
 `web/public/sw.js` hace que la app abra sin Internet: guarda las páginas y los archivos de la app la primera vez que se piden. Nunca guarda `/api` ni lo de Google.
+
+## Decisión: el Excel se dibuja con ExcelJS, cargado solo al exportar
+
+Un CSV es texto: no puede llevar colores, tipografía ni totales con diseño. Para un reporte con la marca de Movo hace falta un libro de Excel (.xlsx).
+
+- **Capas.** La aplicación calcula los datos (`movementsReport.js`: totales, fechas, tono de cada monto) y no sabe nada de Excel; la infraestructura los dibuja (`infrastructure/excel/movementsWorkbook.js`) y `openSession.js` se lo entrega a `createServices` (puerto `WorkbookWriter` en `ports.js`). La regla de capas (`tests/architecture/layers.test.js`) permite `exceljs` solo en infraestructura.
+- **Por qué una librería.** Una primera versión armaba el .xlsx a mano (un ZIP de XML, sin dependencias) y servía para algo sencillo, pero no para el nivel de diseño de los reportes de billardOS (rellenos, bordes, celdas combinadas, tarjetas). ExcelJS lo resuelve y es una librería probada.
+- **Costo.** ExcelJS pesa unos 938 KB (271 KB comprimidos). Se importa con `import('exceljs')` en el momento de exportar, así que Vite lo deja en una pieza aparte y la app principal no cambia de peso (316 KB). El service worker la guarda la primera vez; por eso la primera exportación necesita conexión.
+- **Cómo se prueba.** Las pruebas abren el archivo generado con la misma librería y comprueban colores, rellenos, celdas combinadas, fechas y totales (`tests/application/exportTransactions.test.js`).
+- **Alternativas descartadas.** Un PDF (jsPDF pesa más y no se puede seguir editando) y seguir con solo CSV (no admite diseño).
 
 ## Decisión: leer Gmail desde el teléfono y no con un worker en el servidor
 

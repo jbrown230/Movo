@@ -8,13 +8,13 @@ Peso en puntos: **1** = unas pocas horas, **2** = un día, **3** = varios días.
 
 ## Reparto de lo pendiente
 
-Lo ya hecho (issues 1 a 14) lo hizo Jordy y suma 34 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
+Lo ya hecho (issues 1 a 14 y 39 a 42) lo hizo Jordy y suma 44 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
 
 Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda y Promerica** (Yader).
 
 | Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|---|
-| Jordy Palacios | @jbrown230 | 34 pts (issues 1–14, cerrados) | **6 pts** | 15, 16, 17 |
+| Jordy Palacios | @jbrown230 | 44 pts (issues 1–14 y 39–42, cerrados) | **6 pts** | 15, 16, 17 |
 | Dylan Mejía Ruiz | @DylanMR08 | — | **21 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36, 37, 38 |
 | Jose Meza Álvarez | @devJosemeza | — | **11 pts** | 22, 23, 24, 25, 26 |
 | Yader Barahona Villarreal | @YaderBarahona | — | **11 pts** | 27, 28, 29, 30, 31 |
@@ -27,16 +27,16 @@ Reglas:
 
 ---
 
-## Ya hecho (cerrados) · Jordy Palacios · 34 pts
+## Ya hecho (cerrados) · Jordy Palacios · 44 pts
 
-Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Todo esto está en la versión v0.1.0 (ver `CHANGELOG.md`).
+Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Los issues 1 a 14 están en la versión v0.1.0 y los 39 a 42 se hicieron después de la v0.2.0 (ver `CHANGELOG.md`).
 
 | # | Issue | Pts | Etiquetas | Versión |
 |---|---|---|---|---|
 | 1 | PWA instalable con modo sin conexión, service worker y modo oscuro | 3 | `frontend` | v0.1.0 |
 | 2 | SQLite en el navegador (sql.js): una base por usuario e ingesta idempotente por Message-ID | 3 | `frontend` | v0.1.0 |
 | 3 | Lectura de Gmail de solo lectura, limitada a remitentes bancarios | 2 | `frontend` | v0.1.0 |
-| 4 | Lector de correos base: plantillas sintéticas BAC, BN y BCR | 3 | `parser` | v0.1.0 |
+| 4 | Lector de correos base: plantillas sintéticas BAC, BN y BCR, y lector genérico por etiquetas | 3 | `parser` | v0.1.0 |
 | 5 | Plantillas reales del BCR: SINPE Móvil enviado y recibido, tarjeta, y compras negadas | 3 | `parser` | v0.1.0 |
 | 6 | SINPE entre cuentas propias: detección del titular y control "¿Cómo contarlo?" | 2 | `parser`, `frontend` | v0.1.0 |
 | 7 | API Node mínima: configuración, validación de token de Google y tipo de cambio del BCCR | 3 | `backend` | v0.1.0 |
@@ -47,6 +47,10 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 | 12 | Pruebas automáticas, benchmark del lector, dataset sintético y CI en GitHub Actions | 3 | `tests` | v0.1.0 |
 | 13 | Despliegue con Docker, Caddy y guía para un VPS | 2 | `infra`, `docs` | v0.1.0 |
 | 14 | README, documento de arquitectura, capturas y renombre del proyecto a Movo | 2 | `docs` | v0.1.0 |
+| 39 | Compras en córdobas nicaragüenses se registraban como colones | 2 | `bug`, `parser`, `backend` | Sin publicar |
+| 40 | Pestaña Movimientos con búsqueda de texto y hoja de filtros | 3 | `frontend` | Sin publicar |
+| 41 | Exportar a un Excel con el diseño de Movo | 3 | `frontend` | Sin publicar |
+| 42 | Pulir la interfaz en el celular: sin recortes, sin zoom con los dedos y con más espacio | 2 | `frontend`, `bug` | Sin publicar |
 
 ---
 
@@ -133,7 +137,7 @@ Estado: hecho, issue de GitHub #36 (rama `36-revisar-el-tipo-de-cambio`).
 ### 35. Vista propia para el filtrado de movimientos · 2 pts
 `frontend` · Hito: Funciones de usuario
 Estado: hecho, issue de GitHub #37 (rama `37-vista-propia-para-el-filtrado-de-movimientos`).
-- [x] Mover el filtrado de movimientos a una vista distinta a la del inicio. No había filtros. Se probó una pestaña "Movimientos" aparte, pero el equipo decidió dejar los filtros en el propio inicio: un botón "Filtros" abre un panel con fecha (días completos), categoría, tipo, banco y monto (desde, hasta o un rango), que se aplican con "Aplicar" y se resuelven en la consulta a SQLite. La lista del inicio ("Movimientos") muestra todos los movimientos, o los que cumplen los filtros; tocar una tarjeta de categoría filtra la lista por ella en el mes.
+- [x] Mover el filtrado de movimientos a una vista distinta a la del inicio. No había filtros. Se probó una pestaña "Movimientos" aparte, pero el equipo decidió dejar los filtros en el propio inicio (más adelante se retomó la pestaña propia: ver la tarea 40). Lo que se hizo entonces: un botón "Filtros" abre un panel con fecha (días completos), categoría, tipo, banco y monto (desde, hasta o un rango), que se aplican con "Aplicar" y se resuelven en la consulta a SQLite. La lista del inicio ("Movimientos") muestra todos los movimientos, o los que cumplen los filtros; tocar una tarjeta de categoría filtra la lista por ella en el mes.
 - [x] Mantener los filtros elegidos al entrar y salir de la vista: se conservan al cambiar de pantalla mientras la app está abierta.
 - [x] Prueba de la navegación y de los filtros (`tests/application/searchTransactions.test.js` y `tests/presentation/app.test.jsx`).
 
