@@ -182,6 +182,71 @@ test('buscar correos: registra los nuevos y recuerda cuándo fue la última bús
   assert.equal(again.found, 0, 'los correos ya leídos no se descargan otra vez');
 });
 
+/** Una fuente de correo que recuerda con qué búsqueda y desde cuándo se le pidieron los correos. */
+function recordingMailSource() {
+  const requests = [];
+  return {
+    requests,
+    listNewMailIds: async ({ query, since }) => {
+      requests.push({ query, since });
+      return [];
+    },
+    fetchMail: async () => ({}),
+  };
+}
+
+test('la primera lectura revisa el período inicial, y las siguientes piden solo desde la última', async () => {
+  const mailSource = recordingMailSource();
+  const { services } = createTestApp({ mailSource });
+
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+
+  assert.equal(mailSource.requests[0].since, null, 'la primera vez no hay última lectura');
+  assert.ok(mailSource.requests[1].since > 0, 'la segunda parte de la primera');
+  assert.equal(mailSource.requests[1].query, mailSource.requests[0].query);
+});
+
+test('si cambia la búsqueda por defecto (un banco nuevo en una versión nueva), vuelve a revisar el período inicial', async () => {
+  const mailSource = recordingMailSource();
+  const { services } = createTestApp({ mailSource });
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+
+  // Un teléfono que leyó con la búsqueda de una versión anterior: se simula dejando anotada otra.
+  services.preferences.markScanned('(from:bancoviejo.example)');
+
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  assert.equal(mailSource.requests.at(-1).since, null, 'con otra búsqueda no se confía en la última lectura');
+});
+
+test('si la búsqueda no cambió, no se vuelve a revisar el período inicial', async () => {
+  const mailSource = recordingMailSource();
+  const { services } = createTestApp({ mailSource });
+
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+
+  assert.deepEqual(
+    mailSource.requests.map((request) => request.since === null),
+    [true, false, false],
+  );
+});
+
+test('editar los bancos que se leen también vuelve a revisar el período inicial', async () => {
+  const mailSource = recordingMailSource();
+  const { services } = createTestApp({ mailSource });
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+
+  services.preferences.setGmailQuery('from:otrobanco.example');
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  assert.equal(mailSource.requests.at(-1).since, null);
+  assert.equal(mailSource.requests.at(-1).query, 'from:otrobanco.example');
+
+  await services.scanInbox({ token: 'token-de-prueba-0123456789' });
+  assert.ok(mailSource.requests.at(-1).since > 0, 'con la búsqueda nueva ya leída, sigue desde la última lectura');
+});
+
 test('si el token de Gmail venció, la búsqueda falla con un error de autenticación y no guarda nada', async () => {
   const authError = Object.assign(new Error('auth'), { auth: true });
   const mailSource = {

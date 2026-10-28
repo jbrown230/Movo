@@ -8,13 +8,13 @@ Peso en puntos: **1** = unas pocas horas, **2** = un día, **3** = varios días.
 
 ## Reparto de lo pendiente
 
-Lo ya hecho (issues 1 a 14 y 39 a 42) lo hizo Jordy y suma 44 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
+Lo ya hecho (issues 1 a 14 y 39 a 43) lo hizo Jordy y suma 45 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
 
 Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda y Promerica** (Yader).
 
 | Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|---|
-| Jordy Palacios | @jbrown230 | 44 pts (issues 1–14 y 39–42, cerrados) | **6 pts** | 15, 16, 17 |
+| Jordy Palacios | @jbrown230 | 45 pts (issues 1–14 y 39–43, cerrados) | **6 pts** | 15, 16, 17 |
 | Dylan Mejía Ruiz | @DylanMR08 | — | **21 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36, 37, 38 |
 | Jose Meza Álvarez | @devJosemeza | — | **11 pts** | 22, 23, 24, 25, 26 |
 | Yader Barahona Villarreal | @YaderBarahona | — | **11 pts** | 27, 28, 29, 30, 31 |
@@ -27,9 +27,9 @@ Reglas:
 
 ---
 
-## Ya hecho (cerrados) · Jordy Palacios · 44 pts
+## Ya hecho (cerrados) · Jordy Palacios · 45 pts
 
-Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Los issues 1 a 14 están en la versión v0.1.0 y los 39 a 42 se hicieron después de la v0.2.0 (ver `CHANGELOG.md`).
+Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Los issues 1 a 14 están en la versión v0.1.0, los 39 a 42 en la v0.3.0 y el 43 saldrá en la v0.4.0 (ver `CHANGELOG.md`).
 
 | # | Issue | Pts | Etiquetas | Versión |
 |---|---|---|---|---|
@@ -47,10 +47,11 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 | 12 | Pruebas automáticas, benchmark del lector, dataset sintético y CI en GitHub Actions | 3 | `tests` | v0.1.0 |
 | 13 | Despliegue con Docker, Caddy y guía para un VPS | 2 | `infra`, `docs` | v0.1.0 |
 | 14 | README, documento de arquitectura, capturas y renombre del proyecto a Movo | 2 | `docs` | v0.1.0 |
-| 39 | Compras en córdobas nicaragüenses se registraban como colones | 2 | `bug`, `parser`, `backend` | Sin publicar |
-| 40 | Pestaña Movimientos con búsqueda de texto y hoja de filtros | 3 | `frontend` | Sin publicar |
-| 41 | Exportar a un Excel con el diseño de Movo | 3 | `frontend` | Sin publicar |
-| 42 | Pulir la interfaz en el celular: sin recortes, sin zoom con los dedos y con más espacio | 2 | `frontend`, `bug` | Sin publicar |
+| 39 | Compras en córdobas nicaragüenses se registraban como colones | 2 | `bug`, `parser`, `backend` | v0.3.0 |
+| 40 | Pestaña Movimientos con búsqueda de texto y hoja de filtros | 3 | `frontend` | v0.3.0 |
+| 41 | Exportar a un Excel con el diseño de Movo | 3 | `frontend` | v0.3.0 |
+| 42 | Pulir la interfaz en el celular: sin recortes, sin zoom con los dedos y con más espacio | 2 | `frontend`, `bug` | v0.3.0 |
+| 43 | Releer el historial cuando cambia la búsqueda de Gmail (un banco nuevo no leía los correos viejos) | 1 | `bug`, `frontend` | v0.4.0 |
 
 ---
 

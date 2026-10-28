@@ -15,10 +15,11 @@ export function createScanInbox({ mailSource, readMail, mails, preferences }) {
    * @returns {Promise<ScanSummary>}
    */
   return async function scanInbox({ token, onProgress = () => {} }) {
+    const query = preferences.gmailQuery();
     const ids = await mailSource.listNewMailIds({
       token,
-      query: preferences.gmailQuery(),
-      since: preferences.lastScanAt(),
+      query,
+      since: preferences.lastScanAtFor(query),
       isKnown: (id) => mails.exists({ id }),
     });
 
@@ -37,7 +38,7 @@ export function createScanInbox({ mailSource, readMail, mails, preferences }) {
     }
     await Promise.all(Array.from({ length: PARALLEL_DOWNLOADS }, downloadAndRead));
 
-    preferences.markScanned();
+    preferences.markScanned(query);
     return summary;
   };
 }
