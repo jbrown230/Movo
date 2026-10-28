@@ -1,6 +1,6 @@
-// Lectura de campos compartida por las plantillas de Davivienda (cuenta, tarjeta y transferencia).
+// Lectura de campos "Etiqueta: valor" compartida por las plantillas de Davivienda y Banco Popular.
 //
-// Los correos son una tabla de dos columnas. Al pasarlos a texto queda "Etiqueta:<tab>valor"; en la
+// Esos correos son una tabla de etiquetas y valores. Al pasarlos a texto queda "Etiqueta:<tab>valor"; en la
 // versión de texto plano el valor puede quedar en la línea siguiente. Las dos formas se leen igual.
 
 import { AMOUNT_PATTERN, parseAmount } from '../amount.js';

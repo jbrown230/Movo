@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { parseMail, parseFirstApproved } from '../../web/src/domain/emailParser/parseMail.js';
-import { parseDate } from '../../web/src/domain/emailParser/templates/daviviendaFields.js';
+import { parseDate } from '../../web/src/domain/emailParser/templates/labeledFields.js';
 import { categorize } from '../../web/src/domain/categories.js';
 import { costaRicaIso } from '../helpers/costaRica.js';
 import {

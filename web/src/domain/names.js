@@ -17,7 +17,7 @@ export function toTitleCase(text) {
     .replace(/(^|[\s.*\-(])(\p{L})/gu, (_, before, letter) => before + letter.toUpperCase());
 }
 
-const COUNTRY_SUFFIX = /\s+(US|USA|CR|CRI|GB|IE|NL|CA|MX)\s*$/i;
+const COUNTRY_SUFFIX = /\s+(US|USA|CR|CRI|NI|GB|IE|NL|CA|MX)\s*$/i;
 const LONG_NUMBER = /\b\d{6,}\b/g;
 
 /**

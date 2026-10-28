@@ -19,7 +19,7 @@
 
 import { Direction, TransactionType } from '../../types.js';
 import { isSamePerson } from '../../names.js';
-import { normalizeText, parseDate, parseMoney, readField } from './daviviendaFields.js';
+import { normalizeText, parseDate, parseMoney, readField } from './labeledFields.js';
 
 /** "AHO - CR00000000000000000001 CRC CLIENTE DE PRUEBA" → titular y últimos 4 dígitos de la cuenta. */
 const ACCOUNT_LINE = /^[A-Z]{2,4}\s*-\s*[A-Z]{2}(\d+)\s+(?:CRC|USD|EUR)\s+(.+)$/i;

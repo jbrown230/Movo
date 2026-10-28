@@ -63,6 +63,9 @@ const ALLOWED_EMAIL_DOMAINS = [
   'baccredomatic.cr', // remitente de notificaciones de BAC Credomatic
   'baccredomatic.com',
   'davivienda.cr', // remitentes y correo de atención públicos de Davivienda
+  'bpdc.fi.cr', // remitentes públicos de Banco Popular
+  'bancopopularinforma.fi.cr',
+  'bp.fi.cr', // correos de atención públicos de Banco Popular
   'bancobcr.demo',
   'bac.demo',
   'bn.demo', // remitentes del modo demo
@@ -79,6 +82,7 @@ const PUBLIC_BANK_NUMBERS = [
   '22959797', // teléfono público del BAC
   '22871111', // "Teléfono Rojo" público de Davivienda
   '50622871111',
+  '22022020', // centro de llamadas público de Banco Popular
 ];
 const FAKE_NAMES = new Set([
   'CLIENTE DE PRUEBA',
@@ -154,15 +158,24 @@ test('.env.example no trae valores secretos', () => {
 
 test('los correos de ejemplo solo usan nombres de personas ficticios', () => {
   const stripTags = (text) => text.replace(/<[^>]*>/g, '\n').replace(/&nbsp;/g, ' ');
-  const nameLine = /(?:Estimado\s*\(a\)|Nombre cliente (?:origen|destino))\s*:\s*([^\n\r]*)/gi;
-  // Davivienda: "Estimado(a) Cliente NOMBRE" (sin dos puntos) o "Estimado cliente" con el nombre en la línea
-  // siguiente. Solo cuenta una línea en mayúsculas, para no tomar la frase que sigue al saludo del BCR.
-  const clientLine = /Estimado\s*(?:\(a\))?\s*[Cc]liente\s*:?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)[ \t]*(?:\r?\n|$)/g;
+  const namePatterns = [
+    // BCR y comprobantes SINPE de Banco Popular: "Estimado (a): NOMBRE", "Nombre cliente origen: NOMBRE", "Nombre Destino: NOMBRE".
+    /(?:Estimado\s*\(a\)|Nombre (?:cliente )?(?:origen|destino))\s*:\s*([^\n\r]*)/gi,
+    // Davivienda: "Estimado(a) Cliente NOMBRE" (sin dos puntos) o "Estimado cliente" con el nombre en la línea
+    // siguiente. Solo cuenta una línea en mayúsculas, para no tomar la frase que sigue al saludo del BCR.
+    /Estimado\s*(?:\(a\))?\s*[Cc]liente\s*:?\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)[ \t]*(?:\r?\n|$)/g,
+    // Banco Popular: "Estimado (a) NOMBRE:", "(DTR) a NOMBRE por un monto" y "al teléfono 80000000 de NOMBRE.".
+    /Estimado\s*\(a\)\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\s*:/g,
+    /\(DTR\)\s+a\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\s+por un monto/g,
+    /al tel[eé]fono\s+\d+\s+de\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\./g,
+  ];
   const unexpected = [];
   for (const file of FIXTURES) {
     const text = stripTags(readText(file)).replace(/\s*\r?\n\s*\(a\)/g, ' (a)'); // "Estimado\n(a):" partido por el banco
-    for (const match of [...text.matchAll(nameLine), ...text.matchAll(clientLine)]) {
+    for (const match of namePatterns.flatMap((pattern) => [...text.matchAll(pattern)])) {
       const name = match[1]
+        .replace(/\\[tn]/g, ' ') // tabuladores escritos como \t dentro de un .js
+        .replace(/_+/g, ' ') // Banco Popular escribe "CLIENTE__DE_PRUEBA"
         .replace(/\s+/g, ' ')
         .replace(/[<].*$/, '')
         .trim();

@@ -16,7 +16,7 @@
 // queda como "Sin movimiento", en vez de leerse como gasto.
 
 import { Direction, TransactionType } from '../../types.js';
-import { normalizeText, parseDate, parseMoney, readField, readLastFour } from './daviviendaFields.js';
+import { normalizeText, parseDate, parseMoney, readField, readLastFour } from './labeledFields.js';
 
 const CARD_PURCHASE = /Davivienda le informa que se realiz[oó] una transacci[oó]n en/i;
 

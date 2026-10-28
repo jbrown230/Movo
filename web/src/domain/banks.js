@@ -25,6 +25,12 @@ export const BANKS = Object.freeze({
   },
   DAVIVIENDA: { name: 'Davivienda', color: '#E30613', senderPattern: /davivienda/i, textPattern: /DAVIVIENDA/i },
   PROMERICA: { name: 'Promerica', color: '#00843D', senderPattern: /promerica/i, textPattern: /PROMERICA/i },
+  POPULAR: {
+    name: 'Banco Popular',
+    color: '#F07D00',
+    senderPattern: /(bpdc\.fi\.cr|bancopopularinforma|\bbp\.fi\.cr)/i,
+    textPattern: /\bBanco Popular\b/i,
+  },
 });
 
 /** Color de marca de un banco (gris si no se reconoce). */
