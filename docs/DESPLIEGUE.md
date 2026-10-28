@@ -171,6 +171,6 @@ Si la app instalada muestra otro nombre o un ícono viejo, es porque el teléfon
 
 ## 6. Verificar
 
-- La primera lectura revisa los últimos 45 días.
+- La primera lectura revisa los últimos 45 días, y también la que sigue a un cambio de la búsqueda de Gmail (por ejemplo, una versión nueva con un banco más); las demás piden solo lo posterior a la última lectura. Si un dispositivo no leyó correos de un banco, abre Movo con la versión más nueva y espera a que termine de leer.
 - En **Bandeja** se ven los correos leídos. Si un banco no aparece, en **Ajustes**, "Bancos que se leen", agrega `from:dominio-del-banco`.
 - Los correos que el lector no entiende quedan como "Sin movimiento". Anonimiza el texto del correo y crea una plantilla nueva en `web/src/domain/emailParser/templates/`, con su prueba. El paso a paso está en [CONTRIBUIR.md](CONTRIBUIR.md).

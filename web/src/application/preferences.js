@@ -81,7 +81,18 @@ export function createPreferences({ settings, localState }) {
 
     // ---- estado de este teléfono ----
     lastScanAt: () => localState.get(LocalStateKey.LAST_SCAN_AT),
-    markScanned: () => localState.set(LocalStateKey.LAST_SCAN_AT, Date.now()),
+    /**
+     * Desde cuándo pedir correos nuevos con esta búsqueda: la última lectura hecha con ELLA. Si la búsqueda es
+     * otra (por ejemplo, una versión nueva agregó un banco a la búsqueda por defecto), devuelve null y la
+     * lectura vuelve a revisar los últimos 45 días; los correos ya leídos no se descargan otra vez.
+     */
+    lastScanAtFor: (query) =>
+      localState.get(LocalStateKey.LAST_SCAN_QUERY) === query ? localState.get(LocalStateKey.LAST_SCAN_AT) : null,
+    /** Anota que se leyó el correo con esta búsqueda. */
+    markScanned(query) {
+      localState.set(LocalStateKey.LAST_SCAN_AT, Date.now());
+      localState.set(LocalStateKey.LAST_SCAN_QUERY, query);
+    },
 
     isCloudBackupEnabled: () => Boolean(localState.get(LocalStateKey.CLOUD_BACKUP_ENABLED)),
     setCloudBackupEnabled: (enabled) => localState.set(LocalStateKey.CLOUD_BACKUP_ENABLED, enabled),

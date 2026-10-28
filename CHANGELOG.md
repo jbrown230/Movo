@@ -1,6 +1,10 @@
 # Cambios
 
-## Sin publicar
+## Sin publicar (v0.4.0)
+
+### Lector de notificaciones
+
+- **La lectura de Gmail vuelve a revisar el historial cuando cambia la búsqueda.** Cada lectura pide a Gmail solo los correos posteriores a la última lectura del dispositivo, pero no recordaba con qué búsqueda leyó. Cuando una versión nueva agregaba un banco a la búsqueda por defecto (como pasó con Banco Popular), los dispositivos que ya habían leído antes nunca pedían los correos viejos de ese banco, y la única salida era borrar los datos del dispositivo. Ahora la app anota con qué búsqueda hizo cada lectura (`last_scan_query`) y, si es otra, vuelve a revisar los últimos 45 días; los correos ya leídos no se descargan otra vez. Editar "Bancos que se leen" ya lo hacía; esto cubre también los cambios de la búsqueda por defecto. La primera lectura después de actualizar revisa los 45 días una vez en cada dispositivo. (#79)
 
 ## v0.3.0
 
