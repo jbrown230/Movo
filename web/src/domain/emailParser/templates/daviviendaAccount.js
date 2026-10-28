@@ -14,7 +14,7 @@
 // ejemplo los intereses). El correo NO dice a quién se le envió el dinero: solo el concepto.
 
 import { Direction, TransactionType } from '../../types.js';
-import { normalizeText, parseDate, parseMoney, readField, readLastFour } from './daviviendaFields.js';
+import { normalizeText, parseDate, parseMoney, readField, readLastFour } from './labeledFields.js';
 
 const ACCOUNT_MOVEMENT = /Davivienda le informa que se realiz[oó] un (d[eé]bito|cr[eé]dito) en su cuenta/i;
 /** Conceptos que solo dicen el medio, no la contraparte: con estos, el movimiento queda sin nombre. */
