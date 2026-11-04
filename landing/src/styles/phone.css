@@ -148,6 +148,7 @@
   left: 22px;
   right: 22px;
   bottom: 26px;
+  z-index: 2; /* encima de las pantallas, para que sigan a la vista al entrar la de Movo */
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -159,6 +160,8 @@
   color: #fff;
   font-weight: 700;
   font-size: 14px;
+  white-space: nowrap;
+  transform-origin: left center; /* aterriza alineada con el texto de la fila */
 }
 
 /* --- Movo --- */

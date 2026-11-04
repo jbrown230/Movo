@@ -101,7 +101,9 @@ Sin `GOOGLE_CLIENT_ID` la app abre en modo demo. Para probar con tu Gmail en loc
 En [`landing/`](landing/) está la página que presenta Movo: qué hace, cómo funciona (una animación que avanza con el scroll), con qué está hecha, que es de acceso libre y quiénes la hicimos. Es un sitio estático aparte de la app (Vite, Three.js, GSAP y Lenis).
 
 ```bash
-npm install --prefix landing
+cd landing
+npm install
+cd ..
 npm run landing          # http://localhost:5174
 npm run landing:build    # compila a landing/dist, listo para cualquier hosting estático
 ```

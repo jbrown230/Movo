@@ -69,11 +69,15 @@
           movimientos ordenados por categoría. Todo pasa en tu teléfono.
         </p>
         <div class="hero-actions" data-hero-fade>
-          <a class="button button-mint" href="#como-funciona">Ver cómo funciona</a>
-          <a class="button button-ghost" href="https://github.com/jbrown230/Movo">Código abierto · MIT</a>
+          <a class="button button-mint" href="https://84-46-253-165.sslip.io/" target="_blank" rel="noopener"
+            >Probar la demo</a
+          >
+          <a class="button button-ghost" href="#como-funciona">Ver cómo funciona</a>
         </div>
       </div>
-      <p class="hero-note" data-hero-fade>Para Costa Rica · BCR, BN, BAC, Davivienda y Banco Popular</p>
+      <p class="hero-note" data-hero-fade>
+        Para Costa Rica · BCR, BN, BAC, Davivienda y Banco Popular · Código abierto, licencia MIT
+      </p>
     </header>
 
     <main>
@@ -173,12 +177,6 @@
                       </div>
                     </dl>
                   </div>
-                  <div class="chips">
-                    <span class="chip">₡12 500</span>
-                    <span class="chip">Soda La Esquina</span>
-                    <span class="chip">Hoy 12:41</span>
-                    <span class="chip">Transferencias</span>
-                  </div>
                 </div>
 
                 <!-- Pantalla 3: Movo -->
@@ -214,6 +212,14 @@
                   </div>
                 </div>
 
+                <!-- Los datos que Movo sacó del correo: vuelan hasta la fila nueva -->
+                <div class="chips">
+                  <span class="chip" data-target=".row-new .row-amount">₡12 500</span>
+                  <span class="chip" data-target=".row-new b">Soda La Esquina</span>
+                  <span class="chip" data-target=".movo-day">Hoy 12:41</span>
+                  <span class="chip" data-target=".row-new i">Transferencias</span>
+                </div>
+
                 <!-- La notificación que cae desde arriba -->
                 <div class="push">
                   <span class="bank-badge">BAC</span>
@@ -237,7 +243,8 @@
       <!-- ============ Lo que hace: un color por idea ============ -->
       <section class="fields" aria-label="Lo que hace Movo">
         <article class="field-chapter chapter-mint">
-          <p class="chapter-text" data-reveal>
+          <p class="chapter-tab" aria-hidden="true">Cero tecleo</p>
+          <p class="chapter-text">
             Cada compra con tarjeta y cada SINPE genera un correo del banco. Movo lo convierte en un movimiento con
             monto, comercio, fecha y categoría. Si corriges una categoría, la recuerda como regla.
           </p>
@@ -247,7 +254,8 @@
           </h2>
         </article>
         <article class="field-chapter chapter-pink is-mirrored" id="privacidad">
-          <p class="chapter-text" data-reveal>
+          <p class="chapter-tab" aria-hidden="true">Privado por diseño</p>
+          <p class="chapter-text">
             Gmail con permiso de solo lectura y búsqueda limitada a remitentes bancarios. Los correos se leen y se
             guardan en tu teléfono; el servidor nunca los recibe. Borras todo desde Ajustes cuando quieras.
           </p>
@@ -257,7 +265,8 @@
           </h2>
         </article>
         <article class="field-chapter chapter-cyan">
-          <p class="chapter-text" data-reveal>
+          <p class="chapter-tab" aria-hidden="true">Funciona sin señal</p>
+          <p class="chapter-text">
             Se instala desde el navegador como app, sin tienda. Una base SQLite vive dentro del teléfono y calcula el
             resumen del mes con SQL real, aunque no tengas señal.
           </p>
@@ -267,7 +276,8 @@
           </h2>
         </article>
         <article class="field-chapter chapter-night is-mirrored">
-          <p class="chapter-text" data-reveal>
+          <p class="chapter-tab" aria-hidden="true">Cinco bancos</p>
+          <p class="chapter-text">
             BCR, BN, BAC, Davivienda y Banco Popular. Colones, dólares, euros y córdobas, con el tipo de cambio del
             BCCR. Los SINPE entre tus propias cuentas no cuentan como gasto.
           </p>
@@ -324,13 +334,20 @@
               Modo oscuro
             </button>
           </div>
+          <a
+            class="button button-mint showcase-action"
+            href="https://84-46-253-165.sslip.io/"
+            target="_blank"
+            rel="noopener"
+            >Probar la demo</a
+          >
         </div>
         <figure class="showcase-stage">
           <img
             class="showcase-shot"
             src="./capturas/02-inicio.webp"
-            width="441"
-            height="903"
+            width="436"
+            height="908"
             alt="Pantalla de inicio de Movo"
             loading="lazy"
           />
@@ -357,13 +374,14 @@
             usa Redis, MongoDB y el BCCR.
           </title>
           <g class="arch-links">
-            <path d="M210 120 H400" />
-            <path d="M650 120 H760" />
-            <path d="M525 200 V300" />
-            <path d="M880 200 V250 H1030 V300" />
-            <path d="M880 200 V300" />
-            <path d="M880 200 V250 H730 V300" />
+            <path data-flow="gmail-phone" d="M210 120 H400" />
+            <path data-flow="phone-api" d="M650 120 H760" />
+            <path data-flow="phone-sqlite" d="M525 200 V300" />
+            <path data-flow="api-mongo" d="M880 200 V250 H1030 V300" />
+            <path data-flow="api-bccr" d="M880 200 V300" />
+            <path data-flow="api-redis" d="M880 200 V250 H730 V300" />
           </g>
+          <g class="arch-packets" aria-hidden="true"></g>
           <g class="arch-nodes">
             <g data-node>
               <rect x="40" y="70" width="170" height="100" />
@@ -403,6 +421,16 @@
             </g>
           </g>
         </svg>
+
+        <ul class="arch-legend">
+          <li data-reveal>
+            <span class="arch-swatch is-mail"></span>Los correos llegan hasta tu teléfono y ahí se quedan.
+          </li>
+          <li data-reveal>
+            <span class="arch-swatch is-server"></span>Al servidor solo va tu token de Google y, si lo activas, el
+            respaldo de los movimientos ya extraídos.
+          </li>
+        </ul>
 
         <div class="tech-columns">
           <div data-reveal>
@@ -488,14 +516,23 @@
         <div class="team-copy">
           <h2 class="team-title" id="team-title" data-reveal>Quiénes lo hicimos</h2>
           <p data-reveal>
-            Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacional de Costa Rica, Grupo 1.
+            Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacional de Costa Rica,<br />Grupo
+            1.
           </p>
         </div>
         <ul class="team-names">
-          <li data-reveal><span>Dylan</span> Mejía Ruiz</li>
-          <li data-reveal><span>Jose</span> Meza Álvarez</li>
-          <li data-reveal><span>Jordy</span> Palacios Brown</li>
-          <li data-reveal><span>Yader</span> Barahona Villarreal</li>
+          <li data-reveal>
+            <span class="team-name"><span>Dylan</span> Mejía Ruiz</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Jose</span> Meza Álvarez</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Jordy</span> Palacios Brown</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Yader</span> Barahona Villarreal</span>
+          </li>
         </ul>
       </section>
 
@@ -511,6 +548,7 @@
       <p class="footer-mark" aria-hidden="true">Movo</p>
       <div class="footer-row">
         <ul class="footer-places">
+          <li><a href="https://84-46-253-165.sslip.io/" target="_blank" rel="noopener">Probar la demo</a></li>
           <li><a href="https://github.com/jbrown230/Movo">GitHub</a></li>
           <li><a href="https://github.com/jbrown230/Movo/blob/main/README.md">Documentación</a></li>
         </ul>
