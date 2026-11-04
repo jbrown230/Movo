@@ -18,7 +18,7 @@ export function initHeroIntro({ reducedMotion }) {
   const timeline = gsap.timeline({ delay: 0.15 });
   timeline
     .from('.nav', { y: -24, opacity: 0, duration: 0.8, ease: EASE_OUT })
-    .from(lines, { yPercent: 110, duration: 0.9, ease: 'power4.out', stagger: 0.11 }, 0.1)
+    .from(lines, { yPercent: 135, duration: 0.9, ease: 'power4.out', stagger: 0.11 }, 0.1)
     .from(fades, { y: 20, opacity: 0, duration: 0.8, ease: EASE_OUT, stagger: 0.08 }, 0.65);
 }
 
@@ -26,7 +26,7 @@ export function initHeroIntro({ reducedMotion }) {
 function revealMaskedHeadings() {
   document.querySelectorAll('.tech-title, .open-title').forEach((heading) => {
     gsap.from(heading.querySelectorAll('.line-inner'), {
-      yPercent: 105,
+      yPercent: 135,
       duration: 1,
       ease: 'power4.out',
       stagger: 0.1,
