@@ -9,3 +9,4 @@ web/dist/
 *.eml
 *.msg
 correos*.json
+landing/dist/

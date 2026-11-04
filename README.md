@@ -96,6 +96,16 @@ Para ver la versión compilada, tal como se publica: `npm start` (compila con Vi
 
 Sin `GOOGLE_CLIENT_ID` la app abre en modo demo. Para probar con tu Gmail en local, define `GOOGLE_CLIENT_ID` y registra `http://localhost:5173` como origen y `http://localhost:5173/` como URI de redirección en Google Cloud.
 
+## Página de presentación (landing)
+
+En [`landing/`](landing/) está la página que presenta Movo: qué hace, cómo funciona (una animación que avanza con el scroll), con qué está hecha, que es de acceso libre y quiénes la hicimos. Es un sitio estático aparte de la app (Vite, Three.js, GSAP y Lenis).
+
+```bash
+npm install --prefix landing
+npm run landing          # http://localhost:5174
+npm run landing:build    # compila a landing/dist, listo para cualquier hosting estático
+```
+
 ## Publicar en un VPS e instalar en el teléfono
 
 Resumen (paso a paso en [docs/DESPLIEGUE.md](docs/DESPLIEGUE.md)):
