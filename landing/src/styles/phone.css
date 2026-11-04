@@ -1,0 +1,332 @@
+/* El teléfono de la demostración: un fragmento real de la interfaz, armado en HTML. */
+.phone {
+  --phone-w: 340px;
+  --phone-h: 700px;
+  width: var(--phone-w);
+  height: var(--phone-h);
+  padding: 10px;
+  border-radius: 54px;
+  background: var(--ink);
+  transform-origin: center;
+  transform: perspective(1400px) rotateY(calc(var(--ry, 0) * 1deg)) scale(var(--phone-scale, 1));
+}
+.phone-screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 44px;
+  overflow: hidden;
+  background: var(--paper);
+  font-size: 15px;
+  line-height: 1.35;
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  padding: 58px 22px 22px;
+}
+
+/* --- Pantalla del banco --- */
+.screen-bank {
+  background: #fff;
+}
+.bank-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 26px;
+}
+.bank-badge {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: #d71920;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.bank-label {
+  margin-top: 16px;
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.bank-value {
+  font-weight: 700;
+  font-size: 18px;
+}
+.bank-sub {
+  color: var(--ink-soft);
+}
+.bank-amount {
+  font-weight: 800;
+  font-size: 40px;
+  letter-spacing: -0.03em;
+}
+.bank-button {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 30px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: #d71920;
+  color: #fff;
+  font-weight: 700;
+  overflow: hidden;
+}
+.bank-send,
+.bank-sent {
+  grid-area: 1 / 1;
+}
+.bank-sent {
+  opacity: 0;
+}
+
+/* --- Correo --- */
+.screen-mail {
+  background: #fff;
+}
+.mail-head {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-bottom: 16px;
+  margin-bottom: 14px;
+  background: #fff;
+}
+.mail-from {
+  font-weight: 700;
+}
+.mail-subject {
+  color: var(--ink-soft);
+  font-size: 13px;
+}
+.mail-body {
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+}
+.mail-fields {
+  display: grid;
+  gap: 6px;
+  margin-top: 6px;
+}
+.field {
+  position: relative;
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  padding: 8px 10px;
+  border-radius: 10px;
+  isolation: isolate;
+}
+.field::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: var(--mint);
+  transform: scaleX(var(--mark, 0));
+  transform-origin: left;
+}
+.field dt {
+  color: var(--ink-soft);
+}
+.field dd {
+  font-weight: 700;
+}
+.chips {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 26px;
+  z-index: 2; /* encima de las pantallas, para que sigan a la vista al entrar la de Movo */
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--violet);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  transform-origin: left center; /* aterriza alineada con el texto de la fila */
+}
+
+/* --- Movo --- */
+.screen-movo {
+  padding: 0;
+  background: var(--paper);
+}
+.movo-head {
+  padding: 66px 22px 30px;
+  background: var(--violet);
+  color: #fff;
+  text-align: center;
+}
+.movo-kicker {
+  font-weight: 500;
+  opacity: 0.85;
+}
+.movo-total {
+  margin-top: 4px;
+  font-size: 44px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+.movo-total small {
+  font-size: 22px;
+  opacity: 0.7;
+}
+.movo-bar {
+  height: 8px;
+  margin: 16px 18px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.movo-bar span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: #fff;
+  border-radius: inherit;
+  transform-origin: left;
+  transform: scaleX(var(--bar, 0.265));
+}
+.movo-left {
+  font-size: 13px;
+  opacity: 0.85;
+}
+.movo-list {
+  margin-top: -16px;
+  padding: 20px 16px;
+  border-radius: 24px 24px 0 0;
+  background: var(--paper);
+  position: relative;
+}
+.movo-day {
+  font-weight: 700;
+  color: var(--ink-soft);
+  font-size: 13px;
+  margin: 0 6px 8px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 8px;
+  border-radius: 18px;
+  background: #fff;
+}
+.row-new {
+  background: #e3f6ef;
+}
+.row-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-weight: 700;
+}
+.row-icon-mint {
+  background: #ebe5ff;
+  color: var(--violet);
+}
+.row-icon-blue {
+  background: #e3ecff;
+  color: #3e6be0;
+}
+.row-icon-green {
+  background: #ddf5ec;
+  color: #0e9e74;
+}
+.row-icon-pink {
+  background: #ffe6f0;
+  color: #c43d76;
+}
+.row-text b {
+  display: block;
+  font-size: 14px;
+}
+.row-text i {
+  font-style: normal;
+  color: var(--ink-soft);
+  font-size: 12.5px;
+}
+.row-amount {
+  font-weight: 700;
+  font-size: 14px;
+}
+.row-amount-pos {
+  color: #0e9e74;
+}
+
+/* --- Notificación y avance --- */
+.push {
+  position: absolute;
+  top: 12px;
+  left: 10px;
+  right: 10px;
+  display: grid;
+  grid-template-columns: 38px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 12px 30px rgba(20, 17, 31, 0.22);
+  font-size: 13px;
+  z-index: 3;
+}
+.push-text b {
+  display: block;
+  font-size: 14px;
+}
+.push-time {
+  align-self: start;
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+.toast {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 16px 34px rgba(20, 17, 31, 0.3);
+  z-index: 3;
+}
+.toast-title {
+  font-weight: 700;
+  font-size: 14px;
+}
+.toast-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 11.5px;
+}
+.toast-steps span {
+  padding-top: 8px;
+  background: linear-gradient(var(--mint), var(--mint)) top left / 100% 4px no-repeat;
+}

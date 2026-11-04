@@ -1,0 +1,319 @@
+/* Movo · landing. Colores y tipografía de la marca (los mismos de la app: web/src/presentation/styles/app.css). */
+:root {
+  --night: #120b3f;
+  --indigo: #1b1066;
+  --violet: #5a33e6;
+  --violet-soft: #8c6cff;
+  --mint: #6ee7b7;
+  --pink: #ff8fbd;
+  --cyan: #48cde0;
+  --paper: #f6f5fa;
+  --paper-step: #e9e6f2;
+  --ink: #14111f;
+  --ink-soft: #5d5873;
+  --white: #ffffff;
+
+  --font: 'Onest', 'Segoe UI', Roboto, Arial, sans-serif;
+  --gutter: clamp(16px, 3vw, 40px);
+  --radius: 999px;
+
+  --step-hero: clamp(54px, 7.6vw, 128px);
+  --step-display: clamp(52px, 9vw, 150px);
+  --step-title: clamp(36px, 4.6vw, 76px);
+  --step-lede: clamp(18px, 1.45vw, 22px);
+  --step-small: 15px;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 18px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'tnum' 1;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure {
+  margin: 0;
+}
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+a {
+  color: inherit;
+}
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--mint);
+  outline-offset: 3px;
+}
+::selection {
+  background: var(--mint);
+  color: var(--ink);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -80px;
+  z-index: 20;
+  padding: 12px 20px;
+  background: var(--mint);
+  color: var(--ink);
+  border-radius: var(--radius);
+  font-weight: 700;
+  text-decoration: none;
+}
+.skip:focus {
+  top: 12px;
+}
+
+/* ---------- Botones: planos, un solo color, totalmente redondos ---------- */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 17px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 200ms var(--ease-out),
+    color 200ms var(--ease-out);
+}
+.button:hover {
+  transform: translateY(-2px);
+}
+.button:active {
+  transform: scale(0.97);
+  transition-duration: 90ms;
+}
+.button-mint {
+  background: var(--mint);
+  color: var(--ink);
+}
+.button-mint:hover {
+  background: var(--white);
+}
+.button-light {
+  background: var(--white);
+  color: var(--ink);
+}
+.button-light:hover {
+  background: var(--mint);
+}
+.button-ghost {
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--white);
+}
+.button-ghost:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* ---------- Líneas con máscara (titulares que suben desde su línea base) ---------- */
+.line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.line-inner {
+  display: block;
+  will-change: transform;
+}
+
+/* ---------- Portada ---------- */
+.hero {
+  position: relative;
+  min-height: 100svh;
+  background: var(--indigo);
+  color: var(--white);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  isolation: isolate;
+}
+.hero-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  display: block;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  padding: 20px var(--gutter);
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  font-size: 26px;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+}
+.wordmark svg {
+  width: 38px;
+  height: 30px;
+  transition: transform 400ms var(--ease-spring);
+}
+.wordmark:hover svg {
+  transform: translateY(-3px) rotate(-6deg);
+}
+.nav-links {
+  display: flex;
+  gap: 28px;
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 500;
+}
+.nav-links a {
+  text-decoration: none;
+  opacity: 0.86;
+  transition: opacity 160ms;
+}
+.nav-links a:hover {
+  opacity: 1;
+  text-decoration: underline;
+  text-decoration-color: var(--mint);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+.nav-action {
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 20px;
+  font-size: 16px;
+}
+
+.hero-copy {
+  align-self: end;
+  padding: 0 var(--gutter) clamp(28px, 4vw, 56px);
+  max-width: 1100px;
+}
+.hero-title {
+  font-size: var(--step-hero);
+  font-weight: 700;
+  letter-spacing: -0.055em;
+  line-height: 0.92;
+}
+.hero-lede {
+  margin-top: 32px;
+  max-width: 36ch;
+  font-size: var(--step-lede);
+  line-height: 1.5;
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+.hero-note {
+  padding: 18px var(--gutter);
+  background: var(--night);
+  font-size: var(--step-small);
+  font-weight: 500;
+}
+
+@media (max-width: 860px) {
+  .nav-links {
+    display: none;
+  }
+  .nav-action {
+    margin-left: auto;
+  }
+  .hero-copy {
+    padding-top: 42svh;
+  }
+}
+
+/* ---------- Entradas al hacer scroll (sin JS el contenido se ve igual) ---------- */
+.js [data-reveal] {
+  opacity: 0;
+  transform: translateY(24px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+  .button,
+  .wordmark svg {
+    transition: none;
+  }
+}
+
+.github-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  flex: none;
+}

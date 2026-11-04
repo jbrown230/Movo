@@ -70,8 +70,18 @@ export default [
     rules: { 'react/jsx-uses-vars': 'error' }, // para que usar <App /> cuente como usar App
   },
 
+  // El landing (landing/): sitio estático en el navegador, sin React.
   {
-    files: ['web/src/**/*.{js,jsx}', 'server/src/**/*.js', 'shared/**/*.js', 'scripts/**/*.mjs'],
+    files: ['landing/src/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
+    files: ['landing/vite.config.js'],
+    languageOptions: { globals: { ...globals.node } },
+  },
+
+  {
+    files: ['web/src/**/*.{js,jsx}', 'server/src/**/*.js', 'shared/**/*.js', 'scripts/**/*.mjs', 'landing/src/**/*.js'],
     rules: readabilityRules,
   },
 
