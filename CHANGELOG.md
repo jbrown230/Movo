@@ -1,6 +1,10 @@
 # Cambios
 
-## Sin publicar (v0.4.0)
+## Sin publicar
+
+## v0.4.0
+
+Corrección de la lectura de Gmail: cuando una versión cambia la búsqueda (por ejemplo, un banco más), los dispositivos vuelven a revisar el historial en lugar de dejar sin leer los correos viejos.
 
 ### Lector de notificaciones
 
