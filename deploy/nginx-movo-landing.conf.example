@@ -1,0 +1,43 @@
+# Configuración de nginx para el landing de Movo, en un hostname aparte de la app.
+#
+# Cómo usarla:
+#   1. Copia este archivo a /etc/nginx/sites-available/movo-landing y cambia TU_DOMINIO_LANDING
+#      (por ejemplo movocr.xyz).
+#   2. Antes del certificado, deja solo el bloque del puerto 80 (comenta el de 443), actívalo
+#      con ln -s y recarga nginx. Luego consigue el certificado:
+#        certbot certonly --webroot -w /opt/movo/landing/dist -d TU_DOMINIO_LANDING
+#   3. Descomenta el bloque 443, revisa y recarga: nginx -t && systemctl reload nginx
+#
+# Nginx sirve los archivos del landing compilado (landing/dist), que deploy/update.sh genera.
+
+server {
+    listen 80;
+    server_name TU_DOMINIO_LANDING;
+    location /.well-known/acme-challenge/ { root /opt/movo/landing/dist; }
+    location / { return 301 https://$host$request_uri; }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name TU_DOMINIO_LANDING;
+    ssl_certificate     /etc/letsencrypt/live/TU_DOMINIO_LANDING/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/TU_DOMINIO_LANDING/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    gzip on;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    root /opt/movo/landing/dist;
+    index index.html;
+
+    location = /index.html { add_header Cache-Control "no-cache"; }
+    location /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        add_header X-Content-Type-Options nosniff always;
+    }
+    location / { try_files $uri $uri/ =404; }
+}

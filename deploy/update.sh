@@ -6,8 +6,8 @@
 #
 # Qué hace, en orden:
 #   1. Baja la última versión de la rama main (descarta cambios locales: el servidor no debe tener ninguno).
-#   2. Compila la app con Vite dentro de Docker (así el servidor no necesita tener Node instalado).
-#      El resultado queda en web/dist, que es la carpeta que sirve nginx.
+#   2. Compila la app y el landing con Vite dentro de Docker (así el servidor no necesita tener Node instalado).
+#      Quedan en web/dist (la app) y landing/dist (el landing), que son las carpetas que sirve nginx.
 #   3. Reconstruye y reinicia la API, Redis y MongoDB.
 #   4. Comprueba que la API responda.
 #
@@ -29,8 +29,8 @@ git fetch --prune origin
 git reset --hard origin/main
 echo "    versión: $(git log -1 --format='%h %s')"
 
-echo "==> 2/4 Compilando la app"
-docker run --rm -v "$PWD":/app -w /app node:22-alpine sh -c "npm ci --no-audit --no-fund && npm run build"
+echo "==> 2/4 Compilando la app y el landing"
+docker run --rm -v "$PWD":/app -w /app node:22-alpine sh -c "npm ci --no-audit --no-fund && npm run build && npm --prefix landing ci --no-audit --no-fund && npm run landing:build"
 
 echo "==> 3/4 Reiniciando los servicios"
 docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans
