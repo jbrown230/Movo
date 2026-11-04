@@ -123,7 +123,9 @@ En Android abre el dominio en Chrome y toca "Instalar app". En iPhone, en Safari
 
 ## Modo demo
 
-En la pantalla de bienvenida, "Ver el modo demo" carga datos de ejemplo en una base separada, para probar Movo sin conectar tu Gmail. Los correos del modo demo son sintéticos. Con tu Gmail conectado, Movo lee los correos de notificación de tus bancos y registra cada movimiento sola.
+En la pantalla de bienvenida, "Ver el modo demo" carga datos de ejemplo en una base separada y muestra un simulador del banco: haces un SINPE o una compra, llega la notificación y Movo la registra sola. Los correos del modo demo son sintéticos.
+
+![Simulador](docs/capturas/04-lectura-automatica.png)
 
 ## Pruebas y mediciones
 
