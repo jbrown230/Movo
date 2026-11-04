@@ -6,3 +6,4 @@ tests/fixtures
 docs
 *.md
 .tmp_old
+landing/package-lock.json

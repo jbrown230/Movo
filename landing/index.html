@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#1b1066" />
+    <title>Movo · Tus gastos se anotan solos</title>
+    <meta
+      name="description"
+      content="Movo lee los correos que tu banco ya te envía y los convierte en movimientos, en tu teléfono. Código abierto, gratis, hecho en la Universidad Nacional de Costa Rica."
+    />
+    <meta property="og:title" content="Movo · Tus gastos se anotan solos" />
+    <meta
+      property="og:description"
+      content="Gastos personales para Costa Rica que se registran solos a partir de las notificaciones bancarias. Código abierto, licencia MIT."
+    />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&display=swap" />
+    <link rel="stylesheet" href="./src/styles/base.css" />
+    <link rel="stylesheet" href="./src/styles/sections.css" />
+    <link rel="stylesheet" href="./src/styles/phone.css" />
+  </head>
+  <body>
+    <a class="skip" href="#como-funciona">Saltar al contenido</a>
+
+    <!-- ============ Portada ============ -->
+    <header class="hero" id="inicio">
+      <canvas class="hero-canvas" aria-hidden="true"></canvas>
+      <nav class="nav" aria-label="Principal">
+        <a class="wordmark" href="#inicio" aria-label="Movo, inicio">
+          <svg
+            viewBox="91 144 342 254"
+            fill="none"
+            stroke-width="48"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M136 366V200L252 322L368 206" stroke="#fff" />
+            <path d="M368 366V168M327 209L368 168L409 209" stroke="#6ee7b7" />
+          </svg>
+          <span>Movo</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#como-funciona">Cómo funciona</a></li>
+          <li><a href="#privacidad">Privacidad</a></li>
+          <li><a href="#tecnologia">Tecnología</a></li>
+          <li><a href="#equipo">Equipo</a></li>
+        </ul>
+        <a class="button button-light nav-action" href="https://github.com/jbrown230/Movo">
+          <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <path
+              d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"
+            />
+          </svg>
+          GitHub
+        </a>
+      </nav>
+
+      <div class="hero-copy">
+        <h1 class="hero-title">
+          <span class="line"><span class="line-inner">Tus gastos</span></span>
+          <span class="line"><span class="line-inner">se anotan solos.</span></span>
+        </h1>
+        <p class="hero-lede" data-hero-fade>
+          Movo lee los correos que tu banco ya te envía (compras con tarjeta y SINPE Móvil) y los convierte en
+          movimientos ordenados por categoría. Todo pasa en tu teléfono.
+        </p>
+        <div class="hero-actions" data-hero-fade>
+          <a class="button button-mint" href="https://84-46-253-165.sslip.io/" target="_blank" rel="noopener"
+            >Probar la demo</a
+          >
+          <a class="button button-ghost" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+      </div>
+      <p class="hero-note" data-hero-fade>
+        Para Costa Rica · BCR, BN, BAC, Davivienda y Banco Popular · Código abierto, licencia MIT
+      </p>
+    </header>
+
+    <main>
+      <!-- ============ Cómo funciona (escena fija que avanza con el scroll) ============ -->
+      <section class="how" id="como-funciona" aria-labelledby="how-title">
+        <div class="how-sticky">
+          <div class="how-text">
+            <h2 class="sr-only" id="how-title">Cómo funciona Movo</h2>
+            <div class="how-clauses" aria-live="polite">
+              <div class="clause is-active" data-stage="0">
+                <p class="clause-title">Pagas como siempre.</p>
+                <p class="clause-body">
+                  Haces un SINPE Móvil o pasas la tarjeta en la app de tu banco. Movo nunca mueve dinero.
+                </p>
+              </div>
+              <div class="clause" data-stage="1">
+                <p class="clause-title">El banco te escribe.</p>
+                <p class="clause-body">
+                  Segundos después llega el correo de notificación. Antes se quedaba perdido en la bandeja.
+                </p>
+              </div>
+              <div class="clause" data-stage="2">
+                <p class="clause-title">Movo lee el correo.</p>
+                <p class="clause-body">
+                  Con permiso de solo lectura, encuentra el monto, el comercio, la fecha y el tipo de movimiento.
+                </p>
+              </div>
+              <div class="clause" data-stage="3">
+                <p class="clause-title">Queda anotado.</p>
+                <p class="clause-body">
+                  El gasto entra en su categoría y el resumen del mes se actualiza. Sin teclear nada.
+                </p>
+              </div>
+            </div>
+
+            <div class="stages">
+              <label class="sr-only" for="stage-range">Etapa de la demostración</label>
+              <input id="stage-range" class="stage-range" type="range" min="0" max="300" step="1" value="0" />
+              <ol class="stage-names">
+                <li class="is-active">Recibido</li>
+                <li>Leído</li>
+                <li>Extraído</li>
+                <li>Registrado</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="how-stage">
+            <div class="phone" data-ui aria-hidden="true">
+              <div class="phone-screen">
+                <!-- Pantalla 1: la app del banco -->
+                <div class="screen screen-bank">
+                  <div class="bank-top">
+                    <span class="bank-badge">BAC</span>
+                    <span>SINPE Móvil</span>
+                  </div>
+                  <p class="bank-label">Enviar a</p>
+                  <p class="bank-value">Soda La Esquina</p>
+                  <p class="bank-sub">8888 0000</p>
+                  <p class="bank-label">Monto</p>
+                  <p class="bank-amount">₡12 500</p>
+                  <p class="bank-label">Detalle</p>
+                  <p class="bank-value">Almuerzo</p>
+                  <div class="bank-button">
+                    <span class="bank-send">Enviar</span><span class="bank-sent">Enviado ✓</span>
+                  </div>
+                </div>
+
+                <!-- Pantalla 2: el correo del banco -->
+                <div class="screen screen-mail">
+                  <div class="mail-head">
+                    <span class="bank-badge">BAC</span>
+                    <div>
+                      <p class="mail-from">BAC Credomatic</p>
+                      <p class="mail-subject">Notificación de transferencia SINPE Móvil</p>
+                    </div>
+                  </div>
+                  <div class="mail-body">
+                    <p>Estimado cliente:</p>
+                    <p>Le informamos que se realizó una transferencia SINPE Móvil desde su cuenta.</p>
+                    <dl class="mail-fields">
+                      <div class="field" data-field="monto">
+                        <dt>Monto</dt>
+                        <dd>12 500,00 CRC</dd>
+                      </div>
+                      <div class="field" data-field="destino">
+                        <dt>Destino</dt>
+                        <dd>Soda La Esquina</dd>
+                      </div>
+                      <div class="field" data-field="fecha">
+                        <dt>Fecha</dt>
+                        <dd>03/11/2026 12:41</dd>
+                      </div>
+                      <div class="field" data-field="tipo">
+                        <dt>Tipo</dt>
+                        <dd>SINPE Móvil enviado</dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                <!-- Pantalla 3: Movo -->
+                <div class="screen screen-movo">
+                  <div class="movo-head">
+                    <p class="movo-kicker">Gastado en noviembre</p>
+                    <p class="movo-total">₡<span class="movo-count">92 954</span><small>,90</small></p>
+                    <div class="movo-bar"><span></span></div>
+                    <p class="movo-left">de ₡350 000 de presupuesto</p>
+                  </div>
+                  <div class="movo-list">
+                    <p class="movo-day">Hoy</p>
+                    <div class="row row-new">
+                      <span class="row-icon row-icon-mint">⇄</span>
+                      <span class="row-text"><b>Soda La Esquina</b><i>Transferencias · BAC</i></span>
+                      <span class="row-amount">−₡12 500</span>
+                    </div>
+                    <div class="row">
+                      <span class="row-icon row-icon-blue">◐</span>
+                      <span class="row-text"><b>Gasolinera El Cruce</b><i>Transporte · BCR</i></span>
+                      <span class="row-amount">−₡18 000</span>
+                    </div>
+                    <div class="row">
+                      <span class="row-icon row-icon-green">◇</span>
+                      <span class="row-text"><b>Súper La Colina</b><i>Súper · BN</i></span>
+                      <span class="row-amount">−₡23 450</span>
+                    </div>
+                    <div class="row">
+                      <span class="row-icon row-icon-pink">＋</span>
+                      <span class="row-text"><b>Ana Rojas</b><i>Ingreso · SINPE</i></span>
+                      <span class="row-amount row-amount-pos">+₡20 000</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Los datos que Movo sacó del correo: vuelan hasta la fila nueva -->
+                <div class="chips">
+                  <span class="chip" data-target=".row-new .row-amount">₡12 500</span>
+                  <span class="chip" data-target=".row-new b">Soda La Esquina</span>
+                  <span class="chip" data-target=".movo-day">Hoy 12:41</span>
+                  <span class="chip" data-target=".row-new i">Transferencias</span>
+                </div>
+
+                <!-- La notificación que cae desde arriba -->
+                <div class="push">
+                  <span class="bank-badge">BAC</span>
+                  <span class="push-text"><b>BAC Credomatic</b>Notificación de transferencia SINPE Móvil</span>
+                  <span class="push-time">ahora</span>
+                </div>
+
+                <!-- Avance de la lectura, igual que en la app -->
+                <div class="toast">
+                  <p class="toast-title">Registrado: ₡12 500 en Transferencias</p>
+                  <div class="toast-steps">
+                    <span>Recibido</span><span>Leído</span><span>Extraído</span><span>Registrado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Lo que hace: un color por idea ============ -->
+      <section class="fields" aria-label="Lo que hace Movo">
+        <article class="field-chapter chapter-mint">
+          <p class="chapter-tab" aria-hidden="true">Cero tecleo</p>
+          <p class="chapter-text">
+            Cada compra con tarjeta y cada SINPE genera un correo del banco. Movo lo convierte en un movimiento con
+            monto, comercio, fecha y categoría. Si corriges una categoría, la recuerda como regla.
+          </p>
+          <h2 class="chapter-phrase">
+            <span class="line"><span class="line-inner">Cero</span></span
+            ><span class="line"><span class="line-inner">tecleo.</span></span>
+          </h2>
+        </article>
+        <article class="field-chapter chapter-pink is-mirrored" id="privacidad">
+          <p class="chapter-tab" aria-hidden="true">Privado por diseño</p>
+          <p class="chapter-text">
+            Gmail con permiso de solo lectura y búsqueda limitada a remitentes bancarios. Los correos se leen y se
+            guardan en tu teléfono; el servidor nunca los recibe. Borras todo desde Ajustes cuando quieras.
+          </p>
+          <h2 class="chapter-phrase">
+            <span class="line"><span class="line-inner">Privado</span></span
+            ><span class="line"><span class="line-inner">por diseño.</span></span>
+          </h2>
+        </article>
+        <article class="field-chapter chapter-cyan">
+          <p class="chapter-tab" aria-hidden="true">Funciona sin señal</p>
+          <p class="chapter-text">
+            Se instala desde el navegador como app, sin tienda. Una base SQLite vive dentro del teléfono y calcula el
+            resumen del mes con SQL real, aunque no tengas señal.
+          </p>
+          <h2 class="chapter-phrase">
+            <span class="line"><span class="line-inner">Funciona</span></span
+            ><span class="line"><span class="line-inner">sin señal.</span></span>
+          </h2>
+        </article>
+        <article class="field-chapter chapter-night is-mirrored">
+          <p class="chapter-tab" aria-hidden="true">Cinco bancos</p>
+          <p class="chapter-text">
+            BCR, BN, BAC, Davivienda y Banco Popular. Colones, dólares, euros y córdobas, con el tipo de cambio del
+            BCCR. Los SINPE entre tus propias cuentas no cuentan como gasto.
+          </p>
+          <h2 class="chapter-phrase">
+            <span class="line"><span class="line-inner">Cinco</span></span
+            ><span class="line"><span class="line-inner">bancos.</span></span>
+          </h2>
+        </article>
+      </section>
+
+      <!-- ============ Así se ve ============ -->
+      <section class="showcase" aria-labelledby="showcase-title">
+        <div class="showcase-index">
+          <h2 class="showcase-title" id="showcase-title" data-reveal>Así se ve Movo</h2>
+          <div class="showcase-list" role="tablist" aria-label="Pantallas de Movo">
+            <button
+              role="tab"
+              aria-selected="true"
+              data-shot="02-inicio"
+              data-caption="El mes de un vistazo: gastado, presupuesto y categorías."
+            >
+              Inicio
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              data-shot="04-lectura-automatica"
+              data-caption="Llega el aviso del banco y Movo lo registra solo."
+            >
+              Lectura automática
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              data-shot="03-simulador-sinpe"
+              data-caption="El modo demo trae un simulador del banco para probar sin cuenta."
+            >
+              Simulador
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              data-shot="05-bandeja"
+              data-caption="La bandeja muestra cada correo bancario y lo que se sacó de él."
+            >
+              Bandeja
+            </button>
+            <button
+              role="tab"
+              aria-selected="false"
+              data-shot="07-modo-oscuro"
+              data-caption="Modo oscuro, para las cuentas de fin de mes a medianoche."
+            >
+              Modo oscuro
+            </button>
+          </div>
+          <a
+            class="button button-mint showcase-action"
+            href="https://84-46-253-165.sslip.io/"
+            target="_blank"
+            rel="noopener"
+            >Probar la demo</a
+          >
+        </div>
+        <figure class="showcase-stage">
+          <img
+            class="showcase-shot"
+            src="./capturas/02-inicio.webp"
+            width="436"
+            height="908"
+            alt="Pantalla de inicio de Movo"
+            loading="lazy"
+          />
+          <figcaption class="showcase-caption">El mes de un vistazo: gastado, presupuesto y categorías.</figcaption>
+        </figure>
+      </section>
+
+      <!-- ============ Tecnología ============ -->
+      <section class="tech" id="tecnologia" aria-labelledby="tech-title">
+        <div class="tech-head">
+          <h2 class="tech-title" id="tech-title">
+            <span class="line"><span class="line-inner">Hecha con</span></span
+            ><span class="line"><span class="line-inner">piezas abiertas.</span></span>
+          </h2>
+          <p class="tech-lede" data-reveal>
+            El trabajo pesado ocurre en el teléfono. El servidor es mínimo: entrega la configuración, el tipo de cambio
+            del BCCR y, si lo activas, guarda un respaldo de los movimientos ya extraídos.
+          </p>
+        </div>
+
+        <svg class="arch" viewBox="0 0 1200 420" role="img" aria-labelledby="arch-title">
+          <title id="arch-title">
+            Arquitectura: Gmail entrega los correos al teléfono; el teléfono los lee y guarda en SQLite; la API mínima
+            usa Redis, MongoDB y el BCCR.
+          </title>
+          <g class="arch-links">
+            <path data-flow="gmail-phone" d="M210 120 H400" />
+            <path data-flow="phone-api" d="M650 120 H760" />
+            <path data-flow="phone-sqlite" d="M525 200 V300" />
+            <path data-flow="api-mongo" d="M880 200 V250 H1030 V300" />
+            <path data-flow="api-bccr" d="M880 200 V300" />
+            <path data-flow="api-redis" d="M880 200 V250 H730 V300" />
+          </g>
+          <g class="arch-packets" aria-hidden="true"></g>
+          <g class="arch-nodes">
+            <g data-node>
+              <rect x="40" y="70" width="170" height="100" />
+              <text x="125" y="115">Gmail API</text>
+              <text class="small" x="125" y="142">solo lectura</text>
+            </g>
+            <g data-node class="is-phone">
+              <rect x="400" y="50" width="250" height="150" />
+              <text x="525" y="105">Teléfono · PWA</text>
+              <text class="small" x="525" y="135">React · lector de correos</text>
+              <text class="small" x="525" y="160">service worker</text>
+            </g>
+            <g data-node>
+              <rect x="430" y="300" width="190" height="90" />
+              <text x="525" y="340">SQLite</text>
+              <text class="small" x="525" y="366">WebAssembly</text>
+            </g>
+            <g data-node class="is-api">
+              <rect x="760" y="70" width="240" height="130" />
+              <text x="880" y="120">API Node</text>
+              <text class="small" x="880" y="150">Express · token de Google</text>
+            </g>
+            <g data-node>
+              <rect x="650" y="300" width="160" height="90" />
+              <text x="730" y="340">Redis</text>
+              <text class="small" x="730" y="366">caché efímera</text>
+            </g>
+            <g data-node>
+              <rect x="820" y="300" width="120" height="90" />
+              <text x="880" y="340">BCCR</text>
+              <text class="small" x="880" y="366">tipo de cambio</text>
+            </g>
+            <g data-node>
+              <rect x="950" y="300" width="170" height="90" />
+              <text x="1035" y="340">MongoDB</text>
+              <text class="small" x="1035" y="366">respaldo opcional</text>
+            </g>
+          </g>
+        </svg>
+
+        <ul class="arch-legend">
+          <li data-reveal>
+            <span class="arch-swatch is-mail"></span>Los correos llegan hasta tu teléfono y ahí se quedan.
+          </li>
+          <li data-reveal>
+            <span class="arch-swatch is-server"></span>Al servidor solo va tu token de Google y, si lo activas, el
+            respaldo de los movimientos ya extraídos.
+          </li>
+        </ul>
+
+        <div class="tech-columns">
+          <div data-reveal>
+            <h3>En tu teléfono</h3>
+            <ul>
+              <li>React 18 y Vite</li>
+              <li>SQLite en WebAssembly (sql.js)</li>
+              <li>Gmail API, solo lectura</li>
+              <li>PWA con service worker</li>
+              <li>Exportación a Excel con ExcelJS</li>
+            </ul>
+          </div>
+          <div data-reveal>
+            <h3>En el servidor</h3>
+            <ul>
+              <li>Node.js con Express</li>
+              <li>Redis para caché y límites</li>
+              <li>MongoDB para el respaldo</li>
+              <li>Tipo de cambio del BCCR</li>
+              <li>Docker Compose y Caddy (HTTPS)</li>
+            </ul>
+          </div>
+          <div data-reveal>
+            <h3>Cómo está ordenado</h3>
+            <ul>
+              <li>Arquitectura por capas: dominio, casos de uso, infraestructura y presentación</li>
+              <li>Pruebas de lector, SQLite, interfaz, API, Redis y MongoDB</li>
+              <li>Integración continua en GitHub Actions</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="metrics" aria-label="Resultados del benchmark con 2000 correos sintéticos">
+          <p class="metric" data-reveal>
+            <span class="metric-value" data-count="100" data-suffix=" %">100 %</span
+            ><span class="metric-label">de precisión en monto, comercio, fecha y tipo, en 2000 correos de prueba</span>
+          </p>
+          <p class="metric" data-reveal>
+            <span class="metric-value">0,5 ms</span
+            ><span class="metric-label">para guardar cada correo leído en SQLite</span>
+          </p>
+          <p class="metric" data-reveal>
+            <span class="metric-value">&lt; 1 ms</span
+            ><span class="metric-label">para calcular el resumen del mes</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ============ Acceso libre ============ -->
+      <section class="open" id="acceso-libre" aria-labelledby="open-title">
+        <div class="open-copy">
+          <h2 class="open-title" id="open-title">
+            <span class="line"><span class="line-inner">Libre</span></span
+            ><span class="line"><span class="line-inner">y gratis.</span></span>
+          </h2>
+          <p data-reveal>
+            Movo es de acceso libre: código abierto con licencia MIT, sin anuncios, sin suscripción y sin vender datos.
+            Puedes leer cada línea, instalarlo en tu propio servidor y proponer la plantilla de tu banco.
+          </p>
+          <div class="open-links" data-reveal>
+            <a class="button button-light" href="https://github.com/jbrown230/Movo">Ver el repositorio</a>
+            <a class="button button-ghost" href="https://github.com/jbrown230/Movo/blob/main/docs/CONTRIBUIR.md"
+              >Guía para colaborar</a
+            >
+          </div>
+        </div>
+        <div class="terminal" data-reveal>
+          <div class="terminal-bar">
+            <span>Instalar en tu servidor</span>
+            <button class="copy" type="button" aria-label="Copiar los comandos">
+              <span class="copy-label">Copiar</span>
+            </button>
+          </div>
+          <pre><code><span class="code-line">git clone https://github.com/jbrown230/Movo.git</span>
+<span class="code-line">cd Movo</span>
+<span class="code-line">cp .env.example .env</span>
+<span class="code-line">docker compose up -d --build</span></code></pre>
+        </div>
+      </section>
+
+      <!-- ============ Equipo ============ -->
+      <section class="team" id="equipo" aria-labelledby="team-title">
+        <div class="team-copy">
+          <h2 class="team-title" id="team-title" data-reveal>Quiénes lo hicimos</h2>
+          <p data-reveal>
+            Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacional de Costa Rica,<br />Grupo
+            1.
+          </p>
+        </div>
+        <ul class="team-names">
+          <li data-reveal>
+            <span class="team-name"><span>Dylan</span> Mejía Ruiz</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Jose</span> Meza Álvarez</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Jordy</span> Palacios Brown</span>
+          </li>
+          <li data-reveal>
+            <span class="team-name"><span>Yader</span> Barahona Villarreal</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ============ Llamado ============ -->
+      <a class="cta" href="https://github.com/jbrown230/Movo">
+        <span class="cta-note">Abre el repositorio en GitHub: código, documentación y guía para desplegarlo.</span>
+        <svg class="cta-arrow" viewBox="0 0 48 48" aria-hidden="true"><path d="M12 36 L36 12 M16 12 H36 V32" /></svg>
+        <span class="cta-word">Clonar</span>
+      </a>
+    </main>
+
+    <footer class="footer">
+      <p class="footer-mark" aria-hidden="true">Movo</p>
+      <div class="footer-row">
+        <ul class="footer-places">
+          <li><a href="https://84-46-253-165.sslip.io/" target="_blank" rel="noopener">Probar la demo</a></li>
+          <li><a href="https://github.com/jbrown230/Movo">GitHub</a></li>
+          <li><a href="https://github.com/jbrown230/Movo/blob/main/README.md">Documentación</a></li>
+        </ul>
+        <div class="footer-cols">
+          <ul>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/docs/ARQUITECTURA.md">Arquitectura</a></li>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/docs/API.md">API</a></li>
+          </ul>
+          <ul>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/docs/DESPLIEGUE.md">Despliegue</a></li>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/docs/CONTRIBUIR.md">Contribuir</a></li>
+          </ul>
+          <ul>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/LICENSE">Licencia MIT</a></li>
+            <li><a href="https://github.com/jbrown230/Movo/blob/main/CHANGELOG.md">Cambios</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-legal">
+        <p>© 2026 Grupo 1 · Universidad Nacional · Licencia MIT.</p>
+        <a href="#inicio">Volver arriba</a>
+      </div>
+    </footer>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

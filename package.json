@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "landing": "npm --prefix landing run dev",
+    "landing:build": "npm --prefix landing run build",
     "start": "vite build && npm --prefix server run start:web",
     "test": "npm run test:core && npm run test:ui && npm --prefix server test",
     "test:core": "node --test \"tests/**/*.test.js\"",
