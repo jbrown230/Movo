@@ -175,8 +175,9 @@ button {
 .line {
   display: block;
   overflow: hidden;
-  padding-bottom: 0.08em;
-  margin-bottom: -0.08em;
+  /* Espacio para lo que baja de la línea base (y, g, p): la máscara no lo corta y el interlineado no cambia. */
+  padding-bottom: 0.26em;
+  margin-bottom: -0.26em;
 }
 .line-inner {
   display: block;

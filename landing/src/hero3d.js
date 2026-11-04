@@ -29,6 +29,7 @@ const ARROW_STROKES = [
   ],
 ];
 const NOTICE_COUNT = 22;
+const CARD_SWAY = 0.5; // cuánto se balancea cada aviso en su órbita: poco, para que nunca quede de espaldas
 const DUST_COUNT = 260;
 
 const toScene = ([svgX, svgY]) =>
@@ -78,8 +79,7 @@ function createNotices() {
   const textures = createNoticeTextures();
   const geometry = new THREE.PlaneGeometry(2.6, 0.98);
   const materials = textures.map(
-    (texture) =>
-      new THREE.MeshBasicMaterial({ map: texture, transparent: true, toneMapped: false, side: THREE.DoubleSide }),
+    (texture) => new THREE.MeshBasicMaterial({ map: texture, transparent: true, toneMapped: false }),
   );
   return Array.from({ length: NOTICE_COUNT }, (_, index) => {
     const mesh = new THREE.Mesh(geometry, materials[index % materials.length]);
@@ -153,7 +153,7 @@ function updateNotices(notices, { time, delta, scroll, intro }) {
       data.height * pull + Math.sin(time * 0.6 + data.angle) * 0.25,
       Math.sin(data.angle) * radius * 0.55 - 1,
     );
-    notice.rotation.set(data.tilt, -data.angle * 0.35 + Math.sin(time * 0.4) * 0.1, data.tilt * 0.5);
+    notice.rotation.set(data.tilt, Math.sin(data.angle) * CARD_SWAY + Math.sin(time * 0.4) * 0.1, data.tilt * 0.5);
     notice.scale.setScalar(Math.max(0.001, entry * (1 - scroll * 0.85)));
   }
 }
