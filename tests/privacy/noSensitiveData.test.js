@@ -192,6 +192,41 @@ test('los comercios de los correos de ejemplo no son de compras reales de nadie'
     assert.deepEqual(findings(FIXTURES, new RegExp(term.replace(/[+*]/g, '\\$&'), 'g')), []);
 });
 
+test('no hay direcciones IP de servidores ni hostnames que las lleven (sslip.io, nip.io)', () => {
+  // La IP del VPS no debe estar en el repositorio: se usan los dominios (movocr.xyz). Se permiten
+  // las direcciones locales y los rangos reservados para documentación (RFC 5737).
+  const SERVER_FILES = filesIn(
+    'landing',
+    'deploy',
+    '.github',
+    'web/public',
+    'Dockerfile',
+    'docker-compose.nginx.yml',
+    'vite.config.js',
+    'package.json',
+  );
+  const files = [...EVERYTHING, ...SERVER_FILES];
+  const ipPattern = /(?<![\d.])(?:\d{1,3}\.){3}\d{1,3}(?![\d.])/g;
+  const isAllowedIp = (text) =>
+    /^(?:127\.0\.0\.1|0\.0\.0\.0|192\.0\.2\.\d+|198\.51\.100\.\d+|203\.0\.113\.\d+)$/.test(text);
+  // Los trazos de los íconos SVG (d="M1.23.82.72…") parecen IPs: se quitan antes de buscar.
+  const unexpectedIps = files.flatMap((file) =>
+    [
+      ...readText(file)
+        .replace(/\sd="[^"]*"/g, '')
+        .matchAll(ipPattern),
+    ]
+      .filter((match) => !isAllowedIp(match[0]))
+      .map((match) => `${label(file)}: ${match[0]}`),
+  );
+  assert.deepEqual(unexpectedIps, [], 'direcciones IP');
+
+  // Hostnames que codifican una IP (1-2-3-4.sslip.io); el de documentación (203-0-113-x) sí se permite.
+  const dashedIpHost = /(?<![\d-])(?:\d{1,3}-){3}\d{1,3}\.(?:sslip|nip)\.io/g;
+  const unexpected = findings(files, dashedIpHost, (text) => text.startsWith('203-0-113-'));
+  assert.deepEqual(unexpected, [], 'hostnames sslip.io/nip.io con una IP');
+});
+
 test('hay archivos que revisar (la prueba no está vacía)', () => {
   assert.ok(EVERYTHING.length > 20);
   assert.ok(FIXTURES.length >= 5);
