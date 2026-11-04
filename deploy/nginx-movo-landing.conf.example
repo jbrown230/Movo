@@ -2,7 +2,7 @@
 #
 # Cómo usarla:
 #   1. Copia este archivo a /etc/nginx/sites-available/movo-landing y cambia TU_DOMINIO_LANDING
-#      (por ejemplo landing.84-46-253-165.sslip.io).
+#      (por ejemplo movocr.xyz; el bloque 80 puede listar también www.movocr.xyz).
 #   2. Antes del certificado, deja solo el bloque del puerto 80 (comenta el de 443), actívalo
 #      con ln -s y recarga nginx. Luego consigue el certificado:
 #        certbot certonly --webroot -w /opt/movo/landing/dist -d TU_DOMINIO_LANDING
