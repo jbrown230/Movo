@@ -84,6 +84,7 @@ function createNotices() {
   return Array.from({ length: NOTICE_COUNT }, (_, index) => {
     const mesh = new THREE.Mesh(geometry, materials[index % materials.length]);
     mesh.userData = {
+      index,
       angle: (index / NOTICE_COUNT) * Math.PI * 2 + Math.random() * 0.3,
       radius: 3.8 + Math.random() * 2.6,
       height: (Math.random() - 0.5) * 7,
@@ -132,25 +133,35 @@ function createStage(renderer) {
   return { scene, camera };
 }
 
-/** Coloca el grupo según la pantalla: a la derecha en escritorio, arriba en el teléfono. */
+/**
+ * Coloca el grupo según la pantalla: a la derecha en escritorio, arriba en el teléfono.
+ * `count` es cuántos avisos se ven, repartidos parejo (en el teléfono, pocos, para no tapar el texto);
+ * `orbit` y `spread` encogen el radio y la altura de las órbitas; `pixelRatio` alivia a los teléfonos.
+ */
 function layoutFor(width, height) {
   const aspect = width / height;
-  if (aspect < 0.9) return { x: 0, y: 3.2, scale: 0.5 };
-  if (aspect < 1.3) return { x: 2.6, y: 1.4, scale: 0.8 };
-  return { x: 5.8, y: 0.4, scale: 0.84 };
+  if (aspect < 0.9) return { x: 0, y: 3.4, scale: 0.5, count: 6, orbit: 0.62, spread: 0.5, pixelRatio: 1.5 };
+  if (aspect < 1.3) return { x: 2.6, y: 1.4, scale: 0.8, count: 11, orbit: 0.85, spread: 0.8, pixelRatio: 2 };
+  return { x: 5.8, y: 0.4, scale: 0.84, count: 18, orbit: 1, spread: 1, pixelRatio: 2 };
 }
 
-function updateNotices(notices, { time, delta, scroll, intro }) {
+/** Elige `count` de los avisos, repartidos parejo entre todos (así no quedan huecos en la órbita). */
+const isShown = (index, count) =>
+  Math.floor(((index + 1) * count) / NOTICE_COUNT) > Math.floor((index * count) / NOTICE_COUNT);
+
+function updateNotices(notices, { time, delta, scroll, intro, layout }) {
   for (const notice of notices) {
     const data = notice.userData;
+    notice.visible = isShown(data.index, layout.count);
+    if (!notice.visible) continue;
     data.angle += data.speed * delta;
     const arrival = THREE.MathUtils.clamp((intro - data.delay) / 1.2, 0, 1);
     const entry = 1 - (1 - arrival) ** 3;
     const pull = 1 - scroll * 0.92; // al bajar, los avisos se acercan al logo
-    const radius = data.radius * pull + (1 - entry) * 12;
+    const radius = data.radius * layout.orbit * pull + (1 - entry) * 12;
     notice.position.set(
       Math.cos(data.angle) * radius * 0.7,
-      data.height * pull + Math.sin(time * 0.6 + data.angle) * 0.25,
+      data.height * layout.spread * pull + Math.sin(time * 0.6 + data.angle) * 0.25,
       Math.sin(data.angle) * radius * 0.55 - 1,
     );
     notice.rotation.set(data.tilt, Math.sin(data.angle) * CARD_SWAY + Math.sin(time * 0.4) * 0.1, data.tilt * 0.5);
@@ -188,6 +199,8 @@ export function createHeroScene(canvas, { reducedMotion }) {
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
     layout = layoutFor(width, height);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, layout.pixelRatio));
+    renderer.setSize(width, height, false);
     if (reducedMotion) renderFrame();
   };
 
@@ -205,7 +218,7 @@ export function createHeroScene(canvas, { reducedMotion }) {
     world.rotation.set(smooth.y * 0.18, smooth.x * 0.35, 0);
     logo.rotation.y = Math.sin(time * 0.5) * 0.25 + smooth.scroll * Math.PI * 0.6;
     logo.position.y = Math.sin(time * 0.9) * 0.15;
-    updateNotices(notices, { time, delta, scroll: smooth.scroll, intro: reducedMotion ? 99 : time });
+    updateNotices(notices, { time, delta, scroll: smooth.scroll, intro: reducedMotion ? 99 : time, layout });
     renderer.render(scene, camera);
   }
 
