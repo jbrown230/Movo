@@ -766,6 +766,7 @@
   overflow: hidden;
 }
 .footer-mark {
+  pointer-events: none; /* su caja es más alta que las letras y taparía los enlaces de abajo */
   width: fit-content; /* mide lo que la palabra, para saber cuánto puede desplazarse */
   font-size: clamp(120px, 31vw, 520px);
   font-weight: 800;
@@ -774,6 +775,8 @@
   color: var(--violet-soft);
 }
 .footer-row {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 5fr 7fr;
   gap: 32px 20px;
