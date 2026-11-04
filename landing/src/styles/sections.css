@@ -348,7 +348,7 @@
   top: 72px;
   left: clamp(24px, 8%, 96px);
   width: min(441px, 70%);
-  border-radius: 34px;
+  /* Las capturas ya traen el marco del iPhone (con esquinas transparentes): no se recortan. */
   transition:
     opacity 220ms var(--ease-out),
     transform 420ms var(--ease-out);
@@ -390,7 +390,10 @@
   }
   .showcase-shot {
     top: 112px;
-    left: 16px;
+    /* Centrada: con left y right en 0 y márgenes automáticos, sin tocar el transform del cambio de pantalla. */
+    left: 0;
+    right: 0;
+    margin-inline: auto;
     width: 78%;
   }
   .showcase-caption {
