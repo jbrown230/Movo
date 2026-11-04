@@ -17,6 +17,7 @@ npm run preview   # sirve dist/ en http://localhost:4174
 | `src/hero3d.js` | Escena 3D de la portada (Three.js): el logo en volumen y los avisos bancarios que orbitan y caen hacia él al bajar. |
 | `src/noticeTextures.js` | Dibuja en canvas las notificaciones de ejemplo que flotan en la portada. |
 | `src/howItWorks.js` | La escena fija de "Cómo funciona": el teléfono pasa por Recibido, Leído, Extraído y Registrado con el scroll; el control deslizante también la mueve. |
+| `src/archFlow.js` | Los puntos de luz del diagrama: los correos se quedan en el teléfono y al servidor solo pasan el token y el respaldo. |
 | `src/reveals.js` | Entradas de cada sección (titulares con máscara, diagrama de arquitectura que se dibuja, contadores). |
 | `src/interactions.js` | Selector de capturas y botón para copiar los comandos. |
 | `public/capturas/` | Capturas de la app (copiadas de `docs/capturas`, en WebP). |

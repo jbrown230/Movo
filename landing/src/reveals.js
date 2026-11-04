@@ -1,8 +1,13 @@
 // Entradas de cada sección: titulares con máscara, párrafos que suben y el diagrama que se dibuja.
+// Se repiten: al volver a subir se deshacen, y al bajar de nuevo se ven otra vez.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { createArchFlow } from './archFlow.js';
 
 const EASE_OUT = 'expo.out';
+const REPLAY = 'play none none reverse';
+const DIAGRAM_DRAWN = 'bottom 80%'; // el diagrama queda dibujado apenas está entero en pantalla
+const STACK_QUERY = '(min-height: 700px)'; // la misma condición de la pila de capítulos en sections.css
 
 /** El titular de la portada sube línea por línea desde su línea base; luego aparecen el texto y los botones. */
 export function initHeroIntro({ reducedMotion }) {
@@ -17,15 +22,15 @@ export function initHeroIntro({ reducedMotion }) {
     .from(fades, { y: 20, opacity: 0, duration: 0.8, ease: EASE_OUT, stagger: 0.08 }, 0.65);
 }
 
-/** Titulares con máscara de los capítulos: cada línea sube cuando la sección entra en pantalla. */
+/** Titulares con máscara: cada línea sube cuando la sección entra en pantalla. */
 function revealMaskedHeadings() {
-  document.querySelectorAll('.chapter-phrase, .tech-title, .open-title').forEach((heading) => {
+  document.querySelectorAll('.tech-title, .open-title').forEach((heading) => {
     gsap.from(heading.querySelectorAll('.line-inner'), {
       yPercent: 105,
       duration: 1,
       ease: 'power4.out',
       stagger: 0.1,
-      scrollTrigger: { trigger: heading, start: 'top 88%', once: true },
+      scrollTrigger: { trigger: heading, start: 'top 88%', toggleActions: REPLAY },
     });
   });
 }
@@ -34,24 +39,58 @@ function revealMaskedHeadings() {
 function revealBlocks() {
   ScrollTrigger.batch('[data-reveal]', {
     start: 'top 90%',
-    once: true,
     onEnter: (batch) =>
       gsap.to(batch, { opacity: 1, y: 0, duration: 0.9, ease: EASE_OUT, stagger: 0.08, overwrite: true }),
+    onLeaveBack: (batch) => gsap.to(batch, { opacity: 0, y: 24, duration: 0.25, overwrite: true }),
   });
 }
 
-/** Los capítulos de color se acercan un poco al entrar, como pósters que se asientan. */
-function settleChapters() {
-  document.querySelectorAll('.field-chapter').forEach((chapter) => {
-    gsap.fromTo(
-      chapter.querySelector('.chapter-phrase'),
-      { xPercent: chapter.classList.contains('is-mirrored') ? 6 : -6 },
-      {
-        xPercent: 0,
-        ease: 'none',
-        scrollTrigger: { trigger: chapter, start: 'top bottom', end: 'bottom 60%', scrub: true },
-      },
-    );
+/** El párrafo entra de golpe desde su lado del capítulo, girando. */
+function throwInChapterText(chapter, side) {
+  gsap.from(chapter.querySelector('.chapter-text'), {
+    xPercent: 70 * side,
+    rotation: 5 * side,
+    opacity: 0,
+    duration: 0.9,
+    ease: EASE_OUT,
+    scrollTrigger: { trigger: chapter, start: 'top 85%', toggleActions: REPLAY },
+  });
+}
+
+/** La frase cae sobre el capítulo: llega enorme y girada, y rebota un poco al asentarse. */
+function slamChapterPhrase(phrase, side) {
+  gsap.from(phrase.querySelectorAll('.line-inner'), {
+    scale: 1.9,
+    yPercent: 70,
+    rotation: -7 * side,
+    opacity: 0,
+    transformOrigin: `${getComputedStyle(phrase).textAlign === 'right' ? 'right' : 'left'} bottom`,
+    duration: 0.85,
+    ease: 'back.out(1.6)',
+    stagger: 0.09,
+    scrollTrigger: { trigger: phrase, start: 'top 95%', toggleActions: REPLAY },
+  });
+}
+
+/** Mientras el capítulo siguiente sube encima, los elementos del actual salen empujados hacia arriba. */
+function pushOutChapter(chapter, next, side) {
+  gsap
+    .timeline({
+      defaults: { ease: 'none' },
+      scrollTrigger: { trigger: next, start: 'top bottom', end: 'top top', scrub: true },
+    })
+    .to(chapter.querySelector('.chapter-phrase'), { y: '-34vh', scale: 0.8, rotation: 4 * side }, 0)
+    .to(chapter.querySelector('.chapter-text'), { y: '-45vh', x: `${12 * side}vw` }, 0);
+}
+
+function animateChapters() {
+  const chapters = [...document.querySelectorAll('.field-chapter')];
+  const isStacked = window.matchMedia(STACK_QUERY).matches;
+  chapters.forEach((chapter, index) => {
+    const side = chapter.classList.contains('is-mirrored') ? -1 : 1;
+    throwInChapterText(chapter, side);
+    slamChapterPhrase(chapter.querySelector('.chapter-phrase'), side);
+    if (isStacked && chapters[index + 1]) pushOutChapter(chapter, chapters[index + 1], side);
   });
 }
 
@@ -65,7 +104,7 @@ function drawArchitecture() {
     gsap.set(path, { strokeDasharray: length, strokeDashoffset: length });
   });
   const timeline = gsap.timeline({
-    scrollTrigger: { trigger: diagram, start: 'top 80%', end: 'bottom 55%', scrub: 0.6 },
+    scrollTrigger: { trigger: diagram, start: 'top 80%', end: DIAGRAM_DRAWN, scrub: 0.6 },
   });
   timeline
     .from(diagram.querySelectorAll('[data-node]'), {
@@ -76,9 +115,36 @@ function drawArchitecture() {
       duration: 0.5,
     })
     .to(paths, { strokeDashoffset: 0, stagger: 0.1, duration: 0.6 }, 0.25);
+
+  // Ya dibujado, los puntos de luz corren solo mientras el diagrama está en pantalla.
+  ScrollTrigger.create({
+    trigger: diagram,
+    start: DIAGRAM_DRAWN,
+    end: 'bottom top',
+    animation: createArchFlow(diagram),
+    toggleActions: 'play pause resume pause',
+  });
 }
 
-/** Los números del benchmark cuentan desde cero la primera vez que se ven. */
+/** Al llegar al final de la página, "Movo" se desliza hasta el margen derecho siguiendo el scroll. */
+function slideFooterMark() {
+  const mark = document.querySelector('.footer-mark');
+  if (!mark) return;
+  const footer = mark.parentElement;
+  const distance = () => {
+    const { paddingLeft, paddingRight } = getComputedStyle(footer);
+    return footer.clientWidth - parseFloat(paddingLeft) - parseFloat(paddingRight) - mark.offsetWidth;
+  };
+  gsap.to(mark, {
+    x: distance,
+    ease: 'none',
+    scrollTrigger: { trigger: footer, start: 'top 70%', end: 'bottom bottom', scrub: 1, invalidateOnRefresh: true },
+  });
+  // El ancho de la palabra cambia cuando carga la letra de la marca.
+  document.fonts.ready.then(() => ScrollTrigger.refresh());
+}
+
+/** Los números del benchmark cuentan desde cero cada vez que entran en pantalla. */
 function countMetrics() {
   document.querySelectorAll('[data-count]').forEach((element) => {
     const target = Number(element.dataset.count);
@@ -87,7 +153,7 @@ function countMetrics() {
       value: target,
       duration: 1.6,
       ease: 'power3.out',
-      scrollTrigger: { trigger: element, start: 'top 85%', once: true },
+      scrollTrigger: { trigger: element, start: 'top 85%', toggleActions: 'restart none none reset' },
       onUpdate: () => {
         element.textContent = `${Math.round(counter.value)}${element.dataset.suffix || ''}`;
       },
@@ -99,7 +165,8 @@ export function initReveals({ reducedMotion }) {
   if (reducedMotion) return;
   revealMaskedHeadings();
   revealBlocks();
-  settleChapters();
+  animateChapters();
   drawArchitecture();
   countMetrics();
+  slideFooterMark();
 }

@@ -194,6 +194,9 @@
   font-size: 19px;
   font-weight: 500;
 }
+.chapter-phrase .line {
+  overflow: visible; /* la frase llega más grande que su línea: no se recorta al entrar */
+}
 .chapter-phrase {
   grid-column: 1 / -1;
   grid-row: 3;
@@ -226,6 +229,65 @@
   }
 }
 
+/* Los capítulos se apilan como una baraja: cada uno se queda arriba mostrando la franja con su
+   nombre, y el siguiente se detiene justo debajo hasta recorrer todos. Solo con pantalla alta, para
+   que ningún capítulo quede cortado mientras está fijo. */
+.chapter-tab {
+  display: none;
+}
+@media (min-height: 700px) and (prefers-reduced-motion: no-preference) {
+  .fields {
+    --chapter-tab: 56px;
+  }
+  /* Da tiempo de ver la pila completa antes de que se vaya toda junta. */
+  .fields::after {
+    content: '';
+    display: block;
+    height: 45svh;
+  }
+  .field-chapter {
+    position: sticky;
+    top: calc(var(--chapter-tab) * var(--chapter-index, 0));
+    min-height: calc(100svh - var(--chapter-tab) * var(--chapter-index, 0));
+    grid-template-rows: var(--chapter-tab) auto 1fr auto;
+    padding-top: 0;
+  }
+  .field-chapter:nth-child(2) {
+    --chapter-index: 1;
+  }
+  .field-chapter:nth-child(3) {
+    --chapter-index: 2;
+  }
+  .field-chapter:nth-child(4) {
+    --chapter-index: 3;
+  }
+  /* Margen arriba y no abajo: un margen inferior soltaría el capítulo antes de tiempo. */
+  .field-chapter + .field-chapter {
+    margin-top: 30svh;
+  }
+  .chapter-tab {
+    display: flex;
+    align-items: center;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    /* Tapa de borde a borde: el párrafo que sale empujado pasa por debajo de la franja. */
+    position: relative;
+    z-index: 1;
+    margin-inline: calc(-1 * var(--gutter));
+    padding-inline: var(--gutter);
+    background: inherit;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .chapter-text {
+    grid-row: 2;
+  }
+  .chapter-phrase {
+    grid-row: 4;
+  }
+}
+
 /* ---------- Así se ve ---------- */
 .showcase {
   display: grid;
@@ -233,6 +295,10 @@
   gap: 20px;
   padding: clamp(80px, 10vw, 180px) var(--gutter) 0;
   background: var(--paper);
+}
+.showcase-index,
+.showcase-stage {
+  min-width: 0; /* sin esto, la fila de nombres ensancha la columna y la página entera en móvil */
 }
 .showcase-title {
   font-size: var(--step-small);
@@ -265,6 +331,9 @@
 .showcase-list button[aria-selected='true'] {
   color: var(--ink);
   opacity: 1;
+}
+.showcase-action {
+  margin-top: 32px;
 }
 .showcase-stage {
   position: relative;
@@ -320,15 +389,16 @@
     min-height: 0;
   }
   .showcase-shot {
-    top: 24px;
+    top: 112px;
     left: 16px;
     width: 78%;
   }
   .showcase-caption {
-    right: 16px;
-    bottom: 16px;
-    max-width: 14ch;
+    position: static;
+    max-width: none;
+    padding: 16px;
     font-size: 16px;
+    text-align: left;
   }
 }
 
@@ -367,6 +437,10 @@
   stroke-width: 4;
   stroke-linecap: round;
 }
+.arch-links [data-flow='phone-api'],
+.arch-links [data-flow^='api-'] {
+  stroke: var(--pink); /* lo que llega al servidor, con el color de la leyenda */
+}
 .arch-nodes rect {
   fill: #2a1d86;
   rx: 22px;
@@ -388,6 +462,39 @@
   font-size: 17px;
   font-weight: 500;
   fill: #cfc8ff;
+}
+.arch-packet {
+  opacity: 0;
+}
+.arch-packet.is-mail {
+  fill: var(--mint);
+}
+.arch-packet.is-server {
+  fill: var(--pink);
+}
+.arch-legend {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 40px;
+  margin: clamp(-72px, -4vw, -24px) 0 clamp(72px, 8vw, 128px);
+}
+.arch-legend li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 14px;
+  max-width: 44ch;
+}
+.arch-swatch {
+  width: 18px;
+  height: 18px;
+  margin-top: 0.25em;
+  border-radius: 50%;
+}
+.arch-swatch.is-mail {
+  background: var(--mint);
+}
+.arch-swatch.is-server {
+  background: var(--pink);
 }
 .tech-columns {
   display: grid;
@@ -426,6 +533,7 @@
 
 @media (max-width: 860px) {
   .tech-head,
+  .arch-legend,
   .tech-columns,
   .metrics {
     grid-template-columns: 1fr;
@@ -550,23 +658,31 @@
   gap: 4px;
 }
 .team-names li {
+  width: fit-content;
   font-size: clamp(34px, 5.2vw, 88px);
   font-weight: 700;
   letter-spacing: -0.045em;
   line-height: 1.04;
   color: var(--ink-soft);
-  transition:
-    color 220ms,
-    transform 420ms var(--ease-spring);
+  transition: color 220ms;
 }
-.team-names li span {
+/* El efecto va en este elemento: GSAP ocupa el transform del <li> para su entrada. */
+.team-name {
+  display: inline-block;
+  transform-origin: left center;
+  transition: transform 320ms var(--ease-out);
+}
+.team-name span {
   color: var(--ink);
+  transition: color 220ms;
 }
 .team-names li:hover {
   color: var(--violet);
-  transform: translateX(14px);
 }
-.team-names li:hover span {
+.team-names li:hover .team-name {
+  transform: scale(1.06);
+}
+.team-names li:hover .team-name span {
   color: var(--violet);
 }
 
@@ -612,10 +728,11 @@
   stroke-width: 4;
   stroke-linecap: round;
   stroke-linejoin: round;
-  transition: transform 360ms var(--ease-spring);
+  transition: transform 450ms var(--ease-out);
 }
-.cta:hover .cta-arrow {
-  transform: translate(6px, -6px);
+.cta:hover .cta-arrow,
+.cta:focus-visible .cta-arrow {
+  transform: rotate(45deg) scale(1.6);
 }
 .cta-word {
   position: absolute;
@@ -649,6 +766,7 @@
   overflow: hidden;
 }
 .footer-mark {
+  width: fit-content; /* mide lo que la palabra, para saber cuánto puede desplazarse */
   font-size: clamp(120px, 31vw, 520px);
   font-weight: 800;
   letter-spacing: -0.075em;
@@ -707,5 +825,12 @@
   }
   .footer-legal {
     flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .team-name,
+  .cta-arrow {
+    transition: none;
   }
 }
