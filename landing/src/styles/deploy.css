@@ -1,7 +1,7 @@
 /* ---------- Despliegue: escena fija con dos ventanas en 3D (Google Cloud y la terminal del servidor) ---------- */
 .deploy {
   position: relative;
-  height: 620vh;
+  height: 700vh;
   background: var(--paper);
 }
 .deploy-sticky {
@@ -34,9 +34,9 @@
   max-width: 12ch;
   font-size: clamp(40px, 4.8vw, 80px);
 }
-.deploy .stage-names-six {
-  grid-template-columns: repeat(6, 1fr);
-  font-size: 14px;
+.deploy .stage-names-seven {
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 13px;
 }
 .deploy-guide {
   justify-self: start;
@@ -428,6 +428,68 @@
   opacity: 0;
 }
 
+/* --- Sitio de Indicadores Económicos del BCCR (ilustrativo) --- */
+.bc-nav {
+  display: flex;
+  gap: 18px;
+  font-size: 13px;
+  color: #5f6368;
+}
+.bc-profile {
+  padding: 3px 10px;
+  border-radius: var(--radius);
+  background: #e8f0fe;
+  color: #1a73e8;
+  font-weight: 700;
+}
+.bc-menu {
+  position: absolute;
+  right: 12px;
+  top: 40px;
+  z-index: 4;
+  display: grid;
+  min-width: 170px;
+  padding: 6px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(32, 33, 36, 0.28);
+  font-size: 13px;
+  opacity: 0;
+  visibility: hidden;
+}
+.bc-menu span {
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+.bc-menu-gen {
+  background: #e8f0fe;
+  color: #1a73e8;
+  font-weight: 700;
+}
+.bc-tokenbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  background: #fff;
+}
+.bc-token-text {
+  flex: 1;
+  min-width: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bc-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #5f6368;
+}
+
 /* --- Terminal del servidor --- */
 .term {
   position: absolute;
@@ -458,10 +520,26 @@
 .tenv > .ty:first-child::before {
   content: none;
 }
-.tenv {
+.tenv,
+.tcm {
   padding-left: 10px;
   border-left: 3px solid var(--violet-soft);
+}
+.tenv {
   color: #ffd166;
+}
+.tcm {
+  margin-bottom: 0;
+  color: #7d77b0;
+}
+.tcm::before {
+  content: '# ';
+}
+.tnano {
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #e8e6ff;
 }
 .to {
   color: #9d97c9;
@@ -546,11 +624,11 @@
 
 @media (max-width: 860px) {
   .deploy {
-    height: 700vh;
+    height: 780vh;
   }
   .deploy-sticky {
     grid-template-columns: 1fr;
-    grid-template-rows: 54svh 1fr;
+    grid-template-rows: 50svh 1fr;
   }
   .deploy-stage {
     --win-w: 430px;
@@ -565,18 +643,35 @@
   .deploy-main {
     align-self: start;
   }
+  .deploy-guide {
+    margin-top: 0;
+    min-height: 46px;
+  }
   .deploy-kicker {
     margin-bottom: 10px;
     font-size: 15px;
   }
   .deploy-clauses {
-    min-height: 0;
+    /* Los pasos son absolutos: se reserva el alto del más largo para que el botón de la guía no se pise con el texto. */
+    min-height: 178px;
   }
   .deploy .clause-title {
     font-size: 9vw;
     max-width: none;
   }
-  .deploy .stage-names-six {
-    font-size: 11px;
+  .deploy .stage-names-seven {
+    font-size: 10px;
+  }
+  .term {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 860px) and (max-height: 720px) {
+  .deploy-sticky {
+    grid-template-rows: 40svh 1fr;
+  }
+  .deploy-clauses {
+    min-height: 150px;
   }
 }
