@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="./src/styles/base.css" />
     <link rel="stylesheet" href="./src/styles/sections.css" />
     <link rel="stylesheet" href="./src/styles/phone.css" />
+    <link rel="stylesheet" href="./src/styles/deploy.css" />
   </head>
   <body>
     <a class="skip" href="#como-funciona">Saltar al contenido</a>
@@ -47,6 +48,7 @@
           <li><a href="#como-funciona">Cómo funciona</a></li>
           <li><a href="#privacidad">Privacidad</a></li>
           <li><a href="#tecnologia">Tecnología</a></li>
+          <li><a href="#despliegue">Despliegue</a></li>
           <li><a href="#equipo">Equipo</a></li>
         </ul>
         <a
@@ -461,6 +463,336 @@
             ><span class="metric-label">para calcular el resumen del mes</span>
           </p>
         </div>
+      </section>
+
+      <!-- ============ Despliegue (escena fija que avanza con el scroll) ============ -->
+      <section class="deploy" id="despliegue" aria-labelledby="deploy-title">
+        <div class="deploy-sticky">
+          <div class="deploy-text">
+            <div class="deploy-main">
+              <h2 class="deploy-kicker" id="deploy-title">Despliega Movo en tu servidor</h2>
+              <div class="deploy-clauses" aria-live="polite">
+                <div class="clause is-active" data-stage="0">
+                  <p class="clause-title">Crea el proyecto en Google.</p>
+                  <p class="clause-body">
+                    Entra a Google Cloud y crea un proyecto llamado Movo. Se hace una sola vez y es lo que permite
+                    iniciar sesión con Gmail.
+                  </p>
+                </div>
+                <div class="clause" data-stage="1">
+                  <p class="clause-title">Activa Gmail.</p>
+                  <p class="clause-body">
+                    Habilita la Gmail API y deja solo el permiso de lectura (gmail.readonly). Movo nunca envía ni borra
+                    correos.
+                  </p>
+                </div>
+                <div class="clause" data-stage="2">
+                  <p class="clause-title">Crea el ID de cliente.</p>
+                  <p class="clause-body">
+                    Aplicación web, con tu dominio como origen y como URI de redirección (con la barra final). Copia el
+                    ID: es lo único que Movo necesita de Google.
+                  </p>
+                </div>
+                <div class="clause" data-stage="3">
+                  <p class="clause-title">Saca el token del BCCR.</p>
+                  <p class="clause-body">
+                    Regístrate en el sitio de Indicadores Económicos del BCCR y genera el token en Mi perfil → Generar
+                    token. Es opcional: sin él, Movo usa un tipo de cambio de reserva.
+                  </p>
+                </div>
+                <div class="clause" data-stage="4">
+                  <p class="clause-title">Prepara el servidor.</p>
+                  <p class="clause-body">
+                    Clona el repositorio y completa el .env: dominio, ID y token. Tú decides CLOUD_SYNC (true activa el
+                    respaldo en la nube) y RATE_LIMIT_PER_MIN (solicitudes por minuto por persona).
+                  </p>
+                </div>
+                <div class="clause" data-stage="5">
+                  <p class="clause-title">Levanta todo.</p>
+                  <p class="clause-body">
+                    Un comando construye la app y arranca la API, Redis, MongoDB y Caddy, que consigue el HTTPS solo.
+                    ¿Ya tienes nginx? Usa docker-compose.nginx.yml, sin Caddy.
+                  </p>
+                </div>
+                <div class="clause" data-stage="6">
+                  <p class="clause-title">Movo en línea.</p>
+                  <p class="clause-body">
+                    Abre tu dominio en el teléfono e instala la app. ¿Ya usas nginx? La guía trae esa variante.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div class="stages">
+              <label class="sr-only" for="deploy-range">Paso del despliegue</label>
+              <input id="deploy-range" class="stage-range" type="range" min="0" max="300" step="1" value="0" />
+              <ol class="stage-names stage-names-seven">
+                <li class="is-active">Proyecto</li>
+                <li>Gmail</li>
+                <li>Cliente</li>
+                <li>BCCR</li>
+                <li>Servidor</li>
+                <li>Docker</li>
+                <li>En línea</li>
+              </ol>
+            </div>
+            <a
+              class="button deploy-guide"
+              href="https://github.com/jbrown230/Movo/blob/main/docs/DESPLIEGUE.md"
+              target="_blank"
+              rel="noopener"
+              >Leer la guía completa</a
+            >
+          </div>
+
+          <div class="deploy-stage">
+            <div class="deploy-floor" aria-hidden="true"></div>
+            <div class="deploy-rig" aria-hidden="true">
+              <!-- Ventana 1: la consola de Google Cloud, simulada -->
+              <div class="d-fit">
+                <div class="d-win d-win-a">
+                  <div class="d-bar">
+                    <span class="d-dots"><i></i><i></i><i></i></span>
+                    <span class="d-url">console.cloud.google.com</span>
+                  </div>
+                  <div class="gc">
+                    <div class="gc-top">
+                      <span class="gc-brand">Google Cloud</span>
+                      <span class="gc-project">
+                        <span class="gc-project-old">Seleccionar proyecto</span>
+                        <span class="gc-project-new">Movo</span>
+                      </span>
+                    </div>
+                    <div class="gc-body">
+                      <div class="gc-screen gc-new">
+                        <p class="gc-h">Proyecto nuevo</p>
+                        <p class="gc-label">Nombre del proyecto</p>
+                        <div class="gc-input" data-p="name"><span class="gc-typed"></span></div>
+                        <div class="gc-actions">
+                          <span class="gc-btn gc-btn-ghost">Cancelar</span>
+                          <span class="gc-btn" data-p="create">Crear</span>
+                        </div>
+                        <p class="gc-done">
+                          <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+                          Proyecto creado
+                        </p>
+                      </div>
+                      <div class="gc-screen gc-gmail">
+                        <p class="gc-h">Gmail API</p>
+                        <div class="gc-card">
+                          <span class="gc-mail-icon" aria-hidden="true"></span>
+                          <span class="gc-card-text"><b>Gmail API</b><small>Servicio de Google</small></span>
+                          <span class="gc-btn" data-p="enable">Habilitar</span>
+                          <span class="gc-enabled">
+                            <svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+                            Habilitada
+                          </span>
+                        </div>
+                        <p class="gc-label">Permisos de la app</p>
+                        <ul class="gc-scopes">
+                          <li><i></i>openid</li>
+                          <li><i></i>userinfo.email</li>
+                          <li><i></i>userinfo.profile</li>
+                          <li><i></i>gmail.readonly</li>
+                        </ul>
+                      </div>
+                      <div class="gc-screen gc-client">
+                        <p class="gc-h">Crear ID de cliente de OAuth</p>
+                        <div class="gc-pair">
+                          <span class="gc-label">Tipo</span>
+                          <span class="gc-select">Aplicación web</span>
+                        </div>
+                        <p class="gc-label">Origen autorizado de JavaScript</p>
+                        <div class="gc-input" data-p="origin"><span class="gc-typed"></span></div>
+                        <p class="gc-label">URI de redireccionamiento</p>
+                        <div class="gc-input" data-p="redirect"><span class="gc-typed"></span></div>
+                        <div class="gc-actions">
+                          <span class="gc-btn" data-p="create-client">Crear</span>
+                        </div>
+                        <div class="gc-result">
+                          <p class="gc-result-title">Cliente de OAuth creado</p>
+                          <div class="gc-id">
+                            <span class="gc-id-text">000000000000-tu-id.apps.googleusercontent.com</span>
+                            <span class="gc-btn gc-btn-small" data-p="copy">
+                              <span class="gc-copy-label">Copiar</span>
+                              <span class="gc-copy-done">¡Copiado!</span>
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="d-cursor">
+                      <i class="d-ripple"></i>
+                      <svg viewBox="0 0 24 24" width="22" height="22">
+                        <path d="M5 3l14 8-6 1.6L9.8 19z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ventana 2: el sitio de Indicadores Económicos del BCCR, simulado -->
+              <div class="d-fit">
+                <div class="d-win d-win-c">
+                  <div class="d-bar">
+                    <span class="d-dots"><i></i><i></i><i></i></span>
+                    <span class="d-url">gee.bccr.fi.cr/indicadoreseconomicos</span>
+                  </div>
+                  <div class="gc">
+                    <div class="gc-top">
+                      <span class="gc-brand">Indicadores Económicos</span>
+                      <span class="bc-nav">
+                        <span>Cuadros</span>
+                        <span class="bc-profile" data-p="profile">Mi perfil</span>
+                      </span>
+                      <span class="bc-menu">
+                        <span>Mis preferencias</span>
+                        <span class="bc-menu-gen" data-p="generate">Generar token</span>
+                      </span>
+                    </div>
+                    <div class="gc-body">
+                      <div class="gc-screen bc-signup">
+                        <p class="gc-h">Crea tu cuenta</p>
+                        <p class="gc-label">Correo electrónico</p>
+                        <div class="gc-input" data-p="email"><span class="gc-typed"></span></div>
+                        <div class="gc-actions">
+                          <span class="gc-btn" data-p="signup">Registrarme</span>
+                        </div>
+                        <p class="gc-done">
+                          <svg viewBox="0 0 16 16" width="16" height="16"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+                          Revisa tu correo y confirma la cuenta
+                        </p>
+                      </div>
+                      <div class="gc-screen bc-profile-screen">
+                        <p class="gc-h">Mi perfil</p>
+                        <p class="gc-label">Token de acceso</p>
+                        <div class="bc-tokenbox">
+                          <span class="bc-token-text">eyJ...tu-token</span>
+                          <span class="gc-btn gc-btn-small" data-p="bc-copy">
+                            <span class="gc-copy-label">Copiar</span>
+                            <span class="gc-copy-done">¡Copiado!</span>
+                          </span>
+                        </div>
+                        <p class="bc-hint">Se envía como Bearer token. Ve a tu .env: es BCCR_TOKEN.</p>
+                      </div>
+                    </div>
+                    <div class="d-cursor">
+                      <i class="d-ripple"></i>
+                      <svg viewBox="0 0 24 24" width="22" height="22">
+                        <path d="M5 3l14 8-6 1.6L9.8 19z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ventana 3: la terminal del servidor -->
+              <div class="d-fit">
+                <div class="d-win d-win-b">
+                  <div class="d-bar d-bar-dark">
+                    <span class="d-dots"><i></i><i></i><i></i></span>
+                    <span class="d-url">root@tu-vps: ~/Movo</span>
+                  </div>
+                  <div class="term">
+                    <div class="tg" data-stage="4" data-weight="0.38">
+                      <p class="tl"><span class="ty" data-text="ssh root@tu-vps"></span></p>
+                      <p class="tl to">Bienvenido a Ubuntu</p>
+                      <p class="tl">
+                        <span class="ty" data-text="git clone https://github.com/jbrown230/Movo.git"></span>
+                      </p>
+                      <p class="tl to">Cloning into 'Movo'... listo.</p>
+                      <p class="tl"><span class="ty" data-text="cd Movo &amp;&amp; cp .env.example .env"></span></p>
+                      <p class="tl"><span class="ty" data-text="nano .env"></span></p>
+                    </div>
+                    <div class="tg" data-stage="4" data-weight="0.62">
+                      <p class="tl tnano">GNU nano · .env</p>
+                      <p class="tl tcm">Dominio con HTTPS</p>
+                      <p class="tl tenv"><span class="ty" data-text="DOMAIN=movo.tudominio.com"></span></p>
+                      <p class="tl tcm">ID de cliente de Google</p>
+                      <p class="tl tenv">
+                        <span
+                          class="ty"
+                          data-text="GOOGLE_CLIENT_ID=000000000000-tu-id.apps.googleusercontent.com"
+                        ></span>
+                      </p>
+                      <p class="tl tcm">Respaldo en la nube: true lo activa, false no guarda datos</p>
+                      <p class="tl tenv"><span class="ty" data-text="CLOUD_SYNC=false"></span></p>
+                      <p class="tl tcm">Token del BCCR (tipo de cambio)</p>
+                      <p class="tl tenv"><span class="ty" data-text="BCCR_TOKEN=eyJ...tu-token"></span></p>
+                      <p class="tl tcm">Solicitudes por minuto, por persona</p>
+                      <p class="tl tenv"><span class="ty" data-text="RATE_LIMIT_PER_MIN=60"></span></p>
+                      <p class="tl tcm">Cambio de reserva del dólar (colones)</p>
+                      <p class="tl tenv"><span class="ty" data-text="FX_FALLBACK=510"></span></p>
+                      <p class="tl tcm">Cambio de reserva del córdoba (por dólar)</p>
+                      <p class="tl tenv"><span class="ty" data-text="NIO_PER_USD=36.6243"></span></p>
+                    </div>
+                    <div class="tg" data-stage="5">
+                      <p class="tl"><span class="ty" data-text="docker compose up -d --build"></span></p>
+                      <p class="tl to">[+] Compilando la app y la API</p>
+                      <p class="tl tbar"><span class="tbar-fill"></span></p>
+                      <p class="tl to tok">✔ Container movo-redis-1 Started</p>
+                      <p class="tl to tok">✔ Container movo-mongo-1 Started</p>
+                      <p class="tl to tok">✔ Container movo-api-1 Started</p>
+                      <p class="tl to tok">✔ Container movo-caddy-1 Started</p>
+                      <p class="tl tcm">Con nginx en el servidor, sin Caddy</p>
+                      <p class="tl to">docker compose -f docker-compose.nginx.yml up -d --build</p>
+                    </div>
+                    <div class="tg" data-stage="6">
+                      <p class="tl"><span class="ty" data-text="docker compose logs api"></span></p>
+                      <p class="tl to tok">Google configurado</p>
+                      <p class="tl"><span class="ty" data-text="curl https://movo.tudominio.com/api/health"></span></p>
+                      <p class="tl to tok">{"ok":true,"redis":true,"mongo":true}</p>
+                      <p class="tl to">Caddy: certificado HTTPS obtenido</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Al final: el sitio en línea, al frente de la terminal -->
+              <div class="d-fit">
+                <div class="d-live">
+                  <span class="d-live-lock">
+                    <svg viewBox="0 0 16 16" width="18" height="18">
+                      <rect x="3" y="7" width="10" height="7" rx="2" />
+                      <path d="M5.5 7V5.2a2.5 2.5 0 015 0V7" />
+                    </svg>
+                  </span>
+                  <span class="d-live-text"><b>https://movo.tudominio.com</b><small>Movo en línea</small></span>
+                  <span class="d-live-check">
+                    <svg viewBox="0 0 16 16" width="18" height="18"><path d="M3 8.5l3.2 3.2L13 4.8" /></svg>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Para quien usa lector de pantalla o no ve la animación -->
+        <ol class="sr-only">
+          <li>Crea un proyecto llamado Movo en console.cloud.google.com.</li>
+          <li>
+            Habilita la Gmail API y agrega los permisos openid, userinfo.email, userinfo.profile y gmail.readonly.
+          </li>
+          <li>
+            Crea un ID de cliente de OAuth de tipo aplicación web, con tu dominio como origen autorizado y como URI de
+            redireccionamiento.
+          </li>
+          <li>
+            Opcional: regístrate en el sitio de Indicadores Económicos del BCCR y genera un token en Mi perfil, Generar
+            token.
+          </li>
+          <li>
+            En el servidor, clona el repositorio, copia .env.example a .env y completa DOMAIN, GOOGLE_CLIENT_ID,
+            CLOUD_SYNC (respaldo en la nube: false por defecto, true para activarlo), BCCR_TOKEN, RATE_LIMIT_PER_MIN
+            (solicitudes por minuto por persona), FX_FALLBACK (dólar de reserva, en colones) y NIO_PER_USD (córdoba de
+            reserva, en córdobas por dólar).
+          </li>
+          <li>
+            Ejecuta docker compose up -d --build. Si el servidor ya usa nginx, usa docker compose -f
+            docker-compose.nginx.yml up -d --build, que no levanta Caddy.
+          </li>
+          <li>Comprueba https://tu-dominio/api/health y abre el dominio en el teléfono.</li>
+        </ol>
       </section>
 
       <!-- ============ Acceso libre ============ -->

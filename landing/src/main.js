@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lenis from 'lenis';
 import { initHowItWorks } from './howItWorks.js';
+import { initDeploy } from './deploy.js';
 import { initReveals, initHeroIntro } from './reveals.js';
 import { initShowcase, initCopyButton } from './interactions.js';
 
@@ -46,6 +47,7 @@ const lenis = initSmoothScroll();
 initHeroIntro({ reducedMotion: prefersReducedMotion });
 initHeroScene();
 initHowItWorks({ lenis, reducedMotion: prefersReducedMotion });
+initDeploy({ lenis, reducedMotion: prefersReducedMotion });
 initReveals({ reducedMotion: prefersReducedMotion });
 initShowcase();
 initCopyButton();

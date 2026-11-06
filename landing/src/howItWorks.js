@@ -3,6 +3,7 @@
 // recorrerlas a mano: moverlo desplaza la página hasta ese punto.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { createStageDisplay, linkRange } from './stageControls.js';
 
 const TOTAL = 10; // duración de la línea de tiempo, en unidades arbitrarias
 const STAGE_STARTS = [0, 1.6, 4, 7]; // dónde empieza cada etapa dentro de la línea de tiempo
@@ -146,44 +147,6 @@ function addRegistered(timeline) {
 
 const stageAt = (time) => STAGE_STARTS.findLastIndex((start) => time >= start);
 
-/** Muestra la frase y el nombre de la etapa activa. */
-function createStageDisplay() {
-  const clauses = [...document.querySelectorAll('.clause')];
-  const names = [...document.querySelectorAll('.stage-names li')];
-  let current = 0;
-  return (stage) => {
-    if (stage === current) return;
-    const previous = clauses[current];
-    const next = clauses[stage];
-    const direction = stage > current ? 1 : -1;
-    current = stage;
-    gsap.to(previous, { autoAlpha: 0, y: -24 * direction, duration: 0.25, ease: 'power2.in', overwrite: true });
-    gsap.fromTo(
-      next,
-      { autoAlpha: 0, y: 28 * direction },
-      { autoAlpha: 1, y: 0, duration: 0.5, delay: 0.12, ease: 'expo.out', overwrite: true },
-    );
-    clauses.forEach((clause, index) => clause.classList.toggle('is-active', index === stage));
-    names.forEach((name, index) => name.classList.toggle('is-active', index === stage));
-  };
-}
-
-/** El control deslizante sigue al scroll, y al moverlo lleva la página a esa etapa. */
-function linkRange(range, trigger, lenis) {
-  let dragging = false;
-  range.addEventListener('pointerdown', () => (dragging = true));
-  window.addEventListener('pointerup', () => (dragging = false));
-  range.addEventListener('input', () => {
-    const target = trigger.start + (Number(range.value) / RANGE_MAX) * (trigger.end - trigger.start);
-    if (lenis) lenis.scrollTo(target, { immediate: dragging, duration: 0.8 });
-    else window.scrollTo({ top: target });
-  });
-  return (progress) => {
-    range.style.setProperty('--fill', `${(progress * 100).toFixed(1)}%`);
-    if (!dragging) range.value = String(Math.round(progress * RANGE_MAX));
-  };
-}
-
 function buildScene({ section, phone, lenis, reducedMotion }) {
   const timeline = gsap.timeline({ paused: true, defaults: { ease: 'power2.out' } });
   addPaymentAndPush(timeline);
@@ -191,7 +154,7 @@ function buildScene({ section, phone, lenis, reducedMotion }) {
   addRegistered(timeline);
   timeline.fromTo(phone, { '--ry': -14 }, { '--ry': 10, duration: TOTAL, ease: 'none' }, 0);
 
-  const showStage = createStageDisplay();
+  const showStage = createStageDisplay(section);
   const range = section.querySelector('.stage-range');
   let updateRange = () => {};
   const trigger = ScrollTrigger.create({
@@ -205,7 +168,7 @@ function buildScene({ section, phone, lenis, reducedMotion }) {
       showStage(stageAt(self.progress * TOTAL));
     },
   });
-  updateRange = linkRange(range, trigger, lenis);
+  updateRange = linkRange(range, trigger, lenis, RANGE_MAX);
 }
 
 export function initHowItWorks({ lenis, reducedMotion }) {

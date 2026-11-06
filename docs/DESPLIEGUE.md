@@ -1,5 +1,7 @@
 # Despliegue en un VPS e instalación en el teléfono
 
+Hay una versión animada de estos pasos en https://movocr.xyz/#despliegue: la consola de Google Cloud y la terminal del servidor, paso a paso.
+
 ## 1. Dominio
 
 Crea un registro DNS tipo A (por ejemplo `movo.tudominio.com`) que apunte a la IP del VPS. HTTPS es obligatorio: sin él no se instala la PWA ni funciona el inicio de sesión de Google. Abre los puertos 80 y 443 en el firewall.
@@ -67,11 +69,46 @@ Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "C
 | `Error 403: access_denied` | El Gmail no está en **Usuarios de prueba** (paso 2.3.5). |
 | Sale el modo demo en vez de Google | `GOOGLE_CLIENT_ID` está vacío en el `.env` del servidor. Revisa `https://movo.tudominio.com/api/config`: `googleClientId` no debe ser `null`. Después de cambiar el `.env`, reinicia con `bash deploy/update.sh` o `docker compose up -d --build`. |
 
-## 3. Tipo de cambio del BCCR (opcional)
+## 3. Tipo de cambio del BCCR y el archivo `.env`
 
-Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica. Regístrate en el sitio de Indicadores Económicos del BCCR y genera un token en Mi Perfil → Generar token. Luego coloca ese token en `BCCR_TOKEN` en el `.env`. Si no lo haces, o si el token vence, se usa `FX_FALLBACK`.
+### 3.1 Sacar el token del BCCR (opcional)
+
+Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica para el tipo de cambio. Esa API pide un token personal:
+
+1. Abre el sitio de Indicadores Económicos del BCCR (https://gee.bccr.fi.cr/indicadoreseconomicos/) y **regístrate** con tu correo. Confirma el correo que te llega.
+2. Inicia sesión y entra a **Mi Perfil → Generar token**.
+3. Copia el token y pégalo en el `.env` como `BCCR_TOKEN`. Es una credencial: no la subas al repositorio ni la pegues en chats.
+4. Reinicia con `bash deploy/update.sh` (o `docker compose up -d --build`) y revisa `https://movo.tudominio.com/api/fx`: `source` debe decir "BCCR, tipo de cambio de venta".
+
+Sin token, o si el BCCR no responde, Movo usa `FX_FALLBACK`. El BCCR responde `401` si el token no existe o venció, `403` si la cuenta no tiene una suscripción válida y `429` si haces demasiadas consultas. `BCCR_EMAIL` no lo usa el servidor: con el token basta.
 
 Las compras en córdobas nicaragüenses se convierten solas. El BCCR no publica el córdoba, así que el servidor lee la tasa oficial de cada día del [servicio web del Banco Central de Nicaragua](https://www.bcn.gob.ni/servicio-web-tipo-de-cambio) y divide los colones por dólar del BCCR entre ese valor. Ese servicio solo acepta TLS 1.0, un protocolo antiguo, y el servidor lo permite únicamente para esa conexión. Si el servicio no responde, se usa `NIO_PER_USD` (por defecto 36,6243, la tasa oficial que el Banco Central de Nicaragua mantiene fija durante todo 2026); no hace falta tocarlo. El valor se guarda en Redis, hasta 6 horas, junto con el resto del tipo de cambio, y `GET /api/fx` dice en `nio.source` de dónde salió.
+
+### 3.2 El `.env` completo
+
+Copia `.env.example` a `.env` y completa lo que necesites. Este es un ejemplo del servidor, con valores de mentira:
+
+```bash
+DOMAIN=movo.tudominio.com
+GOOGLE_CLIENT_ID=000000000000-tu-id.apps.googleusercontent.com
+CLOUD_SYNC=false
+BCCR_TOKEN=eyJ...tu-token
+FX_FALLBACK=510
+RATE_LIMIT_PER_MIN=60
+NIO_PER_USD=36.6243
+```
+
+| Variable | Qué hace |
+| --- | --- |
+| `DOMAIN` | El dominio con HTTPS. Caddy lo usa para pedir el certificado. |
+| `GOOGLE_CLIENT_ID` | El ID de cliente OAuth de la sección 2. Vacío = la app arranca en modo demo. |
+| `CLOUD_SYNC` | Respaldo en la nube; lo decides tú. `false` (por defecto): el servidor **no guarda datos de ninguna persona** y la app oculta "Respaldo en la nube" de Ajustes. `true`: guarda un respaldo por persona en MongoDB (con `docker compose` ya viene el contenedor `mongo`; con otro servidor, pon `MONGO_URL`). |
+| `BCCR_TOKEN` | El token de la sección 3.1. Opcional. |
+| `FX_FALLBACK` | Tipo de cambio de reserva **del dólar**, en colones por dólar. Se usa si no hay token o el BCCR no responde. |
+| `RATE_LIMIT_PER_MIN` | Cuántas solicitudes por minuto puede hacer **cada persona** autenticada al servidor (por ejemplo, al sincronizar el respaldo). Cuenta en ventanas de un minuto; al pasarse, el servidor responde `429` ("Demasiadas solicitudes. Intenta en un minuto.") hasta el minuto siguiente. Por defecto, 60. Súbelo solo si tu uso real lo necesita. |
+| `NIO_PER_USD` | Tipo de cambio de reserva **del córdoba**, en córdobas por dólar (la tasa oficial fija de 2026). Se usa si el servicio del Banco Central de Nicaragua no responde. No hace falta tocarlo (ver el párrafo de córdobas, arriba). |
+
+El `.env` vive solo en el servidor: está en `.gitignore` y `update.sh` no lo toca. Después de cambiarlo, reinicia con `bash deploy/update.sh` o `docker compose up -d --build`.
 
 ## 4. VPS con Docker
 
