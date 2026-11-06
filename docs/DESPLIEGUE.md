@@ -102,11 +102,11 @@ NIO_PER_USD=36.6243
 | --- | --- |
 | `DOMAIN` | El dominio con HTTPS. Caddy lo usa para pedir el certificado. |
 | `GOOGLE_CLIENT_ID` | El ID de cliente OAuth de la sección 2. Vacío = la app arranca en modo demo. |
-| `CLOUD_SYNC` | Respaldo en la nube. `false` (por defecto): el servidor **no guarda datos de ninguna persona** y la app oculta "Respaldo en la nube" de Ajustes. `true`: guarda un respaldo por persona en MongoDB (con `docker compose` ya viene el contenedor `mongo`; con otro servidor, pon `MONGO_URL`). |
+| `CLOUD_SYNC` | Respaldo en la nube; lo decides tú. `false` (por defecto): el servidor **no guarda datos de ninguna persona** y la app oculta "Respaldo en la nube" de Ajustes. `true`: guarda un respaldo por persona en MongoDB (con `docker compose` ya viene el contenedor `mongo`; con otro servidor, pon `MONGO_URL`). |
 | `BCCR_TOKEN` | El token de la sección 3.1. Opcional. |
-| `FX_FALLBACK` | Colones por dólar que se usan si no hay token o el BCCR no responde. |
+| `FX_FALLBACK` | Tipo de cambio de reserva **del dólar**, en colones por dólar. Se usa si no hay token o el BCCR no responde. |
 | `RATE_LIMIT_PER_MIN` | Cuántas solicitudes por minuto puede hacer **cada persona** autenticada al servidor (por ejemplo, al sincronizar el respaldo). Cuenta en ventanas de un minuto; al pasarse, el servidor responde `429` ("Demasiadas solicitudes. Intenta en un minuto.") hasta el minuto siguiente. Por defecto, 60. Súbelo solo si tu uso real lo necesita. |
-| `NIO_PER_USD` | Córdobas por dólar de reserva. No hace falta tocarlo (ver el párrafo de córdobas, arriba). |
+| `NIO_PER_USD` | Tipo de cambio de reserva **del córdoba**, en córdobas por dólar (la tasa oficial fija de 2026). Se usa si el servicio del Banco Central de Nicaragua no responde. No hace falta tocarlo (ver el párrafo de córdobas, arriba). |
 
 El `.env` vive solo en el servidor: está en `.gitignore` y `update.sh` no lo toca. Después de cambiarlo, reinicia con `bash deploy/update.sh` o `docker compose up -d --build`.
 

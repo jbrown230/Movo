@@ -503,14 +503,15 @@
                 <div class="clause" data-stage="4">
                   <p class="clause-title">Prepara el servidor.</p>
                   <p class="clause-body">
-                    Clona el repositorio y completa el .env: dominio, ID y token, más CLOUD_SYNC (respaldo en la nube,
-                    apagado) y RATE_LIMIT_PER_MIN (solicitudes por minuto por persona).
+                    Clona el repositorio y completa el .env: dominio, ID y token. Tú decides CLOUD_SYNC (true activa el
+                    respaldo en la nube) y RATE_LIMIT_PER_MIN (solicitudes por minuto por persona).
                   </p>
                 </div>
                 <div class="clause" data-stage="5">
                   <p class="clause-title">Levanta todo.</p>
                   <p class="clause-body">
                     Un comando construye la app y arranca la API, Redis, MongoDB y Caddy, que consigue el HTTPS solo.
+                    ¿Ya tienes nginx? Usa docker-compose.nginx.yml, sin Caddy.
                   </p>
                 </div>
                 <div class="clause" data-stage="6">
@@ -714,14 +715,15 @@
                           data-text="GOOGLE_CLIENT_ID=000000000000-tu-id.apps.googleusercontent.com"
                         ></span>
                       </p>
-                      <p class="tl tcm">Respaldo en la nube: false = no guarda datos</p>
+                      <p class="tl tcm">Respaldo en la nube: true lo activa, false no guarda datos</p>
                       <p class="tl tenv"><span class="ty" data-text="CLOUD_SYNC=false"></span></p>
                       <p class="tl tcm">Token del BCCR (tipo de cambio)</p>
                       <p class="tl tenv"><span class="ty" data-text="BCCR_TOKEN=eyJ...tu-token"></span></p>
                       <p class="tl tcm">Solicitudes por minuto, por persona</p>
                       <p class="tl tenv"><span class="ty" data-text="RATE_LIMIT_PER_MIN=60"></span></p>
-                      <p class="tl tcm">Tipo de cambio de reserva</p>
+                      <p class="tl tcm">Cambio de reserva del dólar (colones)</p>
                       <p class="tl tenv"><span class="ty" data-text="FX_FALLBACK=510"></span></p>
+                      <p class="tl tcm">Cambio de reserva del córdoba (por dólar)</p>
                       <p class="tl tenv"><span class="ty" data-text="NIO_PER_USD=36.6243"></span></p>
                     </div>
                     <div class="tg" data-stage="5">
@@ -732,6 +734,8 @@
                       <p class="tl to tok">✔ Container movo-mongo-1 Started</p>
                       <p class="tl to tok">✔ Container movo-api-1 Started</p>
                       <p class="tl to tok">✔ Container movo-caddy-1 Started</p>
+                      <p class="tl tcm">Con nginx en el servidor, sin Caddy</p>
+                      <p class="tl to">docker compose -f docker-compose.nginx.yml up -d --build</p>
                     </div>
                     <div class="tg" data-stage="6">
                       <p class="tl"><span class="ty" data-text="docker compose logs api"></span></p>
@@ -779,10 +783,14 @@
           </li>
           <li>
             En el servidor, clona el repositorio, copia .env.example a .env y completa DOMAIN, GOOGLE_CLIENT_ID,
-            CLOUD_SYNC (respaldo en la nube, apagado por defecto), BCCR_TOKEN, RATE_LIMIT_PER_MIN (solicitudes por
-            minuto por persona), FX_FALLBACK y NIO_PER_USD.
+            CLOUD_SYNC (respaldo en la nube: false por defecto, true para activarlo), BCCR_TOKEN, RATE_LIMIT_PER_MIN
+            (solicitudes por minuto por persona), FX_FALLBACK (dólar de reserva, en colones) y NIO_PER_USD (córdoba de
+            reserva, en córdobas por dólar).
           </li>
-          <li>Ejecuta docker compose up -d --build.</li>
+          <li>
+            Ejecuta docker compose up -d --build. Si el servidor ya usa nginx, usa docker compose -f
+            docker-compose.nginx.yml up -d --build, que no levanta Caddy.
+          </li>
           <li>Comprueba https://tu-dominio/api/health y abre el dominio en el teléfono.</li>
         </ol>
       </section>
