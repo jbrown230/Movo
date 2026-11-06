@@ -1,5 +1,7 @@
 # Despliegue en un VPS e instalación en el teléfono
 
+Hay una versión animada de estos pasos en https://movocr.xyz/#despliegue: la consola de Google Cloud y la terminal del servidor, paso a paso.
+
 ## 1. Dominio
 
 Crea un registro DNS tipo A (por ejemplo `movo.tudominio.com`) que apunte a la IP del VPS. HTTPS es obligatorio: sin él no se instala la PWA ni funciona el inicio de sesión de Google. Abre los puertos 80 y 443 en el firewall.
