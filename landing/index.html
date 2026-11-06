@@ -720,8 +720,9 @@
                       <p class="tl tenv"><span class="ty" data-text="BCCR_TOKEN=eyJ...tu-token"></span></p>
                       <p class="tl tcm">Solicitudes por minuto, por persona</p>
                       <p class="tl tenv"><span class="ty" data-text="RATE_LIMIT_PER_MIN=60"></span></p>
-                      <p class="tl tcm">Tipo de cambio de reserva</p>
+                      <p class="tl tcm">Cambio de reserva del dólar (colones)</p>
                       <p class="tl tenv"><span class="ty" data-text="FX_FALLBACK=510"></span></p>
+                      <p class="tl tcm">Cambio de reserva del córdoba (por dólar)</p>
                       <p class="tl tenv"><span class="ty" data-text="NIO_PER_USD=36.6243"></span></p>
                     </div>
                     <div class="tg" data-stage="5">
@@ -780,7 +781,8 @@
           <li>
             En el servidor, clona el repositorio, copia .env.example a .env y completa DOMAIN, GOOGLE_CLIENT_ID,
             CLOUD_SYNC (respaldo en la nube, apagado por defecto), BCCR_TOKEN, RATE_LIMIT_PER_MIN (solicitudes por
-            minuto por persona), FX_FALLBACK y NIO_PER_USD.
+            minuto por persona), FX_FALLBACK (dólar de reserva, en colones) y NIO_PER_USD (córdoba de reserva, en
+            córdobas por dólar).
           </li>
           <li>Ejecuta docker compose up -d --build.</li>
           <li>Comprueba https://tu-dominio/api/health y abre el dominio en el teléfono.</li>
