@@ -10,3 +10,7 @@ web/dist/
 *.msg
 correos*.json
 landing/dist/
+
+# Bases SQLite recreadas con npm run db:sqlite: no se versionan.
+*.sqlite
+*.db

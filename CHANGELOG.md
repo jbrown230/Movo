@@ -4,6 +4,9 @@
 
 ### Agregado
 
+- **Ficha del portal** `portal.yml` en la raíz, con los datos del grupo para el portal de proyectos del curso. (#99)
+- **Carga con mongosh:** `npm run seed:mongosh` corre `scripts/mongo/cargar.mongosh.js` contra `MONGO_URL` del `.env`: pone el validador `$jsonSchema` y los índices, carga datos sintéticos reproducibles y muestra el resumen con un aggregation pipeline. (#99)
+- **Script para recrear la base SQLite:** `npm run db:sqlite` aplica las migraciones de la app y lee correos sintéticos en `data/movo.sqlite`. Los `.sqlite` y `.db` ya no se pueden versionar por error (`.gitignore`). (#99)
 - **Resumen del respaldo** en `GET /api/backup/summary`: cuántos movimientos, reglas, ajustes y metas guarda la persona, cuántos están eliminados y cuándo fue el último cambio. Lo calcula MongoDB con un aggregation pipeline (`$match` por `userId` → `$group` por `kind`) y se guarda en Redis como un hash que se invalida en cuanto una sincronización guarda algún cambio o la persona borra su respaldo. (#96)
 - **Mediciones de SQLite y MongoDB** con `npm run bench:sqlite` y `npm run bench:mongo`: el plan de cada consulta (`EXPLAIN QUERY PLAN` y `explain("executionStats")`) y sus tiempos con y sin índices, el respaldo de la base local con `db.export()` y el resumen con y sin Redis. Mediana de 3 corridas de 5 ejecuciones; resultados en `docs/MEDICIONES.md`. (#96)
 
