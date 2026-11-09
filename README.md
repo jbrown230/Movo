@@ -72,7 +72,7 @@ flowchart TB
 
 El servidor (`server/src`) tiene el mismo orden: `domain`, `application` y `adapters` (HTTP, MongoDB, Redis, BCCR, Google). La app y el servidor solo comparten el contrato de [`shared/`](shared/backupContract.js).
 
-Detalles, decisiones y escenarios de falla: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md). API: [docs/API.md](docs/API.md). Guía para colaborar: [docs/CONTRIBUIR.md](docs/CONTRIBUIR.md).
+Detalles y escenarios de falla: [docs/ARQUITECTURA.md](docs/ARQUITECTURA.md). Decisiones técnicas con sus alternativas: [docs/decisiones.md](docs/decisiones.md). Pruebas por caso (normal, error de conexión y datos inválidos): [docs/PRUEBAS.md](docs/PRUEBAS.md). API: [docs/API.md](docs/API.md). Guía para colaborar: [docs/CONTRIBUIR.md](docs/CONTRIBUIR.md).
 
 ## Probar en local
 

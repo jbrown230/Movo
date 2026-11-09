@@ -1,5 +1,12 @@
 # Cambios
 
+## Sin publicar
+
+### Documentación
+
+- **Pruebas documentadas por caso** en `docs/PRUEBAS.md`: cómo correrlas y las 336 pruebas agrupadas en caso normal, error de conexión y datos inválidos, con el archivo de cada una y qué comprueba. Incluye cuáles usan Redis y MongoDB de verdad y cómo activarlas en local. (#94)
+- **Decisiones técnicas en un solo lugar** en `docs/decisiones.md`: 27 decisiones reunidas de `docs/ARQUITECTURA.md`, `docs/MEDICIONES.md` y las bitácoras S1 a S4, cada una con qué se decidió, las alternativas descartadas, por qué y su costo. (#94)
+
 ## v0.9.0
 
 Release candidate: la app publicada en su dominio con un landing propio, la guía de despliegue completa y una corrección de la lectura de Gmail para los bancos nuevos.
