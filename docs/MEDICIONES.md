@@ -122,7 +122,7 @@ Con índices, la ejecución más lenta de cada medición quedó a menos del 10 %
 - **Donde más pesan los índices es en las búsquedas de un solo valor:** saber si un correo ya se leyó es unas 200 veces más rápido con `mails_by_message_id`, y los movimientos de un correo, unas 50 veces con `transactions_by_mail_key`. Sin índice, las dos recorren la tabla completa.
 - **Los índices no hacen más lenta la escritura, la hacen más rápida.** Se esperaba lo contrario, porque cada índice hay que mantenerlo al insertar. Pero leer un correo primero pregunta si ya se leyó, y sin índice esa pregunta recorre toda la tabla `mails`. Por eso leer un correo tarda 0,32 ms con índices y 2,1 ms sin ellos.
 - **En las listas la diferencia es menor (2–3 veces),** porque gran parte del tiempo se va en armar las 400 filas que se devuelven, no en encontrarlas.
-- **Con 10.000 movimientos todo sigue por debajo de 2 ms,** incluso sin índices. La diferencia crece con la tabla: un recorrido completo crece con el número de filas y una búsqueda por índice casi no. El benchmark a 100.000 correos es el issue [#31](https://github.com/jbrown230/Movo/issues/31).
+- **Con 10.000 movimientos todo sigue por debajo de 2 ms,** incluso sin índices. La diferencia crece con la tabla: un recorrido completo crece con el número de filas y una búsqueda por índice casi no. Cuánto crece está medido en "SQLite a 100, 10.000 y 100.000 correos", más abajo.
 
 **Decisión: se mantienen los tres índices.** Ninguno sobra: cada uno lo usa al menos una consulta frecuente, y no frenan la escritura.
 
@@ -137,6 +137,60 @@ En el teléfono, SQLite corre con sql.js, compilado a WebAssembly y en memoria. 
 | Tamaño de la base | 8,5 MB (10.000 movimientos con sus correos) |
 
 La base restaurada tiene los mismos 10.000 movimientos y pasa `PRAGMA integrity_check`. La mayor parte del tamaño son los cuerpos de los correos guardados en `mails`. Lo que este script no mide es la escritura en IndexedDB, porque solo existe en el navegador.
+
+## SQLite a 100, 10.000 y 100.000 correos
+
+Issue [#31](https://github.com/jbrown230/Movo/issues/31): el enunciado pide responder qué cambia al escalar. Es el mismo script de la sección anterior, corrido con tres cantidades de correos repartidos en un año:
+
+```bash
+npm run bench:sqlite -- 100
+npm run bench:sqlite -- 10000
+npm run bench:sqlite -- 100000
+```
+
+Misma metodología: 5 ejecuciones por medición, 3 corridas por escala, y la tabla da la mediana de las tres. Se corrió el 9 de noviembre de 2026 en la misma computadora. Las cifras de 10.000 son de una tanda nueva y difieren de las de la sección anterior en torno al 10 % o menos.
+
+### Resultados con los índices de la app
+
+Milisegundos por consulta (por correo en la ingesta).
+
+| Medición | 100 | 10.000 | 100.000 | Cómo crece de 10.000 a 100.000 |
+|---|---|---|---|---|
+| Leer un correo nuevo (ingesta) | 0,388 | 0,353 | 0,346 | No crece |
+| ¿Ya se leyó este correo? | 0,010 | 0,010 | 0,010 | No crece |
+| Movimientos de un correo | 0,016 | 0,015 | 0,015 | No crece |
+| Lista de movimientos (400) | 0,455 | 1,737 | 1,810 | No crece |
+| Lista de la última semana | 0,031 | 0,870 | 1,772 | 2 veces |
+| Resumen del mes | 0,010 | 0,153 | 2,944 | 19 veces |
+| Tamaño de la base | 152 KB | 8,5 MB | 86 MB | 10 veces |
+| Exportar la base (`db.export()`) | 0,08 | 1,30 | 16,2 | 12 veces |
+| Restaurarla | 0,07 | 1,40 | 16,3 | 12 veces |
+
+### Las mismas consultas sin índices
+
+| Medición | 100 | 10.000 | 100.000 | Veces más lenta que con índices, a 100.000 |
+|---|---|---|---|---|
+| Leer un correo nuevo (ingesta) | 0,362 | 2,095 | 18,131 | 52 |
+| ¿Ya se leyó este correo? | 0,017 | 1,652 | 18,238 | 1.800 |
+| Movimientos de un correo | 0,018 | 0,725 | 9,852 | 650 |
+| Lista de movimientos (400) | 0,513 | 5,376 | 20,745 | 11 |
+| Lista de la última semana | 0,036 | 1,856 | 14,825 | 8 |
+| Resumen del mes | 0,018 | 1,210 | 14,619 | 5 |
+
+### Qué cambia al escalar
+
+- **Con índices, lo que la app hace con cada correo no depende del tamaño de la base.** Leer un correo, saber si ya se leyó y buscar sus movimientos tardan lo mismo con 100 que con 100.000 correos. Un índice es un árbol B: encontrar un valor cuesta unos pocos pasos aunque la tabla crezca 1.000 veces.
+- **Sin índices, todo crece con la tabla.** Leer un correo pasa de 0,36 ms a 18 ms, porque antes de guardarlo hay que recorrer toda la tabla `mails` para saber si ya se leyó. Con 100.000 correos, guardar cada correo cuesta 50 veces más que con índices.
+- **La lista no crece porque se detiene en 400.** Con índice, SQLite recorre el índice de fechas ya ordenado y para en las 400 primeras filas, haya 10.000 o 100.000. Sin índice tiene que leerlas y ordenarlas todas.
+- **El resumen del mes sí crece, aun con índice.** El índice evita leer los otros once meses, pero los movimientos del mes hay que sumarlos todos, y con 100.000 correos al año el mes tiene unos 8.300. Por eso es lo único que crece con índice: 19 veces de 10.000 a 100.000, un poco más que los movimientos del mes (10 veces), porque los tiene que leer, agrupar y ordenar todos. Aun así son 3 ms.
+- **Con 100 correos los índices no hacen diferencia.** Todo tarda menos de medio milisegundo, y leer un correo es hasta un poco más rápido sin índices, porque no hay que mantenerlos. Es la única escala donde cuestan más de lo que ahorran.
+- **Lo que de verdad crece es el tamaño.** La base ocupa unos 0,9 KB por correo, casi todo el cuerpo guardado en `mails`, así que 100.000 correos son 86 MB. Exportarla tarda 16 ms, y la app la guarda completa en IndexedDB después de cada cambio, con todo eso en la memoria del teléfono.
+
+### Conclusión
+
+Para una persona, las consultas no son el límite. Unos 60 a 100 avisos del banco al mes son unos 1.000 correos al año: 10.000 correos son casi diez años, y en esa escala todo sigue por debajo de 2 ms. 100.000 correos no le pasarían a una persona; sirven para ver dónde está el límite.
+
+Si la base llegara a crecer tanto, el límite sería el tamaño y no la velocidad: guardar 86 MB completos en IndexedDB después de cada cambio. La mejora sería no guardar el cuerpo completo de los correos viejos, que ya no se necesitan una vez registrados. Con los volúmenes reales no hace falta, así que queda anotado y no se hace.
 
 ## MongoDB: sincronización y resumen del respaldo, con y sin índice
 
