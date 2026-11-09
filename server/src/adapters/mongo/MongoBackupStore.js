@@ -10,7 +10,7 @@
 
 import { MongoClient, MongoNetworkError, MongoServerSelectionError } from 'mongodb';
 import { ServiceUnavailableError } from '../../application/errors.js';
-import { nextServerSequence } from '../../domain/backupRecord.js';
+import { nextServerSequence, toBackupSummary } from '../../domain/backupRecord.js';
 import { backupRecordSchema } from './backupRecordSchema.js';
 
 const COLLECTION_NAME = 'backup_records';
@@ -18,6 +18,32 @@ const CONNECTION_TIMEOUT_MS = 4000;
 const DUPLICATE_KEY_ERROR_CODE = 11000;
 const NAMESPACE_EXISTS_ERROR_CODE = 48;
 const BACKUP_UNAVAILABLE_MESSAGE = 'Respaldo no disponible por ahora.';
+
+/**
+ * Aggregation pipeline del resumen del respaldo: una fila por tipo de registro, con cuántos están
+ * vigentes, cuántos eliminados y la fecha del cambio más reciente. El `$match` por `userId` va
+ * primero, así usa el índice { userId, kind, id } y solo lee los documentos de esa persona.
+ * Se exporta para medirlo con explain() (scripts/bench-mongo.mjs).
+ */
+export const backupSummaryPipeline = (userId) => [
+  { $match: { userId } },
+  {
+    $group: {
+      _id: '$kind',
+      active: { $sum: { $cond: ['$isDeleted', 0, 1] } },
+      deleted: { $sum: { $cond: ['$isDeleted', 1, 0] } },
+      lastUpdatedAt: { $max: '$updatedAt' },
+    },
+  },
+  { $project: { _id: 0, kind: '$_id', active: 1, deleted: 1, lastUpdatedAt: 1 } },
+  { $sort: { kind: 1 } },
+];
+
+/** La consulta de la sincronización: lo de una persona después del cursor, en orden. También la mide el script. */
+export const changesAfterQuery = (userId, cursor) => ({
+  filter: { userId, serverSequence: { $gt: cursor } },
+  sort: { serverSequence: 1 },
+});
 
 /** Errores del controlador que significan "MongoDB no responde", a diferencia de un error en los datos. */
 const isConnectionError = (error) =>
@@ -126,10 +152,11 @@ export function createMongoBackupStore(url, log = console) {
     },
 
     findChangesAfter(userId, cursor, limit) {
+      const { filter, sort } = changesAfterQuery(userId, cursor);
       return withCollection((records) =>
         records
-          .find({ userId, serverSequence: { $gt: cursor } }, { projection: { _id: 0, userId: 0 } })
-          .sort({ serverSequence: 1 })
+          .find(filter, { projection: { _id: 0, userId: 0 } })
+          .sort(sort)
           .limit(limit)
           .toArray(),
       );
@@ -137,6 +164,12 @@ export function createMongoBackupStore(url, log = console) {
 
     deleteAll(userId) {
       return withCollection(async (records) => (await records.deleteMany({ userId })).deletedCount);
+    },
+
+    summarize(userId) {
+      return withCollection(async (records) =>
+        toBackupSummary(await records.aggregate(backupSummaryPipeline(userId)).toArray()),
+      );
     },
 
     async ping() {

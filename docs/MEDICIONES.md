@@ -66,3 +66,157 @@ Límites de la medición: el cliente y la API corren en la misma máquina, así 
 Y su costo es bajo: un contenedor más en el `docker-compose.yml`, con la memoria limitada a 64 MB y sin guardar nada en disco. Si Redis se cae, la API sigue funcionando con la memoria (`ResilientCache`), así que no es un punto único de falla.
 
 **Decisión: mantener Redis.** Para un solo servidor con un solo proceso de la API, la caché en memoria bastaría para el tipo de cambio; Redis se justifica por compartir el estado entre reinicios y procesos, no por velocidad.
+
+## SQLite: consultas con y sin índices, y respaldo de la base
+
+Tarea de SQLite del enunciado: revisar con `EXPLAIN QUERY PLAN` que las consultas principales usan los índices, medirlas con y sin ellos, y medir el respaldo de la base.
+
+- Script: [`scripts/bench-sqlite.mjs`](../scripts/bench-sqlite.mjs).
+- Qué se mide: las consultas que la app hace más seguido, con el mismo SQL de `web/src/infrastructure/sqlite/*Repository.js`, sobre una base llenada con el lector real de la app.
+
+```bash
+npm run bench:sqlite            # 10.000 correos repartidos en un año
+npm run bench:sqlite -- 50000   # otra cantidad
+```
+
+No necesita nada más que Node: la base es sql.js en memoria, igual que en el teléfono.
+
+### Cómo se mide
+
+1. Se leen 10.000 correos sintéticos (semilla fija) con `readMail`, el mismo caso de uso de la app. Quedan 10.000 movimientos repartidos en 365 días.
+2. Se guarda una copia exacta de la base con `db.export()`. Cada escenario abre su propia copia, así los dos parten de los mismos datos:
+   - **Con los índices de la app:** `transactions_by_date`, `transactions_by_mail_key` y `mails_by_message_id` (`migrations.js`).
+   - **Sin índices:** los mismos datos después de `DROP INDEX` de los tres. Las claves primarias quedan, porque son la tabla misma.
+3. Cada consulta se repite durante al menos 200 ms y se toma el tiempo por consulta. Eso se hace **5 veces** y se reporta la mediana. El script se corrió **3 veces**; la tabla da la mediana de las tres corridas.
+4. Al final de cada escenario se leen 500 correos nuevos, para ver lo que cuestan los índices al escribir.
+
+### Plan de cada consulta (`EXPLAIN QUERY PLAN`)
+
+| Consulta | Dónde está | Con índices | Sin índices |
+|---|---|---|---|
+| Resumen del mes | `transactionRepository.summarizeMonth` | `SEARCH transactions USING INDEX transactions_by_date (occurred_at>? AND occurred_at<?)`, y un B-tree temporal para el `GROUP BY` y el `ORDER BY` | `SCAN transactions` |
+| Lista de movimientos (sin filtros) | `transactionRepository.list` | `SCAN transactions USING INDEX transactions_by_date`: recorre el índice ya ordenado y para en 400, sin ordenar | `SCAN transactions` y `USE TEMP B-TREE FOR ORDER BY`: lee todo y lo ordena |
+| Lista de la última semana | `transactionRepository.list` con fechas | `SEARCH … USING INDEX transactions_by_date (occurred_at>? AND occurred_at<?)` | `SCAN transactions` y ordena |
+| Movimientos de un correo | `transactionRepository.listForMail` | `SEARCH … USING INDEX transactions_by_mail_key (mail_key=?)` | `SCAN transactions` |
+| ¿Ya se leyó este correo? | `mailRepository`, antes de leer cada correo | `MULTI-INDEX OR`: busca por la clave primaria (`id=?`) y por `mails_by_message_id` (`message_id=?`) | `SCAN mails` |
+
+Todas las consultas usan su índice. La única que sigue recorriendo un índice entero es la lista sin filtros, y es a propósito: lo recorre en orden y se detiene en los 400 primeros.
+
+### Resultados
+
+10.000 correos, el 9 de noviembre de 2026, en una computadora con Windows 11 y Node 22. Mediana de 3 corridas, en milisegundos por consulta.
+
+| Consulta | Con índices | Sin índices | Veces más lenta sin índices |
+|---|---|---|---|
+| Resumen del mes | **0,151** | 1,221 | 8,1 |
+| Lista de movimientos (400) | **1,783** | 5,399 | 3,0 |
+| Lista de la última semana | **0,876** | 1,951 | 2,2 |
+| Movimientos de un correo | **0,016** | 0,773 | 48 |
+| ¿Ya se leyó este correo? | **0,009** | 1,794 | 199 |
+| Leer un correo nuevo (de 500) | **0,318** | 2,134 | 6,7 |
+
+Con índices, la ejecución más lenta de cada medición quedó a menos del 10 % de la más rápida. Sin índices hubo más variación (hasta un 30 % en la primera corrida), pero la mediana cambió poco de una corrida a otra.
+
+### Interpretación
+
+- **Donde más pesan los índices es en las búsquedas de un solo valor:** saber si un correo ya se leyó es unas 200 veces más rápido con `mails_by_message_id`, y los movimientos de un correo, unas 50 veces con `transactions_by_mail_key`. Sin índice, las dos recorren la tabla completa.
+- **Los índices no hacen más lenta la escritura, la hacen más rápida.** Se esperaba lo contrario, porque cada índice hay que mantenerlo al insertar. Pero leer un correo primero pregunta si ya se leyó, y sin índice esa pregunta recorre toda la tabla `mails`. Por eso leer un correo tarda 0,32 ms con índices y 2,1 ms sin ellos.
+- **En las listas la diferencia es menor (2–3 veces),** porque gran parte del tiempo se va en armar las 400 filas que se devuelven, no en encontrarlas.
+- **Con 10.000 movimientos todo sigue por debajo de 2 ms,** incluso sin índices. La diferencia crece con la tabla: un recorrido completo crece con el número de filas y una búsqueda por índice casi no. El benchmark a 100.000 correos es el issue [#31](https://github.com/jbrown230/Movo/issues/31).
+
+**Decisión: se mantienen los tres índices.** Ninguno sobra: cada uno lo usa al menos una consulta frecuente, y no frenan la escritura.
+
+### Respaldo de la base: el equivalente a `.backup`
+
+En el teléfono, SQLite corre con sql.js, compilado a WebAssembly y en memoria. No hay archivo en disco, así que no existen el modo WAL ni el comando `.backup` de la consola de SQLite. Su equivalente es `db.export()`, que devuelve la base completa como bytes (un archivo SQLite válido). La app lo guarda en IndexedDB un momento después de cada cambio (`web/src/infrastructure/sqlite/openUserDatabase.js`) y lo vuelve a abrir con `new SQL.Database(bytes)`.
+
+| Operación | Mediana (3 corridas) |
+|---|---|
+| Exportar la base (`db.export()`) | 1,35 ms |
+| Restaurarla (`new SQL.Database(bytes)`) | 1,37 ms |
+| Tamaño de la base | 8,5 MB (10.000 movimientos con sus correos) |
+
+La base restaurada tiene los mismos 10.000 movimientos y pasa `PRAGMA integrity_check`. La mayor parte del tamaño son los cuerpos de los correos guardados en `mails`. Lo que este script no mide es la escritura en IndexedDB, porque solo existe en el navegador.
+
+## MongoDB: sincronización y resumen del respaldo, con y sin índice
+
+Tarea de MongoDB del enunciado: mostrar con `explain()` que las consultas usan los índices, escribir un aggregation pipeline con sentido y medir una consulta representativa.
+
+- Script: [`scripts/bench-mongo.mjs`](../scripts/bench-mongo.mjs).
+- Qué se mide:
+  - la consulta de la sincronización (`findChangesAfter`), que es lo que más hace el servidor;
+  - el aggregation pipeline del resumen del respaldo (`backupSummaryPipeline`), los dos tal como están en `server/src/adapters/mongo/MongoBackupStore.js`.
+
+```bash
+npm run bench:mongo                # 200 personas × 500 registros = 100.000 documentos
+npm run bench:mongo -- 500 1000    # otra escala
+```
+
+Necesita `MONGO_URL` (y `REDIS_URL` para la última parte) en el `.env`. Trabaja en una base aparte, `movo_bench`, y la borra al terminar.
+
+### Cómo se mide
+
+1. Se cargan 200 personas con 500 registros cada una por el almacén real (`saveChanges`). Así la colección tiene su validador y sus índices, `{ userId, kind, id }` (único) y `{ userId, serverSequence }`. Casi todos los registros son movimientos, con algunas reglas, un ajuste y un 5 % eliminados.
+2. Se mide una persona con y sin índice. "Sin índice" no borra los índices: fuerza el recorrido de la colección con `hint({ $natural: 1 })`. Así los dos casos usan la misma colección y la misma consulta.
+3. Cada consulta se repite durante al menos 300 ms. Eso se hace **5 veces** y se reporta la mediana. El script se corrió **3 veces**; la tabla da la mediana de las tres corridas.
+
+### El aggregation pipeline: resumen del respaldo
+
+`GET /api/backup/summary` responde cuántos movimientos, reglas, ajustes y metas guarda la persona, cuántos están eliminados y cuándo fue el último cambio. Lo calcula MongoDB:
+
+```js
+[
+  { $match: { userId } }, // primero, para usar el índice y leer solo lo de esa persona
+  {
+    $group: {
+      _id: '$kind',
+      active: { $sum: { $cond: ['$isDeleted', 0, 1] } },
+      deleted: { $sum: { $cond: ['$isDeleted', 1, 0] } },
+      lastUpdatedAt: { $max: '$updatedAt' },
+    },
+  },
+  { $project: { _id: 0, kind: '$_id', active: 1, deleted: 1, lastUpdatedAt: 1 } },
+  { $sort: { kind: 1 } },
+];
+```
+
+Con los datos de la medición devuelve tres filas: 464 movimientos vigentes y 25 eliminados, 10 reglas y 1 ajuste.
+
+### Plan de cada consulta (`explain("executionStats")`)
+
+| Consulta | Con índice | Sin índice |
+|---|---|---|
+| Sincronización completa (cursor 0) | `IXSCAN (userId_1_serverSequence_1) → FETCH → LIMIT`: 500 claves y 500 documentos leídos para devolver 500. Sin `SORT`: el índice ya da el orden | `COLLSCAN → SORT`: 100.000 documentos leídos y ordenados en memoria para devolver 500 |
+| Sincronización a mitad (cursor en el registro del medio) | `IXSCAN`: 249 claves y 249 documentos para devolver 249. El cursor salta directo a su lugar en el índice | `COLLSCAN → SORT`: otra vez 100.000 documentos |
+| Resumen del respaldo (pipeline) | `IXSCAN (userId_1_serverSequence_1) → FETCH → $group → $project → $sort`: 500 documentos | `COLLSCAN → $group → …`: 100.000 documentos |
+
+Con índice, MongoDB lee exactamente los documentos que devuelve: ni uno de más. Para el pipeline, el planificador eligió `{ userId, serverSequence }` aunque `{ userId, kind, id }` también empieza por `userId`; con cualquiera de los dos lee solo los documentos de esa persona.
+
+### Resultados
+
+200 personas × 500 registros, el 9 de noviembre de 2026, en una computadora con Windows 11, Node 22 y MongoDB 7 en Docker Desktop. Mediana de 3 corridas, en milisegundos.
+
+| Consulta | Con índice | Sin índice (COLLSCAN) | Veces más lenta sin índice |
+|---|---|---|---|
+| Sincronización completa (cursor 0) | **4,78** | 37,45 | 7,8 |
+| Sincronización a mitad | **2,98** | 36,14 | 12,1 |
+| Resumen del respaldo (pipeline) | **1,62** | 33,24 | 20,5 |
+
+### Interpretación
+
+- **Sin índice, el costo depende de cuántos documentos hay en total, no de cuántos tiene la persona.** Cada consulta lee los 100.000 documentos de las 200 personas, aunque devuelva 249. Con índice, el costo depende solo de lo que se devuelve. Por eso la diferencia crece con el número de personas que usan el respaldo.
+- **El índice del cursor evita además el ordenamiento.** `{ userId, serverSequence }` entrega los registros ya en el orden que pide la sincronización. Sin él, MongoDB tiene que leer todo y ordenarlo en memoria (`SORT`).
+- **La sincronización completa tarda más que el pipeline** porque devuelve los 500 documentos al servidor; el pipeline los agrupa dentro de MongoDB y devuelve solo tres filas.
+
+**Decisión: se mantienen los dos índices.** El de `{ userId, serverSequence }` es el que usan la sincronización y el resumen. El único, `{ userId, kind, id }`, sostiene la regla de "gana el más reciente" (no puede haber dos versiones del mismo registro).
+
+### El resumen con y sin Redis
+
+El resumen se guarda en Redis como un hash (`bk:summary:<persona>`), con un campo por tipo de registro. Se invalida explícitamente: la clave se borra en cuanto una sincronización guarda algún cambio o la persona borra su respaldo. Ver "Claves en Redis" en [ARQUITECTURA.md](ARQUITECTURA.md). Se midió el caso de uso completo (`getBackupSummary`) con Redis 7, con la misma metodología:
+
+| Escenario | Mediana (3 corridas) |
+|---|---|
+| Sin caché: invalidar, correr el pipeline y guardar el hash | 3,24 ms |
+| Con el hash en Redis | **0,41 ms** |
+
+Con la caché, el resumen es unas 8 veces más rápido y no le cuesta nada a MongoDB. Como se invalida en cuanto cambia el respaldo, nunca muestra un resumen viejo; el vencimiento de una hora es solo una red de seguridad.

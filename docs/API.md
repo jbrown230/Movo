@@ -14,6 +14,7 @@ Los nombres y los valores permitidos viven en un solo archivo que usan la app y 
 | `GET /api/config` | No | Cómo está configurado el servidor |
 | `GET /api/fx` | No | Tipo de cambio del dólar |
 | `POST /api/sync` | Sí | Sincroniza el respaldo de la persona |
+| `GET /api/backup/summary` | Sí | Cuánto guarda el respaldo de la persona, por tipo |
 | `DELETE /api/me` | Sí | Borra todo el respaldo de la persona |
 
 **Token:** es el token de acceso de Google que ya tiene la app. Se envía así: `Authorization: Bearer <token>`. El servidor lo valida una sola vez con Google y guarda el resultado en la caché hasta que venza. No hay contraseñas ni sesiones propias.
@@ -174,6 +175,16 @@ El avance (ingresos menos gastos desde `startDay`) no viaja: cada teléfono lo c
 
 El servidor **no confía** en lo que llega: solo acepta los campos de arriba (el resto se descarta), recorta los textos al máximo, reemplaza los valores fuera de lo permitido por uno seguro y rechaza con `400` ids que no cumplan `^[A-Za-z0-9_\- .*:@]{1,120}$`, listas que no sean listas, `updatedAt` inválido o más de 500 cambios.
 
+## `GET /api/backup/summary`
+
+Cuántos registros vigentes guarda el respaldo de la persona del token, por tipo, cuántos están eliminados y la fecha (`updatedAt`, en milisegundos) del cambio más reciente.
+
+```json
+{ "activeByKind": { "transaction": 53, "category_rule": 4, "setting": 2 }, "deleted": 3, "lastUpdatedAt": 1767000000000 }
+```
+
+Un tipo sin registros no aparece en `activeByKind`; con el respaldo vacío, la respuesta es `{ "activeByKind": {}, "deleted": 0, "lastUpdatedAt": 0 }`. Lo calcula un aggregation pipeline de MongoDB y se guarda en Redis hasta que el respaldo cambia (ver "Claves en Redis" en [ARQUITECTURA.md](ARQUITECTURA.md)).
+
 ## `DELETE /api/me`
 
 Borra todo lo que el servidor guarda de la persona del token. No toca lo que hay en el teléfono.
@@ -203,7 +214,7 @@ En MongoDB, una colección `backup_records`:
 - `kind` es `transaction`, `category_rule`, `setting` o `savings_goal`.
 - `serverSequence` es el número creciente que se usa de cursor.
 - Toda consulta lleva `userId` en el filtro: los datos de cada persona están separados.
-- Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`.
+- Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`. Su efecto, medido con `explain()`, está en [MEDICIONES.md](MEDICIONES.md).
 
 ## Cómo se prueba
 

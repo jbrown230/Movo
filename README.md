@@ -133,6 +133,8 @@ En la pantalla de bienvenida, "Ver el modo demo" carga datos de ejemplo en una b
 npm test             # lector, SQLite local, casos de uso, interfaz React, contrato, arquitectura, API, Redis y MongoDB*
 npm run check        # lint, formato, pruebas y compilación (lo mismo que corre el CI)
 npm run bench        # precisión del lector y tiempos de SQLite con 2000 correos sintéticos
+npm run bench:sqlite # EXPLAIN QUERY PLAN y consultas de SQLite con y sin índices, y db.export()
+npm run bench:mongo  # explain() de MongoDB con y sin índice, y el resumen con y sin Redis (usa MONGO_URL y REDIS_URL)
 npm run dataset -- 50 > correos.json   # dataset sintético reproducible
 npm run seed:mongo -- 200 7            # carga ese dataset en el respaldo de MongoDB (usa MONGO_URL del .env)
 ```

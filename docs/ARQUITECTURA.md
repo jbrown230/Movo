@@ -179,7 +179,8 @@ Una colección `backup_records` con documentos `{ userId, kind, id, updatedAt, s
 
 - `kind` dice qué es el registro: `transaction`, `category_rule` o `setting`.
 - `data` trae el contenido del registro tal como lo envió el teléfono, ya validado contra una lista blanca.
-- Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización.
+- Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización. `explain()` confirma que la sincronización y el resumen los usan y leen solo los documentos que devuelven ([MEDICIONES.md](MEDICIONES.md)).
+- **Aggregation pipeline** (`backupSummaryPipeline` en `MongoBackupStore.js`): el resumen del respaldo de `GET /api/backup/summary`. Filtra por `userId` con el índice, agrupa por `kind` y cuenta vigentes y eliminados, con la fecha del último cambio. Se guarda en Redis como un hash y se invalida cuando cambia el respaldo (ver "Claves en Redis").
 - **Validador `$jsonSchema`** (`server/src/adapters/mongo/backupRecordSchema.js`), que se aplica al conectar: exige la envoltura completa y sin campos de más, y la forma de `data` según `kind` (monedas, tipos y direcciones permitidos, largos máximos, y solo los ajustes que se sincronizan). Se arma con los mismos valores de `shared/backupContract.js` que usa la API, así las dos validaciones no pueden contradecirse. MongoDB rechaza un documento que no cumple (error 121) aunque llegue sin pasar por la API.
 - **Carga de datos de prueba:** `npm run seed:mongo -- <cantidad> <semilla> [usuario]` carga correos sintéticos reproducibles por el mismo camino que los reales (lector, sincronización, validación de la API y caso de uso del servidor). La URI sale solo de `MONGO_URL` en el `.env`.
 
@@ -209,14 +210,33 @@ En desarrollo y en el despliegue con Docker se usa un MongoDB local (el servicio
 
 ## Claves en Redis
 
-Redis guarda solo datos efímeros que se pueden reconstruir. Todas las claves son de tipo string y vencen solas; ninguna guarda datos de los movimientos.
+Redis guarda solo datos efímeros que se pueden reconstruir. Todas las claves vencen solas y ninguna guarda datos de los movimientos. Se usan tres estructuras, cada una donde encaja:
 
-| Clave | Qué guarda | Vence en | Dónde se define |
-|---|---|---|---|
-| `fx:usd` | Tipo de cambio vigente del dólar y del euro, con el de cada uno de los últimos 60 días, como JSON `{ rate, date, source, euro, history }` | 6 horas; 30 minutos si es el valor de reserva, para reintentar pronto | `application/getExchangeRate.js` |
-| `fx:usd:last` | Último tipo de cambio obtenido del BCCR, por si la fuente falla | 30 días | `application/getExchangeRate.js` |
-| `tok:<sha256 del token>` | Id de la persona dueña de un token de Google ya validado. Se guarda un resumen del token, nunca el token completo | Lo que le quede de vida al token, máximo 1 hora | `application/authenticateUser.js` |
-| `rl:<quién>:<minuto>` | Contador de solicitudes de ese minuto. `<quién>` es el id de la persona, o `ip:<dirección>` en las rutas sin sesión | 70 segundos | `application/rateLimiter.js` |
+- **String con vencimiento** para valores que se leen enteros: el tipo de cambio y los tokens ya validados.
+- **Sorted set** para el límite de solicitudes: cada solicitud es un miembro con su hora como puntaje, así se cuentan las del último minuto exacto (ventana deslizante) borrando las viejas con `ZREMRANGEBYSCORE` y contando con `ZCARD`, todo en un `MULTI`.
+- **Hash** para el resumen del respaldo: un campo por tipo de registro, que se escribe y se lee en una sola operación (`HSET`, `HGETALL`).
+
+| Clave | Estructura | Qué guarda | Vence en | Dónde se define |
+|---|---|---|---|---|
+| `fx:usd` | String | Tipo de cambio vigente del dólar y del euro, con el de cada uno de los últimos 60 días, como JSON `{ rate, date, source, euro, history }` | 6 horas; 30 minutos si es el valor de reserva, para reintentar pronto | `application/getExchangeRate.js` |
+| `fx:usd:last` | String | Último tipo de cambio obtenido del BCCR, por si la fuente falla | 30 días | `application/getExchangeRate.js` |
+| `tok:<sha256 del token>` | String | Id de la persona dueña de un token de Google ya validado. Se guarda un resumen del token, nunca el token completo | Lo que le quede de vida al token, máximo 1 hora | `application/authenticateUser.js` |
+| `rl:<quién>` | Sorted set | Las solicitudes del último minuto, con su hora como puntaje. `<quién>` es el id de la persona, o `ip:<dirección>` en las rutas sin sesión | 60 segundos después de la última solicitud | `application/rateLimiter.js` |
+| `bk:summary:<persona>` | Hash | Resumen del respaldo: `kind:transaction`, `kind:category_rule`… (vigentes por tipo), `deleted` y `lastUpdatedAt` | Se borra en cuanto cambia el respaldo; 1 hora como red de seguridad | `application/getBackupSummary.js` |
+
+### Invalidación de la caché
+
+Casi todas las claves vencen solas porque el dato de origen cambia a su propio ritmo (el BCCR publica una vez al día, el token vence cuando Google dice). El resumen del respaldo es distinto: cambia cada vez que la persona sincroniza, y un resumen viejo sería un dato falso. Por eso se **invalida explícitamente**:
+
+- `syncBackup` borra `bk:summary:<persona>` cuando guardó al menos un cambio. Si la sincronización no trajo nada nuevo (o solo cambios más viejos que los guardados), el resumen sigue siendo cierto y se conserva.
+- `deleteUserBackup` lo borra al vaciar el respaldo.
+- La siguiente consulta a `GET /api/backup/summary` corre el aggregation pipeline otra vez y guarda el hash nuevo.
+
+Si Redis estuvo caído, el resumen pudo quedar en la memoria del proceso; `ResilientCache.delete` lo borra en los dos lados para que no reaparezca si Redis vuelve a fallar.
+
+### Límite por minuto: ventana deslizante
+
+Antes, el límite contaba con un `INCR` en una clave por minuto del reloj (`rl:<quién>:<minuto>`). Con esa ventana fija, alguien podía hacer el doble del límite en dos segundos: todo al final de un minuto y todo al empezar el siguiente. El sorted set cuenta las solicitudes de los últimos 60 segundos, sean del minuto que sean. El costo es memoria: guarda un miembro por solicitud en vez de un número, como máximo el límite (60 por persona) más las rechazadas de ese minuto.
 
 Las claves no llevan prefijo de grupo porque Movo usa su propio Redis (el del `docker-compose.yml`). Para usar un Redis compartido habría que anteponer un prefijo a todas.
 
@@ -282,3 +302,5 @@ Las caídas de Redis y MongoDB se prueban de verdad, no con dobles: `server/test
 `npm run bench:fx` mide la latencia de `/api/fx` sin caché, con caché en memoria y con Redis; los resultados y la conclusión están en [MEDICIONES.md](MEDICIONES.md).
 
 `npm run bench` mide la precisión del lector por campo, el tiempo de lectura por correo, el tiempo de ingesta en SQLite, el tiempo del resumen mensual y el costo de descartar duplicados. Con `node scripts/bench-parser.mjs 10000` se ve el comportamiento al escalar.
+
+`npm run bench:sqlite` muestra el `EXPLAIN QUERY PLAN` de las consultas principales y las mide con y sin índices, junto con el respaldo de la base (`db.export()`). `npm run bench:mongo` hace lo mismo en MongoDB con `explain("executionStats")`: la sincronización y el aggregation pipeline, con y sin índice, y el resumen con y sin Redis. Los resultados están en [MEDICIONES.md](MEDICIONES.md).

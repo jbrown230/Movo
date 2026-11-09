@@ -65,6 +65,16 @@ export function createHttpApp({ useCases, staticDirectory = '' }) {
     }),
   );
 
+  app.get(
+    '/api/backup/summary',
+    requireBackupEnabled,
+    requireUser,
+    handle(async (request, response) => {
+      const { activeByKind, deleted, lastUpdatedAt } = await useCases.getBackupSummary(request.userId);
+      response.json({ activeByKind, deleted, lastUpdatedAt });
+    }),
+  );
+
   app.delete(
     '/api/me',
     requireBackupEnabled,

@@ -186,6 +186,23 @@ test('límite de solicitudes por persona', async () => {
   assert.deepEqual(codes, [200, 200, 200, 429, 429]);
 });
 
+test('el resumen del respaldo cuenta lo de la persona y se actualiza después de sincronizar o borrar', async () => {
+  const api = await startApi();
+  const summary = async (token) => (await api.call('/backup/summary', { token })).body;
+
+  assert.deepEqual(await summary(TOKENS.ana), { activeByKind: {}, deleted: 0, lastUpdatedAt: 0 });
+  await api.call(
+    '/sync',
+    sync(TOKENS.ana, { changes: { transactions: [transaction('m1', 5), transaction('m2', 7)] } }),
+  );
+  await api.call('/sync', sync(TOKENS.beto, { changes: { transactions: [transaction('m9', 9)] } }));
+  assert.deepEqual(await summary(TOKENS.ana), { activeByKind: { transaction: 2 }, deleted: 0, lastUpdatedAt: 7 });
+
+  await api.call('/me', { method: 'DELETE', token: TOKENS.ana });
+  assert.deepEqual(await summary(TOKENS.ana), { activeByKind: {}, deleted: 0, lastUpdatedAt: 0 });
+  assert.equal((await api.call('/backup/summary')).status, 401);
+});
+
 test('tipo de cambio: valor de referencia si no hay BCCR', async () => {
   const api = await startApi();
   assert.equal((await api.call('/fx')).body.rate, 510);

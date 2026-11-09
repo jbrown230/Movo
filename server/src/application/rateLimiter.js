@@ -1,23 +1,20 @@
-// Límite de solicitudes por minuto. Cuenta en una ventana fija de un minuto.
+// Límite de solicitudes por minuto, con ventana deslizante: cuenta las solicitudes de los últimos
+// 60 segundos, no las del minuto del reloj. Con una ventana fija, alguien podía hacer el doble del
+// límite en dos segundos (al final de un minuto y al empezar el siguiente).
 
 import { TooManyRequestsError } from './errors.js';
 
-const MS_PER_MINUTE = 60_000;
-const COUNTER_LIFETIME_SECONDS = 70; // un poco más que el minuto, para que el contador no venza antes
+const WINDOW_SECONDS = 60;
 
 /** @param {{ cache: import('./ports.js').Cache }} dependencies */
 export function createRateLimiter({ cache }) {
   /**
-   * Cuenta una solicitud y lanza TooManyRequestsError si `who` ya pasó el límite este minuto.
+   * Cuenta una solicitud y lanza TooManyRequestsError si `who` ya pasó el límite en el último minuto.
    *
    * @param {{ who: string, limitPerMinute: number, message: string }} options
    */
   return async function ensureWithinLimit({ who, limitPerMinute, message }) {
-    const currentMinute = Math.floor(Date.now() / MS_PER_MINUTE);
-    const requestsThisMinute = await cache.incrementWindowCounter(
-      `rl:${who}:${currentMinute}`,
-      COUNTER_LIFETIME_SECONDS,
-    );
-    if (requestsThisMinute > limitPerMinute) throw new TooManyRequestsError(message);
+    const requestsLastMinute = await cache.countInSlidingWindow(`rl:${who}`, WINDOW_SECONDS);
+    if (requestsLastMinute > limitPerMinute) throw new TooManyRequestsError(message);
   };
 }

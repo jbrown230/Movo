@@ -1,11 +1,12 @@
 // Caché en la memoria del propio proceso. Es el respaldo cuando Redis no está disponible
-// (más lenta y por proceso, pero el servidor sigue funcionando).
+// (más lenta y por proceso, pero el servidor sigue funcionando). Imita las estructuras de
+// RedisCache: valores con vencimiento, ventanas deslizantes y hashes.
 
 const MAX_ENTRIES = 5000;
 
 /** @returns {Omit<import('../../application/ports.js').Cache, 'isSharedCacheReady'>} */
 export function createInMemoryCache() {
-  /** @type {Map<string, {value: string|number, expiresAt: number}>} */
+  /** @type {Map<string, {value: unknown, expiresAt: number}>} */
   const entries = new Map();
 
   function readLive(key) {
@@ -18,22 +19,41 @@ export function createInMemoryCache() {
     return entry;
   }
 
+  function store(key, value, ttlSeconds) {
+    if (entries.size > MAX_ENTRIES) entries.clear(); // límite simple para no crecer sin fin
+    entries.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
+  }
+
   return {
     async get(key) {
       return readLive(key)?.value ?? null;
     },
 
     async set(key, value, ttlSeconds) {
-      if (entries.size > MAX_ENTRIES) entries.clear(); // límite simple para no crecer sin fin
-      entries.set(key, { value, expiresAt: Date.now() + ttlSeconds * 1000 });
+      store(key, value, ttlSeconds);
     },
 
-    async incrementWindowCounter(key, ttlSeconds) {
-      const current = readLive(key);
-      const count = (Number(current?.value) || 0) + 1;
-      const expiresAt = current?.expiresAt ?? Date.now() + ttlSeconds * 1000;
-      entries.set(key, { value: count, expiresAt });
-      return count;
+    async countInSlidingWindow(key, windowSeconds) {
+      const now = Date.now();
+      const windowStart = now - windowSeconds * 1000;
+      const recent = (readLive(key)?.value ?? []).filter((time) => time > windowStart);
+      recent.push(now);
+      store(key, recent, windowSeconds);
+      return recent.length;
+    },
+
+    async getHash(key) {
+      const fields = readLive(key)?.value;
+      return fields ? { ...fields } : null;
+    },
+
+    async setHash(key, fields, ttlSeconds) {
+      const asText = Object.fromEntries(Object.entries(fields).map(([name, value]) => [name, String(value)]));
+      store(key, asText, ttlSeconds);
+    },
+
+    async delete(key) {
+      entries.delete(key);
     },
 
     async close() {},

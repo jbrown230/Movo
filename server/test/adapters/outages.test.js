@@ -41,6 +41,14 @@ async function startApi(overrides) {
   };
 }
 
+/** Borra el tipo de cambio guardado en el Redis real, sin pasar por el intermediario (que puede estar cortado). */
+async function clearExchangeRateInRedis() {
+  const redis = createRedisCache(redisUrl, {});
+  for (let attempt = 0; attempt < 100 && !redis.isReady(); attempt++) await wait(20);
+  for (const key of ['fx:usd', 'fx:usd:last']) await redis.delete(key);
+  await redis.close();
+}
+
 const targetOf = (url) => {
   const parsed = new URL(url);
   return { host: parsed.hostname, port: Number(parsed.port) };
@@ -53,10 +61,11 @@ describe('Redis se cae a mitad de ejecución', { skip: !redisUrl && 'REDIS_URL n
     cleanups.push(
       () => redis.close(),
       () => proxy.close(),
+      clearExchangeRateInRedis, // corre primero (se limpia al revés): no deja el tipo de cambio de prueba en Redis
     );
     for (let attempt = 0; attempt < 100 && !redis.isReady(); attempt++) await wait(20);
     // Se vacía el tipo de cambio guardado (un Redis local puede traer el valor real del BCCR).
-    for (const key of ['fx:usd', 'fx:usd:last']) await redis.set(key, '', 1);
+    await clearExchangeRateInRedis();
 
     let sourceCalls = 0;
     const exchangeRateSource = {

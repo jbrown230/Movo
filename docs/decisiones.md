@@ -31,6 +31,10 @@ Las decisiones que dan forma a Movo, reunidas en un solo lugar: qué se decidió
 | 25 | Las reglas se hacen cumplir con pruebas, no con disciplina | Calidad | S1 |
 | 26 | Sin datos reales ni infraestructura en el repositorio | Privacidad | S1, S4 |
 | 27 | El landing es un sitio aparte, en otro hostname | Despliegue | S4 |
+| 28 | Se mantienen los tres índices de SQLite | SQLite | Entrega final |
+| 29 | Límite por minuto con ventana deslizante en un sorted set | Redis | Entrega final |
+| 30 | Resumen del respaldo en un hash, invalidado al cambiar el respaldo | Redis, MongoDB | Entrega final |
+| 31 | El resumen del respaldo lo calcula MongoDB con un aggregation pipeline | MongoDB | Entrega final |
 
 ## Arquitectura
 
@@ -73,7 +77,7 @@ Las decisiones que dan forma a Movo, reunidas en un solo lugar: qué se decidió
 
 ### 6. Redis solo para datos efímeros, con caché de respaldo en memoria
 
-- **Qué se decidió.** Redis guarda solo lo que se puede reconstruir: el tipo de cambio, los tokens ya validados (un resumen, nunca el token) y el límite de solicitudes. Si Redis no está o se cae, las mismas claves pasan a la memoria del proceso.
+- **Qué se decidió.** Redis guarda solo lo que se puede reconstruir: el tipo de cambio, los tokens ya validados (un resumen, nunca el token), el límite de solicitudes y, desde la entrega final, el resumen del respaldo. Si Redis no está o se cae, las mismas claves pasan a la memoria del proceso.
 - **Por qué.** Ningún dato de los movimientos depende de Redis, así que una caída no puede perder nada: la API sigue respondiendo y solo se pierde la caché al reiniciar.
 - **Fuente.** [`ARQUITECTURA.md`](ARQUITECTURA.md), "Claves en Redis".
 
@@ -221,3 +225,34 @@ Las decisiones que dan forma a Movo, reunidas en un solo lugar: qué se decidió
 - **Qué se decidió.** El landing (`landing/`) no comparte código con la app y se sirve en `movocr.xyz`; la app, en `app.movocr.xyz`, desde el mismo Nginx del VPS.
 - **Por qué.** La app no carga Three.js ni las animaciones del landing, cada uno se compila y se publica por su cuenta, y la app conserva su propio origen para el inicio de sesión de Google y el service worker.
 - **Fuente.** [S4](seguimientos/S4.md), decisiones.
+
+## Tareas por motor (entrega final)
+
+### 28. Se mantienen los tres índices de SQLite
+
+- **Qué se decidió.** Se conservan `transactions_by_date`, `transactions_by_mail_key` y `mails_by_message_id`.
+- **Alternativa.** Quitar alguno para escribir más rápido.
+- **Por qué.** `EXPLAIN QUERY PLAN` muestra que cada uno lo usa al menos una consulta frecuente. Con 10.000 movimientos, sin ellos las consultas son de 2 a 200 veces más lentas. Además, leer un correo es casi 7 veces más lento sin índices: antes de guardar hay que saber si el correo ya se leyó, y esa búsqueda recorre toda la tabla `mails`.
+- **Fuente.** [`MEDICIONES.md`](MEDICIONES.md), "SQLite".
+
+### 29. Límite por minuto con ventana deslizante en un sorted set
+
+- **Qué se decidió.** El límite de solicitudes guarda cada solicitud en un sorted set de Redis, con su hora como puntaje, y cuenta las de los últimos 60 segundos.
+- **Alternativa descartada.** El contador con `INCR` en una clave por minuto del reloj, que era lo que había.
+- **Por qué.** Con la ventana fija, alguien podía hacer el doble del límite en dos segundos, entre el final de un minuto y el inicio del siguiente.
+- **Costo.** Un miembro por solicitud en vez de un número: como máximo el límite (60 por persona) más las rechazadas de ese minuto.
+- **Fuente.** [`ARQUITECTURA.md`](ARQUITECTURA.md), "Límite por minuto: ventana deslizante".
+
+### 30. Resumen del respaldo en un hash, invalidado al cambiar el respaldo
+
+- **Qué se decidió.** El resumen del respaldo se guarda en Redis como un hash, con un campo por tipo de registro. `syncBackup` lo borra cuando guarda algún cambio y `deleteUserBackup` cuando vacía el respaldo.
+- **Alternativas.** Un string con el JSON (no deja ver ni cambiar un campo suelto). Esperar a que venza, como el tipo de cambio.
+- **Por qué.** El resumen cambia cada vez que la persona sincroniza, y uno viejo sería un dato falso. El vencimiento de una hora queda solo como red de seguridad. Con el hash en Redis, el resumen tarda 0,41 ms; sin caché, 3,24 ms.
+- **Fuente.** [`ARQUITECTURA.md`](ARQUITECTURA.md), "Invalidación de la caché", y [`MEDICIONES.md`](MEDICIONES.md), "El resumen con y sin Redis".
+
+### 31. El resumen del respaldo lo calcula MongoDB con un aggregation pipeline
+
+- **Qué se decidió.** `GET /api/backup/summary` corre un pipeline `$match` por `userId` → `$group` por `kind` → `$project` → `$sort`, que devuelve una fila por tipo.
+- **Alternativa descartada.** Traer los documentos de la persona y contarlos en Node.
+- **Por qué.** MongoDB agrupa sin mandar los documentos por la red y devuelve tres o cuatro filas. Al ir el `$match` primero, `explain()` muestra que usa el índice y lee solo los documentos de esa persona: 1,6 ms con índice y 33 ms recorriendo los 100.000 documentos de la medición.
+- **Fuente.** [`MEDICIONES.md`](MEDICIONES.md), "MongoDB".

@@ -2,6 +2,7 @@
 
 import { createAuthenticateUser } from './authenticateUser.js';
 import { createDeleteUserBackup } from './deleteUserBackup.js';
+import { createGetBackupSummary } from './getBackupSummary.js';
 import { createGetExchangeRate } from './getExchangeRate.js';
 import { createGetHealth } from './getHealth.js';
 import { createGetPublicConfig } from './getPublicConfig.js';
@@ -39,7 +40,8 @@ export function createUseCases({ settings, cache, backupStore, tokenVerifier, ex
       expectedClientId: settings.googleClientId,
       requestsPerMinute: settings.requestsPerMinute,
     }),
-    syncBackup: backupStore && createSyncBackup({ backupStore }),
-    deleteUserBackup: backupStore && createDeleteUserBackup({ backupStore }),
+    syncBackup: backupStore && createSyncBackup({ backupStore, cache }),
+    deleteUserBackup: backupStore && createDeleteUserBackup({ backupStore, cache }),
+    getBackupSummary: backupStore && createGetBackupSummary({ backupStore, cache }),
   };
 }

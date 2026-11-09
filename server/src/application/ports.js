@@ -15,8 +15,19 @@
  *           Registros guardados después del cursor, del más antiguo al más reciente.
  * @property {(userId: string) => Promise<number>} deleteAll
  *           Borra todo lo de la persona. Devuelve cuántos registros eliminó.
+ * @property {(userId: string) => Promise<BackupSummary>} summarize
+ *           Cuántos registros guarda la persona de cada tipo, y cuándo cambió el último.
  * @property {() => Promise<boolean>} ping
  * @property {() => Promise<void>} close
+ */
+
+/**
+ * Resumen del respaldo de una persona.
+ *
+ * @typedef {Object} BackupSummary
+ * @property {Record<string, number>} activeByKind  Registros vigentes por tipo ('transaction', 'category_rule', …).
+ * @property {number} deleted                      Registros marcados como eliminados (de cualquier tipo).
+ * @property {number} lastUpdatedAt                Fecha (ms) del cambio más reciente, o 0 si no hay nada.
  */
 
 /**
@@ -25,8 +36,13 @@
  * @typedef {Object} Cache
  * @property {(key: string) => Promise<string|null>} get
  * @property {(key: string, value: string, ttlSeconds: number) => Promise<void>} set
- * @property {(key: string, ttlSeconds: number) => Promise<number>} incrementWindowCounter
- *           Suma 1 a un contador que vence solo y devuelve el valor nuevo. Sirve para límites por minuto.
+ * @property {(key: string, windowSeconds: number) => Promise<number>} countInSlidingWindow
+ *           Anota una solicitud ahora y devuelve cuántas hubo en los últimos `windowSeconds` (incluida esta).
+ *           Sirve para límites por minuto.
+ * @property {(key: string) => Promise<Record<string, string>|null>} getHash  Campos guardados, o null si no hay.
+ * @property {(key: string, fields: Record<string, string|number>, ttlSeconds: number) => Promise<void>} setHash
+ *           Reemplaza todos los campos de la clave.
+ * @property {(key: string) => Promise<void>} delete  Borra la clave ya (invalidación explícita).
  * @property {() => boolean} isSharedCacheReady  true si la caché compartida (Redis) responde.
  * @property {() => Promise<void>} close
  */
