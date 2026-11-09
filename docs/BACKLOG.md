@@ -10,7 +10,7 @@ Peso en puntos: **1** = unas pocas horas, **2** = un día, **3** = varios días.
 
 Lo ya hecho (issues 1 a 14 y 39 a 43) lo hizo Jordy y suma 45 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
 
-Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda, Promerica y Banco Popular** (Yader; Banco Popular hecho).
+Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda, Promerica y Banco Popular** (Yader; Davivienda y Banco Popular hechos, Promerica descartado: ver la tarea 28).
 
 | Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|---|
@@ -215,15 +215,16 @@ Estado: hecho, issue de GitHub #59 (rama `59-releer-gmail-en-un-telefono-limpio-
 
 ### 28. Plantilla real de Promerica · 2 pts
 `parser` · Hito: Más bancos
-- [ ] Mismos pasos que el issue 27, con fixtures en `tests/fixtures/promerica-html/`.
-- [ ] Actualizar la sección "Limitaciones conocidas" del README con los bancos soportados.
+**No se hará.** Nunca se consiguieron correos reales de Promerica, y sin ellos no se puede escribir una plantilla real (decisión 14 de [`decisiones.md`](decisiones.md)). El issue se cerró como descartado y el README dice que Promerica no se lee.
+- [ ] ~~Mismos pasos que el issue 27, con fixtures en `tests/fixtures/promerica-html/`.~~
+- [x] Actualizar la sección "Limitaciones conocidas" del README con los bancos soportados.
 
 ### 29. Benchmark a 100, 10.000 y 100.000 correos · 2 pts
 `tests`, `investigación` · Hito: Mediciones
 El PDF del curso pide responder qué cambia al escalar.
-- [ ] Extender `scripts/bench-parser.mjs` para varias escalas.
-- [ ] Medir ingesta, resumen del mes y tamaño de la base SQLite.
-- [ ] Tabla de resultados en `docs/MEDICIONES.md`.
+- [x] Medir a varias escalas: en vez de extender `scripts/bench-parser.mjs`, se usa `scripts/bench-sqlite.mjs`, que recibe la cantidad de correos y además compara con y sin índices.
+- [x] Medir ingesta, resumen del mes y tamaño de la base SQLite.
+- [x] Tabla de resultados en `docs/MEDICIONES.md`, "SQLite a 100, 10.000 y 100.000 correos".
 
 ### 30. Comparar parser por reglas contra un modelo de lenguaje (semilla de TFG) · 3 pts
 `investigación` · Hito: TFG

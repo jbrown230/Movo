@@ -13,6 +13,8 @@
 
 ### Documentación
 
+- **SQLite a 100, 10.000 y 100.000 correos** en `docs/MEDICIONES.md`: ingesta, resumen del mes, consultas y tamaño de la base a tres escalas, con y sin índices, para responder qué cambia al crecer. (#31)
+- **Promerica descartado:** sin correos reales no se puede escribir su plantilla. El README ya no lo anuncia para el próximo mes y dice que no se lee. (#30)
 - **Tareas por motor** en `docs/ARQUITECTURA.md` (las tres estructuras de Redis y la invalidación de la caché) y cuatro decisiones nuevas en `docs/decisiones.md`. (#96)
 
 - **Pruebas documentadas por caso** en `docs/PRUEBAS.md`: cómo correrlas y las 336 pruebas agrupadas en caso normal, error de conexión y datos inválidos, con el archivo de cada una y qué comprueba. Incluye cuáles usan Redis y MongoDB de verdad y cómo activarlas en local. (#94)

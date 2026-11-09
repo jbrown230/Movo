@@ -90,7 +90,9 @@ function mainQueries(db) {
   const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1)).toISOString();
   const weekAgo = new Date(now.getTime() - 7 * MS_PER_DAY).toISOString();
   const [{ values }] = db.exec(
-    'SELECT mail_key FROM transactions WHERE mail_key IS NOT NULL ORDER BY id LIMIT 1 OFFSET 777',
+    // un correo cualquiera que sí existe: el del medio, para que sirva con cualquier cantidad
+    `SELECT mail_key FROM transactions WHERE mail_key IS NOT NULL ORDER BY id LIMIT 1
+     OFFSET (SELECT COUNT(*) / 2 FROM transactions WHERE mail_key IS NOT NULL)`,
   );
   const mailKey = values[0][0];
   return [
