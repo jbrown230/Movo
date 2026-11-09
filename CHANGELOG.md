@@ -1,10 +1,27 @@
 # Cambios
 
-## Sin publicar (v0.4.0)
+## v0.9.0
+
+Release candidate: la app publicada en su dominio con un landing propio, la guía de despliegue completa y una corrección de la lectura de Gmail para los bancos nuevos.
 
 ### Lector de notificaciones
 
 - **La lectura de Gmail vuelve a revisar el historial cuando cambia la búsqueda.** Cada lectura pide a Gmail solo los correos posteriores a la última lectura del dispositivo, pero no recordaba con qué búsqueda leyó. Cuando una versión nueva agregaba un banco a la búsqueda por defecto (como pasó con Banco Popular), los dispositivos que ya habían leído antes nunca pedían los correos viejos de ese banco, y la única salida era borrar los datos del dispositivo. Ahora la app anota con qué búsqueda hizo cada lectura (`last_scan_query`) y, si es otra, vuelve a revisar los últimos 45 días; los correos ya leídos no se descargan otra vez. Editar "Bancos que se leen" ya lo hacía; esto cubre también los cambios de la búsqueda por defecto. La primera lectura después de actualizar revisa los 45 días una vez en cada dispositivo. (#79)
+
+### Landing y despliegue
+
+- **Landing de Movo** (`landing/`). Sitio estático aparte de la app, sin código compartido con `web/`: portada con una escena 3D (Three.js) del logo y avisos bancarios que orbitan y caen hacia él, "Cómo funciona" con el teléfono que pasa por Recibido, Leído, Extraído y Registrado al desplazarse, diagrama de arquitectura (los correos se quedan en el teléfono; al servidor solo pasan el token y el respaldo), capturas de la app con marco de iPhone, tecnología, equipo y enlaces a la demo. Respeta `prefers-reduced-motion` y sin JavaScript el texto se lee igual. Los datos que muestra son ficticios. `npm run landing` y `npm run landing:build`. Se corrigieron las letras cortadas de los titulares, los avisos que quedaban al revés, los enlaces del pie que no se podían tocar y la cantidad de avisos en el teléfono (6 en vez de 22).
+- **Despliegue en `movocr.xyz`.** `deploy/update.sh` compila también el landing, y `deploy/nginx-movo-landing.conf.example` lo sirve en un hostname aparte: el landing en `movocr.xyz` y la app en `app.movocr.xyz`, adonde apuntan los enlaces a la demo.
+- **Guía de despliegue completa** (`docs/DESPLIEGUE.md`), también como sección "Despliegue" del landing: la consola de Google Cloud paso a paso (Gmail API, pantalla de consentimiento, ID y secreto del cliente, problemas comunes), cómo sacar el token del BCCR, el `.env` completo (`CLOUD_SYNC`, `RATE_LIMIT_PER_MIN`, `FX_FALLBACK`, `NIO_PER_USD`), la variante para un VPS que ya usa Nginx y la actualización con git.
+
+### Privacidad
+
+- **La guardia de privacidad también busca IPs de servidores.** `tests/privacy/noSensitiveData.test.js` falla si aparece una dirección IPv4 (salvo localhost y los rangos de documentación) o un hostname de sslip.io o nip.io con una IP. Corre en el CI en cada pull request.
+
+### Documentación
+
+- **Bitácora del seguimiento 4** en `docs/seguimientos/S4.md`: estado del release candidate, lo completado después de `v0.3.0`, lo que sigue pendiente del enunciado y por motor, decisiones y responsables.
+- **Banco Popular en el backlog y en el README.** La plantilla entró en `v0.3.0` (#77) sin issue propio; ahora tiene su issue cerrado (#91), su tarea en `docs/BACKLOG.md` y aparece en la hoja de ruta del README. El backlog marca como hechas la publicación de releases (#17) y el aviso oculto del modo demo (#34).
 
 ## v0.3.0
 
