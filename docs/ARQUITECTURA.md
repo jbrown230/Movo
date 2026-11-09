@@ -166,7 +166,7 @@ En el código, las filas se traducen a entidades con nombres claros (por ejemplo
 
 ### Cambios al esquema
 
-El esquema se crea con migraciones numeradas (`migrations.js`). Una instalación nueva las ejecuta todas desde la 1. Al cambiar el esquema después de publicar una versión, no se edita una migración existente: se agrega una nueva al final.
+El esquema se crea con migraciones numeradas (`migrations.js`). `npm run db:sqlite` las aplica fuera del navegador y deja una base con datos sintéticos en `data/movo.sqlite`, que se abre con cualquier cliente de SQLite; los archivos `.sqlite` no se versionan. Una instalación nueva las ejecuta todas desde la 1. Al cambiar el esquema después de publicar una versión, no se edita una migración existente: se agrega una nueva al final.
 
 El formato con el que el teléfono y el servidor intercambian el respaldo (`amountCents`, `cat`, `dir`...) es un contrato aparte del esquema local.
 
@@ -177,12 +177,12 @@ El id de un movimiento leído de un correo se deriva del Message-ID (`'m' + hash
 
 Una colección `backup_records` con documentos `{ userId, kind, id, updatedAt, serverSequence, isDeleted, data }`. Los detalles y el formato de red están en [API.md](API.md).
 
-- `kind` dice qué es el registro: `transaction`, `category_rule` o `setting`.
+- `kind` dice qué es el registro: `transaction`, `category_rule`, `setting` o `savings_goal`.
 - `data` trae el contenido del registro tal como lo envió el teléfono, ya validado contra una lista blanca.
 - Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización. `explain()` confirma que la sincronización y el resumen los usan y leen solo los documentos que devuelven ([MEDICIONES.md](MEDICIONES.md)).
 - **Aggregation pipeline** (`backupSummaryPipeline` en `MongoBackupStore.js`): el resumen del respaldo de `GET /api/backup/summary`. Filtra por `userId` con el índice, agrupa por `kind` y cuenta vigentes y eliminados, con la fecha del último cambio. Se guarda en Redis como un hash y se invalida cuando cambia el respaldo (ver "Claves en Redis").
 - **Validador `$jsonSchema`** (`server/src/adapters/mongo/backupRecordSchema.js`), que se aplica al conectar: exige la envoltura completa y sin campos de más, y la forma de `data` según `kind` (monedas, tipos y direcciones permitidos, largos máximos, y solo los ajustes que se sincronizan). Se arma con los mismos valores de `shared/backupContract.js` que usa la API, así las dos validaciones no pueden contradecirse. MongoDB rechaza un documento que no cumple (error 121) aunque llegue sin pasar por la API.
-- **Carga de datos de prueba:** `npm run seed:mongo -- <cantidad> <semilla> [usuario]` carga correos sintéticos reproducibles por el mismo camino que los reales (lector, sincronización, validación de la API y caso de uso del servidor). La URI sale solo de `MONGO_URL` en el `.env`.
+- **Carga de datos de prueba:** `npm run seed:mongo -- <cantidad> <semilla> [usuario]` carga correos sintéticos reproducibles por el mismo camino que los reales (lector, sincronización, validación de la API y caso de uso del servidor). `npm run seed:mongosh -- <cantidad> <semilla> [usuario]` hace una carga directa con un script de mongosh (`scripts/mongo/cargar.mongosh.js`): pone el mismo validador y los mismos índices que la API y muestra el resumen con un aggregation pipeline. En los dos, la URI sale solo de `MONGO_URL` en el `.env`.
 
 ### Decisión: un documento por registro, con el contenido embebido
 
@@ -238,7 +238,7 @@ Si Redis estuvo caído, el resumen pudo quedar en la memoria del proceso; `Resil
 
 Antes, el límite contaba con un `INCR` en una clave por minuto del reloj (`rl:<quién>:<minuto>`). Con esa ventana fija, alguien podía hacer el doble del límite en dos segundos: todo al final de un minuto y todo al empezar el siguiente. El sorted set cuenta las solicitudes de los últimos 60 segundos, sean del minuto que sean. El costo es memoria: guarda un miembro por solicitud en vez de un número, como máximo el límite (60 por persona) más las rechazadas de ese minuto.
 
-Las claves no llevan prefijo de grupo porque Movo usa su propio Redis (el del `docker-compose.yml`). Para usar un Redis compartido habría que anteponer un prefijo a todas.
+Nunca se usan `FLUSHALL` ni `FLUSHDB`: cada clave vence sola o se borra una por una con `DEL` (la invalidación del resumen). Las claves no llevan prefijo de grupo porque Movo usa su propio Redis (el del `docker-compose.yml`). Para usar un Redis compartido habría que anteponer un prefijo a todas.
 
 Si Redis no está configurado o deja de responder, las mismas claves se guardan en la memoria del proceso (`adapters/cache/ResilientCache.js`): la API sigue funcionando y solo se pierde la caché al reiniciar.
 
@@ -249,7 +249,7 @@ Si Redis no está configurado o deja de responder, las mismas claves se guardan 
 3. El servidor responde con lo que cambió para esa persona después del cursor, y un cursor nuevo. Si hay más de 1000 cambios, `hasMore` es `true` y se pide otra vez.
 4. El teléfono aplica esos cambios con la misma regla y guarda el cursor.
 
-Borrar el respaldo (`DELETE /api/me`) vacía lo del servidor, apaga la sincronización y reinicia el cursor en 0. Lo del teléfono no se borra: todos sus movimientos, reglas y ajustes vuelven a quedar con `needs_backup=1`, sin cambiar su `updated_at`. Así, si la persona enciende el respaldo otra vez, la siguiente sincronización sube todo de nuevo y otro teléfono puede recuperarlo.
+Borrar el respaldo (`DELETE /api/me`) vacía lo del servidor, apaga la sincronización y reinicia el cursor en 0. Lo del teléfono no se borra: todos sus movimientos, reglas, ajustes y metas vuelven a quedar con `needs_backup=1`, sin cambiar su `updated_at`. Así, si la persona enciende el respaldo otra vez, la siguiente sincronización sube todo de nuevo y otro teléfono puede recuperarlo.
 
 ### Conflictos entre teléfonos
 

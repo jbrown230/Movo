@@ -1,0 +1,15 @@
+nombre: Movo
+resumen: Gastos personales para Costa Rica que se registran solos a partir de los correos del banco, con SQLite en el teléfono, Redis como caché y MongoDB como respaldo
+problema: Registrar gastos a mano se abandona en pocas semanas; la información ya existe en los correos que envían los bancos, pero queda dispersa en la bandeja de entrada
+usuarios: Personas en Costa Rica que pagan con tarjeta y SINPE Móvil, con cuentas en uno o varios bancos
+motores: [SQLite, Redis, MongoDB]
+lenguaje: JavaScript (React y Node.js)
+licencia: MIT
+repositorio: https://github.com/jbrown230/Movo
+demo_video:
+demo_url: https://app.movocr.xyz
+captura: docs/capturas/02-inicio.png
+grupo: 1
+dia: martes
+periodo: II-2026
+autores_publicos: [Dylan Mejía Ruiz, Jose Meza Álvarez, Jordy Palacios Brown, Yader Barahona Villarreal]

@@ -45,8 +45,8 @@ flowchart LR
 | Motor | Dónde | Qué guarda | Por qué |
 |---|---|---|---|
 | SQLite (sql.js) | En el teléfono, una base por usuario | Movimientos, correos leídos, reglas, ajustes | Funciona sin Internet y hace las agregaciones del mes con SQL real, sin cargar al servidor |
-| Redis | Servidor | Validación de tokens (TTL), límite de solicitudes, tipo de cambio (6 h) | Datos efímeros: si se pierden, se reconstruyen |
-| MongoDB | Servidor | Respaldo por usuario: movimientos, reglas y ajustes | Esquema flexible por banco; sincroniza varios teléfonos |
+| Redis | Servidor | Validación de tokens (TTL), límite de solicitudes, tipo de cambio (6 h), resumen del respaldo | Datos efímeros: si se pierden, se reconstruyen |
+| MongoDB | Servidor | Respaldo por usuario: movimientos, reglas, ajustes y metas de ahorro | Esquema flexible por banco; sincroniza varios teléfonos |
 
 ### Capas del código
 
@@ -137,6 +137,8 @@ npm run bench:sqlite # EXPLAIN QUERY PLAN y consultas de SQLite con y sin índic
 npm run bench:mongo  # explain() de MongoDB con y sin índice, y el resumen con y sin Redis (usa MONGO_URL y REDIS_URL)
 npm run dataset -- 50 > correos.json   # dataset sintético reproducible
 npm run seed:mongo -- 200 7            # carga ese dataset en el respaldo de MongoDB (usa MONGO_URL del .env)
+npm run seed:mongosh -- 200 7          # carga datos sintéticos con un script de mongosh (usa MONGO_URL del .env)
+npm run db:sqlite -- 200 7             # recrea una base SQLite con el esquema de la app en data/movo.sqlite
 ```
 
 \* Las pruebas de Redis y MongoDB reales se ejecutan cuando existen `REDIS_URL` y `MONGO_URL` (GitHub Actions las levanta como servicios).
@@ -161,7 +163,7 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 
 ## Roadmap
 
-En 6 meses: plantillas de otros bancos a partir de correos reales (BCR, BN, BAC, Davivienda y Banco Popular ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)), lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
+En 1 mes: mostrar en Ajustes lo que guarda el respaldo (el servidor ya lo calcula en `GET /api/backup/summary`), que los lectores de BAC, BN y Davivienda dejen sin leer una moneda desconocida en vez de contarla como colones, y no guardar el cuerpo completo de los correos ya registrados (es lo que más crece con el uso, ver [docs/MEDICIONES.md](docs/MEDICIONES.md)). En 6 meses: plantillas de otros bancos a partir de correos reales (BCR, BN, BAC, Davivienda y Banco Popular ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)), lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
 
 ## Equipo
 
