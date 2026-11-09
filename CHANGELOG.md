@@ -2,7 +2,18 @@
 
 ## Sin publicar
 
+### Agregado
+
+- **Resumen del respaldo** en `GET /api/backup/summary`: cuántos movimientos, reglas, ajustes y metas guarda la persona, cuántos están eliminados y cuándo fue el último cambio. Lo calcula MongoDB con un aggregation pipeline (`$match` por `userId` → `$group` por `kind`) y se guarda en Redis como un hash que se invalida en cuanto una sincronización guarda algún cambio o la persona borra su respaldo. (#96)
+- **Mediciones de SQLite y MongoDB** con `npm run bench:sqlite` y `npm run bench:mongo`: el plan de cada consulta (`EXPLAIN QUERY PLAN` y `explain("executionStats")`) y sus tiempos con y sin índices, el respaldo de la base local con `db.export()` y el resumen con y sin Redis. Mediana de 3 corridas de 5 ejecuciones; resultados en `docs/MEDICIONES.md`. (#96)
+
+### Cambiado
+
+- **El límite de solicitudes por minuto usa una ventana deslizante** en un sorted set de Redis, en vez de un contador por minuto del reloj: ya no se puede hacer el doble del límite entre el final de un minuto y el inicio del siguiente. (#96)
+
 ### Documentación
+
+- **Tareas por motor** en `docs/ARQUITECTURA.md` (las tres estructuras de Redis y la invalidación de la caché) y cuatro decisiones nuevas en `docs/decisiones.md`. (#96)
 
 - **Pruebas documentadas por caso** en `docs/PRUEBAS.md`: cómo correrlas y las 336 pruebas agrupadas en caso normal, error de conexión y datos inválidos, con el archivo de cada una y qué comprueba. Incluye cuáles usan Redis y MongoDB de verdad y cómo activarlas en local. (#94)
 - **Decisiones técnicas en un solo lugar** en `docs/decisiones.md`: 27 decisiones reunidas de `docs/ARQUITECTURA.md`, `docs/MEDICIONES.md` y las bitácoras S1 a S4, cada una con qué se decidió, las alternativas descartadas, por qué y su costo. (#94)

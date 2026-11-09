@@ -1,6 +1,6 @@
 // Respaldo en memoria. Tiene la misma lógica que el de MongoDB, y sirve para las pruebas.
 
-import { nextServerSequence, shouldReplace } from '../../domain/backupRecord.js';
+import { nextServerSequence, shouldReplace, toBackupSummary } from '../../domain/backupRecord.js';
 
 const KEY_SEPARATOR = String.fromCharCode(0); // un carácter que no aparece en ids ni en nombres
 const recordKey = (userId, kind, id) => [userId, kind, id].join(KEY_SEPARATOR);
@@ -38,6 +38,18 @@ export function createInMemoryBackupStore() {
         deletedCount++;
       }
       return deletedCount;
+    },
+
+    async summarize(userId) {
+      const rowsByKind = new Map();
+      for (const record of storedRecords.values()) {
+        if (record.userId !== userId) continue;
+        const row = rowsByKind.get(record.kind) ?? { kind: record.kind, active: 0, deleted: 0, lastUpdatedAt: 0 };
+        row[record.isDeleted ? 'deleted' : 'active']++;
+        row.lastUpdatedAt = Math.max(row.lastUpdatedAt, record.updatedAt);
+        rowsByKind.set(record.kind, row);
+      }
+      return toBackupSummary([...rowsByKind.values()]);
     },
 
     async ping() {

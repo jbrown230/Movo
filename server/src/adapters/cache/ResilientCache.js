@@ -24,7 +24,24 @@ export function createResilientCache({ redis, memory }) {
   return {
     get: (key) => withFallback('get', key),
     set: (key, value, ttlSeconds) => withFallback('set', key, value, ttlSeconds),
-    incrementWindowCounter: (key, ttlSeconds) => withFallback('incrementWindowCounter', key, ttlSeconds),
+    countInSlidingWindow: (key, windowSeconds) => withFallback('countInSlidingWindow', key, windowSeconds),
+    getHash: (key) => withFallback('getHash', key),
+    setHash: (key, fields, ttlSeconds) => withFallback('setHash', key, fields, ttlSeconds),
+
+    /**
+     * Se borra en los dos lados: si Redis estuvo caído, la memoria pudo guardar una copia
+     * que, sin esto, seguiría viva cuando Redis vuelva a fallar.
+     */
+    async delete(key) {
+      await memory.delete(key);
+      if (!redisIsReady()) return;
+      try {
+        await redis.delete(key);
+      } catch {
+        // Redis falló: su copia vence sola por su TTL.
+      }
+    },
+
     isSharedCacheReady: redisIsReady,
 
     async close() {

@@ -98,6 +98,33 @@ function runContract(createStore) {
     await store.close();
   });
 
+  test('el resumen cuenta lo de la persona por tipo, separa los eliminados y da el cambio más reciente', async () => {
+    const store = createStore();
+    const deleted = (id, updatedAt) => ({ ...record(id, updatedAt, 'x'), isDeleted: true });
+    await store.saveChanges('ana', [
+      record('m1', 10, 'super'),
+      record('m2', 30, 'ocio'),
+      deleted('m3', 20),
+      {
+        kind: 'category_rule',
+        id: 'CAFE',
+        updatedAt: 5,
+        isDeleted: false,
+        data: { counterpartyKey: 'CAFE', category: 'comida' },
+      },
+      { kind: 'setting', id: 'budget', updatedAt: 40, isDeleted: false, data: { value: 40000000 } },
+    ]);
+    await store.saveChanges('beto', [record('m9', 99, 'x')]);
+
+    assert.deepEqual(await store.summarize('ana'), {
+      activeByKind: { category_rule: 1, setting: 1, transaction: 2 },
+      deleted: 1,
+      lastUpdatedAt: 40,
+    });
+    assert.deepEqual(await store.summarize('nadie'), { activeByKind: {}, deleted: 0, lastUpdatedAt: 0 });
+    await store.close();
+  });
+
   test('guardar una lista vacía no hace nada', async () => {
     const store = createStore();
     assert.equal(await store.saveChanges('ana', []), 0);

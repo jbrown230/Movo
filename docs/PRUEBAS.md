@@ -1,6 +1,6 @@
 # Pruebas
 
-Movo tiene 336 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
+Movo tiene 346 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
 
 ## Cómo correrlas
 
@@ -16,7 +16,7 @@ npm run check          # lint, formato, pruebas y compilación: lo mismo que cor
 |---|---|---|---|
 | Núcleo de la app | `tests/` (sin `presentation`) | 235 | `node --test`, con SQLite real (sql.js) y el servidor y Gmail simulados |
 | Interfaz | `tests/presentation/` | 35 | Vitest y Testing Library sobre la app completa |
-| Servidor | `server/test/` | 66 | `node --test`, con los casos de uso reales y Redis, MongoDB y Google simulados |
+| Servidor | `server/test/` | 76 | `node --test`, con los casos de uso reales y Redis, MongoDB y Google simulados |
 
 Las pruebas que usan **Redis y MongoDB de verdad** corren solo si existen `REDIS_URL` y `MONGO_URL`. El CI (`.github/workflows/ci.yml`) los levanta como servicios (`redis:7-alpine` y `mongo:7`), así que en cada pull request corren todas. En local, `docker compose up -d redis mongo` y esas dos variables las activan; sin ellas, esos grupos se saltan y avisan por qué.
 
@@ -39,7 +39,8 @@ El flujo principal de punta a punta, y cada caso de uso con datos correctos.
 | Respaldo en MongoDB | `tests/contract/backupContract.test.js` y `server/test/adapters/backupStore.contract.test.js` | Dos teléfonos se sincronizan a través del código real del servidor; reactivar el respaldo después de borrarlo vuelve a subir todo; el almacén guarda, devuelve por cursor y borra solo lo de cada persona, en memoria y en MongoDB real. |
 | Conflictos entre teléfonos | `tests/contract/syncConflicts.test.js` | Gana la última escritura por registro, sincronice primero quien sincronice; editar contra eliminar; empate exacto. |
 | API HTTP | `server/test/adapters/http.api.test.js` | Configuración, salud, sincronización con token válido y separación por persona. |
-| Caché | `server/test/adapters/cache.test.js` | Guarda, vence y cuenta, en memoria y en Redis real. |
+| Caché | `server/test/adapters/cache.test.js` | La misma batería en memoria y en Redis real: valores con vencimiento, la ventana deslizante del límite por minuto (sorted set), que olvida las solicitudes viejas, y el hash del resumen, que se reemplaza completo y se invalida al borrarlo. |
+| Resumen del respaldo | `server/test/application/getBackupSummary.test.js`, `backupStore.contract.test.js` y `http.api.test.js` | El aggregation pipeline cuenta por tipo y separa los eliminados (en memoria y en MongoDB real); el resumen sale de la caché la segunda vez; sincronizar un cambio o borrar el respaldo lo invalida, y una sincronización sin cambios no. |
 | Interfaz | `tests/presentation/app.test.jsx` | Navegación entre pestañas, filtros, confirmaciones (una acción cancelada no se ejecuta), modo demo y Ajustes. |
 | Migraciones de SQLite | `tests/infrastructure/schemaMigration.test.js` | Una base nueva queda con todas las tablas; migrar dos veces no hace nada; una base de la versión 1 se actualiza sin perder datos. |
 
@@ -51,6 +52,7 @@ Qué pasa cuando un motor o un servicio externo no responde. Las pruebas marcada
 |---|---|---|
 | Redis se cae a mitad de ejecución **(real)** | `server/test/adapters/outages.test.js` | La API sigue respondiendo el tipo de cambio, con la caché en la memoria del proceso. |
 | Redis no responde desde el inicio | `server/test/adapters/cache.test.js` | Con una dirección que no responde, el servidor sigue funcionando en memoria. |
+| Redis cae y vuelve con un resumen guardado | `server/test/adapters/cache.test.js` | Invalidar borra también la copia que quedó en memoria mientras Redis estuvo caído, así no reaparece un resumen viejo. |
 | MongoDB se cae a mitad de ejecución **(real)** | `server/test/adapters/outages.test.js` | El respaldo responde 503 "Respaldo no disponible por ahora." en vez de 500. |
 | MongoDB caído al arrancar **(real)** | `server/test/adapters/outages.test.js` | El respaldo se recupera solo cuando MongoDB vuelve, sin reiniciar la API. |
 | El servidor no responde (desde el teléfono) | `tests/application/backupAndNetwork.test.js` | La app local sigue funcionando y los cambios quedan pendientes para el próximo intento. |
@@ -74,7 +76,7 @@ Lo que llega mal formado, de otra aplicación o con valores fuera de lo permitid
 | Documentos mal formados escritos directo en MongoDB **(real)** | `server/test/adapters/backupStore.contract.test.js` | El validador `$jsonSchema` los rechaza aunque no pasen por la API, también en una colección que ya existía sin validador. |
 | Una meta de ahorro mal formada | `tests/contract/backupContract.test.js` y `tests/application/savingsGoals.test.js` | El servidor la limpia; en el teléfono no se guarda y explica por qué. |
 | Token inválido, vencido o de otra aplicación | `server/test/application/authenticateUser.test.js` y `http.api.test.js` | Se rechaza con 401; el token de otra aplicación también, aunque Google lo reconozca. |
-| Demasiadas solicitudes | `server/test/application/authenticateUser.test.js` y `http.api.test.js` | Límite por persona y por minuto; el límite de una persona no afecta a otra. |
+| Demasiadas solicitudes | `server/test/application/authenticateUser.test.js` y `http.api.test.js` | Límite por persona en el último minuto (ventana deslizante); el límite de una persona no afecta a otra. |
 | Correos publicitarios, sin plantilla o sin monto | `tests/domain/parseMail.test.js` y `tests/application/ingestMail.test.js` | Quedan como "Sin movimiento" y se pueden ver en la bandeja; la publicidad con montos no se lee como gasto. |
 | Compras negadas por el banco | `tests/domain/parseMail.test.js`, `tests/infrastructure/bcrHtml.test.js` y `tests/application/ingestMail.test.js` | No se registran como gasto; en una tabla con varias filas solo se registran las aprobadas. |
 | Monedas desconocidas | `tests/domain/parseMail.test.js` | Una moneda que Movo no sabe convertir no se cuenta como colones. |

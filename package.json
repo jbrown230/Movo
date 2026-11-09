@@ -21,6 +21,8 @@
     "check": "npm run lint && npm run format:check && npm test && npm run build",
     "bench": "node scripts/bench-parser.mjs",
     "bench:fx": "node --env-file-if-exists=.env scripts/bench-fx.mjs",
+    "bench:sqlite": "node scripts/bench-sqlite.mjs",
+    "bench:mongo": "node --env-file-if-exists=.env scripts/bench-mongo.mjs",
     "dataset": "node scripts/dataset.mjs",
     "seed:mongo": "node --env-file-if-exists=.env scripts/seed-mongo.mjs",
     "anomalias": "node scripts/anomalies.mjs",

@@ -38,3 +38,20 @@ export function nextServerSequence() {
   sequenceCounter = (sequenceCounter + 1) % SEQUENCE_SLOTS_PER_MILLISECOND;
   return Date.now() * SEQUENCE_SLOTS_PER_MILLISECOND + sequenceCounter;
 }
+
+/**
+ * Arma el resumen del respaldo a partir de una fila por tipo de registro (lo que devuelve el
+ * aggregation pipeline de MongoDB, o lo que cuenta la versión en memoria).
+ *
+ * @param {Array<{ kind: string, active: number, deleted: number, lastUpdatedAt: number }>} rows
+ * @returns {import('../application/ports.js').BackupSummary}
+ */
+export function toBackupSummary(rows) {
+  const summary = { activeByKind: {}, deleted: 0, lastUpdatedAt: 0 };
+  for (const { kind, active, deleted, lastUpdatedAt } of rows) {
+    summary.activeByKind[kind] = active;
+    summary.deleted += deleted;
+    summary.lastUpdatedAt = Math.max(summary.lastUpdatedAt, lastUpdatedAt);
+  }
+  return summary;
+}
