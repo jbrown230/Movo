@@ -159,7 +159,7 @@ Este repositorio no contiene datos reales: los correos de ejemplo, el modo demo 
 
 ## Roadmap
 
-En 1 mes: plantilla real de Promerica (BCR, BN, BAC y Davivienda ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)). En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
+En 1 mes: plantilla real de Promerica (BCR, BN, BAC, Davivienda y Banco Popular ya están; ver [docs/BACKLOG.md](docs/BACKLOG.md)). En 6 meses: lectura en segundo plano con Periodic Background Sync, Outlook vía Microsoft Graph. Como TFG: comparar parsers por reglas frente a un modelo de lenguaje para extraer y clasificar transacciones de correos bancarios costarricenses, y detección de cargos anómalos.
 
 ## Equipo
 
