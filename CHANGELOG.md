@@ -4,6 +4,7 @@
 
 ### Agregado
 
+- **Roadmap a 1 mes** en el README, como pide el enunciado (1 mes, 6 meses y TFG), y la documentación de MongoDB incluye las metas de ahorro entre lo que se respalda. (#99)
 - **Ficha del portal** `portal.yml` en la raíz, con los datos del grupo para el portal de proyectos del curso. (#99)
 - **Carga con mongosh:** `npm run seed:mongosh` corre `scripts/mongo/cargar.mongosh.js` contra `MONGO_URL` del `.env`: pone el validador `$jsonSchema` y los índices, carga datos sintéticos reproducibles y muestra el resumen con un aggregation pipeline. (#99)
 - **Script para recrear la base SQLite:** `npm run db:sqlite` aplica las migraciones de la app y lee correos sintéticos en `data/movo.sqlite`. Los `.sqlite` y `.db` ya no se pueden versionar por error (`.gitignore`). (#99)

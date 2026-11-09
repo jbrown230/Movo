@@ -177,7 +177,7 @@ El id de un movimiento leído de un correo se deriva del Message-ID (`'m' + hash
 
 Una colección `backup_records` con documentos `{ userId, kind, id, updatedAt, serverSequence, isDeleted, data }`. Los detalles y el formato de red están en [API.md](API.md).
 
-- `kind` dice qué es el registro: `transaction`, `category_rule` o `setting`.
+- `kind` dice qué es el registro: `transaction`, `category_rule`, `setting` o `savings_goal`.
 - `data` trae el contenido del registro tal como lo envió el teléfono, ya validado contra una lista blanca.
 - Índices: único en `{ userId, kind, id }` y otro en `{ userId, serverSequence }`, que es el cursor de la sincronización. `explain()` confirma que la sincronización y el resumen los usan y leen solo los documentos que devuelven ([MEDICIONES.md](MEDICIONES.md)).
 - **Aggregation pipeline** (`backupSummaryPipeline` en `MongoBackupStore.js`): el resumen del respaldo de `GET /api/backup/summary`. Filtra por `userId` con el índice, agrupa por `kind` y cuenta vigentes y eliminados, con la fecha del último cambio. Se guarda en Redis como un hash y se invalida cuando cambia el respaldo (ver "Claves en Redis").
@@ -249,7 +249,7 @@ Si Redis no está configurado o deja de responder, las mismas claves se guardan 
 3. El servidor responde con lo que cambió para esa persona después del cursor, y un cursor nuevo. Si hay más de 1000 cambios, `hasMore` es `true` y se pide otra vez.
 4. El teléfono aplica esos cambios con la misma regla y guarda el cursor.
 
-Borrar el respaldo (`DELETE /api/me`) vacía lo del servidor, apaga la sincronización y reinicia el cursor en 0. Lo del teléfono no se borra: todos sus movimientos, reglas y ajustes vuelven a quedar con `needs_backup=1`, sin cambiar su `updated_at`. Así, si la persona enciende el respaldo otra vez, la siguiente sincronización sube todo de nuevo y otro teléfono puede recuperarlo.
+Borrar el respaldo (`DELETE /api/me`) vacía lo del servidor, apaga la sincronización y reinicia el cursor en 0. Lo del teléfono no se borra: todos sus movimientos, reglas, ajustes y metas vuelven a quedar con `needs_backup=1`, sin cambiar su `updated_at`. Así, si la persona enciende el respaldo otra vez, la siguiente sincronización sube todo de nuevo y otro teléfono puede recuperarlo.
 
 ### Conflictos entre teléfonos
 
