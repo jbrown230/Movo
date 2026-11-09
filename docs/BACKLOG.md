@@ -10,14 +10,14 @@ Peso en puntos: **1** = unas pocas horas, **2** = un día, **3** = varios días.
 
 Lo ya hecho (issues 1 a 14 y 39 a 43) lo hizo Jordy y suma 45 puntos. Por eso Jordy lleva menos trabajo pendiente: entre lo hecho y lo que queda, la carga total del equipo queda parecida.
 
-Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda y Promerica** (Yader).
+Los bancos se reparten uno por persona, para que nadie cargue con toda la lógica de lectura de comprobantes: **BCR** (Jordy, hecho), **BN** (Dylan), **BAC** (Jose), **Davivienda, Promerica y Banco Popular** (Yader; Banco Popular hecho).
 
 | Integrante | GitHub | Hecho | Pendiente | Issues pendientes |
 |---|---|---|---|---|
 | Jordy Palacios | @jbrown230 | 45 pts (issues 1–14 y 39–43, cerrados) | **6 pts** | 15, 16, 17 |
 | Dylan Mejía Ruiz | @DylanMR08 | — | **21 pts** | 18, 19, 20, 21, 32, 33, 34, 35, 36, 37, 38 |
 | Jose Meza Álvarez | @devJosemeza | — | **11 pts** | 22, 23, 24, 25, 26 |
-| Yader Barahona Villarreal | @YaderBarahona | — | **11 pts** | 27, 28, 29, 30, 31 |
+| Yader Barahona Villarreal | @YaderBarahona | — | **13 pts** | 27, 28, 29, 30, 31, 44 |
 
 Reglas:
 - Cada issue se trabaja en una rama `tipo/numero-descripcion` (ej. `feat/18-plantilla-bn`) y entra a `main` por pull request.
@@ -29,7 +29,7 @@ Reglas:
 
 ## Ya hecho (cerrados) · Jordy Palacios · 45 pts
 
-Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Los issues 1 a 14 están en la versión v0.1.0, los 39 a 42 en la v0.3.0 y el 43 saldrá en la v0.4.0 (ver `CHANGELOG.md`).
+Estos issues se crean y se cierran de una vez, para que el historial del proyecto muestre el trabajo. Los issues 1 a 14 están en la versión v0.1.0, los 39 a 42 en la v0.3.0 y el 43 en la v0.9.0 (ver `CHANGELOG.md`).
 
 | # | Issue | Pts | Etiquetas | Versión |
 |---|---|---|---|---|
@@ -51,7 +51,7 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 | 40 | Pestaña Movimientos con búsqueda de texto y hoja de filtros | 3 | `frontend` | v0.3.0 |
 | 41 | Exportar a un Excel con el diseño de Movo | 3 | `frontend` | v0.3.0 |
 | 42 | Pulir la interfaz en el celular: sin recortes, sin zoom con los dedos y con más espacio | 2 | `frontend`, `bug` | v0.3.0 |
-| 43 | Releer el historial cuando cambia la búsqueda de Gmail (un banco nuevo no leía los correos viejos) | 1 | `bug`, `frontend` | v0.4.0 |
+| 43 | Releer el historial cuando cambia la búsqueda de Gmail (un banco nuevo no leía los correos viejos) | 1 | `bug`, `frontend` | v0.9.0 |
 
 ---
 
@@ -60,10 +60,11 @@ Estos issues se crean y se cierran de una vez, para que el historial del proyect
 ### 15. Publicar el release con etiqueta y notas · 2 pts
 `docs` · Hito: Publicación
 El `CHANGELOG.md` describe la v0.1.0 pero el repositorio no tiene tags ni releases.
-- [ ] Crear el tag `v0.1.0` sobre el commit actual de `main`.
-- [ ] Publicar el release en GitHub con las notas tomadas del changelog.
-- [ ] Verificar que el repositorio es público y que el CI pasa en `main`.
-- [ ] Crear las etiquetas e hitos para el resto del equipo.
+Estado: hecho, issue de GitHub #17. Después se publicaron igual `v0.2.0` (#63) y `v0.3.0`, y el release candidate `v0.9.0` va en el #92.
+- [x] Crear el tag `v0.1.0` sobre el commit actual de `main`.
+- [x] Publicar el release en GitHub con las notas tomadas del changelog.
+- [x] Verificar que el repositorio es público y que el CI pasa en `main`.
+- [x] Crear las etiquetas e hitos para el resto del equipo.
 
 ### 16. Endurecer el servidor ante caídas de Redis y Mongo · 2 pts
 `backend`, `tests` · Hito: Publicación
@@ -118,8 +119,9 @@ Estado: hecho, issue de GitHub #23 (rama `23-exportar-movimientos-a-csv`).
 
 ### 32. Ocultar el aviso "Modo demo: simula a tu banco" · 1 pt
 `frontend` · Hito: Funciones de usuario
-- [ ] Aplicar `display: none` al aviso "Modo demo: simula a tu banco" del inicio (`web/src/presentation/screens/HomeScreen.jsx`).
-- [ ] Ajustar la prueba que hoy espera ese texto (`tests/presentation/app.test.jsx`).
+Estado: hecho, issue de GitHub #34.
+- [x] Aplicar `display: none` al aviso "Modo demo: simula a tu banco" del inicio (`web/src/presentation/screens/HomeScreen.jsx`).
+- [x] Ajustar la prueba que hoy espera ese texto (`tests/presentation/app.test.jsx`): ahora comprueba que no se ve.
 
 ### 33. Diálogos de confirmación para las acciones de las cards · 2 pts
 `frontend` · Hito: Funciones de usuario
@@ -203,7 +205,7 @@ Estado: hecho, issue de GitHub #59 (rama `59-releer-gmail-en-un-telefono-limpio-
 
 ---
 
-## Pendiente · Yader Barahona Villarreal · 11 pts
+## Pendiente · Yader Barahona Villarreal · 13 pts
 
 ### 27. Plantilla real de Davivienda · 2 pts
 `parser` · Hito: Más bancos
@@ -236,6 +238,14 @@ El PDF del curso pide responder qué cambia al escalar.
 - [x] Medir falsos positivos y documentar límites.
 
 Resultado en `docs/ANOMALIAS.md`.
+
+### 44. Plantilla real de Banco Popular · 2 pts
+`parser` · Hito: Seguimiento 3
+Estado: hecho en el PR #77 (`v0.3.0`), issue de GitHub #91. El PR entró sin issue; el issue se creó después para registrarlo.
+- [x] Notificaciones reales de Banco Popular (tarjeta de crédito y SINPE enviado o recibido) anonimizadas en `tests/fixtures/popular-html/`.
+- [x] Plantillas `popularCard.js` y `popularSinpe.js` en `web/src/domain/emailParser/templates/`, con sus pruebas.
+- [x] No leer los avisos de movimiento en la cuenta ni los de débito en tiempo real, para no contar dos veces el mismo dinero.
+- [x] Agregar los remitentes en la búsqueda de Gmail (`bpdc.fi.cr` y `bancopopularinforma.fi.cr`).
 
 ---
 
