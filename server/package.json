@@ -1,6 +1,6 @@
 {
   "name": "movo-api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "API mínima de Movo: configuración, tipo de cambio y respaldo opcional por usuario.",
   "type": "module",

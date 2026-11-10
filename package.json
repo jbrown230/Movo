@@ -1,6 +1,6 @@
 {
   "name": "movo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "PWA de gastos personales para Costa Rica que lee las notificaciones bancarias desde el teléfono.",
   "type": "module",
