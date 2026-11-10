@@ -28,9 +28,11 @@
     "seed:mongosh": "node --env-file-if-exists=.env scripts/seed-mongosh.mjs",
     "db:sqlite": "node scripts/crear-base-sqlite.mjs",
     "anomalias": "node scripts/anomalies.mjs",
+    "comparar-lector": "node scripts/parser-vs-llm.mjs",
     "issues": "node scripts/create-issues.mjs"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "@eslint/js": "^9.17.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
