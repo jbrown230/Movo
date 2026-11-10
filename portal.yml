@@ -6,7 +6,7 @@ motores: [SQLite, Redis, MongoDB]
 lenguaje: JavaScript (React y Node.js)
 licencia: MIT
 repositorio: https://github.com/jbrown230/Movo
-demo_video:
+demo_video: https://drive.google.com/file/d/1dvps7YE0LbnVhkJJNNoOl5L6up85J6s4/view?usp=sharing
 demo_url: https://app.movocr.xyz
 captura: docs/capturas/02-inicio.png
 grupo: 1
