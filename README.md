@@ -8,6 +8,12 @@ Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacio
 
 ![Inicio](docs/capturas/02-inicio.png)
 
+## Video de demostración
+
+<a href="https://drive.google.com/file/d/1dvps7YE0LbnVhkJJNNoOl5L6up85J6s4/view?usp=sharing"><img src="docs/capturas/video-demo.png" alt="Video de demostración de Movo" width="240"></a>
+
+Recorrido de 7 min 35 s por la app, grabado en un teléfono con Gmail conectado: la bienvenida, la lectura de los correos del banco, los movimientos y las categorías, la bandeja, exportar a Excel, los filtros, el presupuesto, el tipo de cambio y el modo oscuro. [Ver el video](https://drive.google.com/file/d/1dvps7YE0LbnVhkJJNNoOl5L6up85J6s4/view?usp=sharing).
+
 ## El problema
 
 Registrar gastos a mano se abandona en pocas semanas. La información ya existe: cada compra o SINPE genera un correo del banco, pero queda dispersa en la bandeja de entrada. Movo convierte esos correos en movimientos sin que la persona teclee nada.
