@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { precachePlugin } from './scripts/precache.mjs';
 
 // La API de Movo (server/) corre aparte en el puerto 3000. Durante el desarrollo, Vite
 // le reenvía las llamadas a /api. Sin la API, la app funciona igual en modo demo.
@@ -33,10 +34,11 @@ const addContentSecurityPolicy = {
 
 export default defineConfig({
   root: 'web',
-  plugins: [react(), addContentSecurityPolicy],
+  plugins: [react(), addContentSecurityPolicy, precachePlugin()],
   server: { port: 5173, proxy: apiProxy },
   preview: { port: 4173, proxy: apiProxy },
-  // exceljs pesa casi 1 MB, pero va en una pieza aparte que solo se descarga al exportar un Excel.
+  // exceljs pesa casi 1 MB, pero va en una pieza aparte que la app solo carga al exportar un Excel.
+  // El service worker la guarda al instalarse (scripts/precache.mjs), así se puede exportar sin conexión.
   build: { outDir: 'dist', emptyOutDir: true, target: 'es2022', chunkSizeWarningLimit: 1000 },
   test: {
     root: '.',

@@ -1,7 +1,7 @@
 // Pruebas de la interfaz: se dibuja la app completa y se usa como lo haría una persona.
 // La base de datos es SQLite real en memoria; el servidor no responde (la app debe funcionar igual).
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // Se reemplaza solo la apertura de la base (IndexedDB no existe en las pruebas). Todo lo demás es real.
@@ -657,5 +657,49 @@ describe('barra de abajo', () => {
     await goToTab(user, 'Ajustes');
     expect(navigation.getByRole('button', { name: 'Ajustes' })).toHaveAttribute('aria-current', 'page');
     expect(navigation.getByRole('button', { name: 'Inicio' })).toHaveAttribute('aria-current', 'false');
+  });
+});
+
+describe('la pestaña en la dirección', () => {
+  const visibleTitle = (name) => screen.queryByRole('heading', { name, level: 1 });
+
+  test('cada pestaña queda en la dirección, y el inicio no lleva nada', async () => {
+    const user = await openDemo();
+    expect(window.location.hash).toBe('');
+
+    await goToTab(user, 'Movimientos');
+    expect(window.location.hash).toBe('#movimientos');
+    await goToTab(user, 'Bandeja');
+    expect(window.location.hash).toBe('#bandeja');
+    await goToTab(user, 'Ajustes');
+    expect(window.location.hash).toBe('#ajustes');
+    await goToTab(user, 'Inicio');
+    expect(window.location.hash).toBe('');
+  });
+
+  test('al refrescar en una pestaña, la app vuelve a abrir en esa pestaña', async () => {
+    history.replaceState(null, '', '/#movimientos'); // lo que queda en la dirección al refrescar
+    await openDemo();
+    expect(visibleTitle('Movimientos')).toBeInTheDocument();
+  });
+
+  test('una dirección que no es de una pestaña abre el inicio', async () => {
+    history.replaceState(null, '', '/#algo-que-no-existe');
+    await openDemo();
+    expect(screen.getByRole('heading', { name: 'Últimos movimientos' })).toBeInTheDocument();
+    expect(visibleTitle('Movimientos')).not.toBeInTheDocument();
+  });
+
+  test('el botón Atrás vuelve a la pestaña anterior', async () => {
+    const user = await openDemo();
+    await goToTab(user, 'Movimientos');
+    await goToTab(user, 'Bandeja');
+
+    act(() => {
+      history.replaceState(null, '', '/#movimientos'); // lo que hace Atrás: la dirección anterior y un popstate
+      window.dispatchEvent(new PopStateEvent('popstate'));
+    });
+    expect(visibleTitle('Movimientos')).toBeInTheDocument();
+    expect(visibleTitle('Bandeja')).not.toBeInTheDocument();
   });
 });

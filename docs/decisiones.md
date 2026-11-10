@@ -179,7 +179,7 @@ Las decisiones que dan forma a Movo, reunidas en un solo lugar: qué se decidió
 
 - **Qué se decidió.** El reporte principal es un .xlsx con el diseño de Movo, dibujado con ExcelJS. Se importa en el momento de exportar, así que queda en una pieza aparte y la app no cambia de peso. El CSV sigue como segunda opción.
 - **Alternativas descartadas.** Armar el .xlsx a mano (no daba para ese nivel de diseño), un PDF (jsPDF pesa más y no se puede editar) y solo CSV (no admite diseño).
-- **Costo.** ExcelJS pesa unos 938 KB, y la primera exportación necesita conexión.
+- **Costo.** ExcelJS pesa unos 938 KB. Al principio la primera exportación necesitaba conexión; ahora el service worker la guarda al instalarse (#101).
 - **Fuente.** [`ARQUITECTURA.md`](ARQUITECTURA.md), "Decisión: el Excel se dibuja con ExcelJS".
 
 ### 21. Exportación protegida contra fórmulas
