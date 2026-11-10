@@ -1,17 +1,23 @@
 # Cambios
 
-## Sin publicar
+## v1.0.0
+
+Entrega final: la lectura de correos más estricta con las monedas que no conoce, exportar a Excel sin conexión, las mediciones de SQLite y MongoDB, la ficha del portal y un video de demostración.
 
 ### Cambiado
 
 - **Logotipo completo en el landing:** en la barra de arriba, la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola junto a la palabra escrita con la tipografía. La bienvenida de la app conserva la M en su cuadro translúcido. (#107)
 - **El landing usa el mismo lema que la app:** "Tus gastos se registran solos" en vez de "se anotan solos", también en el título de la pestaña y al compartir el enlace. El titular es un poco más chico para que la frase, más larga, no tape la M en 3D. (#107)
+- **El límite de solicitudes por minuto usa una ventana deslizante** en un sorted set de Redis, en vez de un contador por minuto del reloj: ya no se puede hacer el doble del límite entre el final de un minuto y el inicio del siguiente. (#96)
 
 ### Corregido
 
 - **BN y Davivienda ya no cuentan una moneda desconocida como colones.** Un voucher del BN con `TOTAL: GBP 15.00`, o un aviso de Davivienda con `Monto: 15.00 GBP`, se registraba como ₡15; ahora queda como "Sin movimiento" para registrarlo a mano, como ya pasaba en el BCR, BAC y Banco Popular. Sale del roadmap a 1 mes. (#105)
 - **Exportar a Excel funciona sin conexión** desde la primera vez. ExcelJS es una pieza aparte que el service worker solo guardaba al usarla con Internet; ahora la compilación escribe en `sw.js` la lista de todos los archivos de la app (`scripts/precache.mjs`) y el service worker los guarda al instalarse, y borra los de versiones anteriores. (#101)
 - **Al refrescar, la app se queda en la misma pestaña.** La pestaña va en la dirección (`#movimientos`, `#bandeja`, `#ajustes`, `#metas`), así que refrescar la conserva y el botón Atrás del navegador o del teléfono vuelve a la anterior. (#102)
+- **La guía de despliegue y su animación en el landing apuntan al sitio real del BCCR.** La dirección es `sdd.bccr.fi.cr/es/IndicadoresEconomicos/Inicio` (antes `gee.bccr.fi.cr`, donde está alojado el PDF) y los pasos siguen el estándar de la API del SDDE: registro de usuario, Mi Perfil → Generar token y enviarlo como Bearer, sin detalles que el estándar no dice. (#104)
+- **El botón "Leer la guía completa" del landing ya no se corta en los teléfonos.** El alto del texto de los pasos estaba fijado a mano y, en pantallas bajas, el contenido se pasaba del alto de la escena; ahora lo marca el paso más largo y la escena toma el espacio que sobra. (#104)
+- **La prueba de Redis caído ya no deja un tipo de cambio falso en el Redis real.** Guardaba 505,5 con la fuente "prueba" y no lo borraba, y en local la API lo servía hasta seis horas después. (#96)
 
 ### Agregado
 
@@ -21,17 +27,13 @@
 - **Script para recrear la base SQLite:** `npm run db:sqlite` aplica las migraciones de la app y lee correos sintéticos en `data/movo.sqlite`. Los `.sqlite` y `.db` ya no se pueden versionar por error (`.gitignore`). (#99)
 - **Resumen del respaldo** en `GET /api/backup/summary`: cuántos movimientos, reglas, ajustes y metas guarda la persona, cuántos están eliminados y cuándo fue el último cambio. Lo calcula MongoDB con un aggregation pipeline (`$match` por `userId` → `$group` por `kind`) y se guarda en Redis como un hash que se invalida en cuanto una sincronización guarda algún cambio o la persona borra su respaldo. (#96)
 - **Mediciones de SQLite y MongoDB** con `npm run bench:sqlite` y `npm run bench:mongo`: el plan de cada consulta (`EXPLAIN QUERY PLAN` y `explain("executionStats")`) y sus tiempos con y sin índices, el respaldo de la base local con `db.export()` y el resumen con y sin Redis. Mediana de 3 corridas de 5 ejecuciones; resultados en `docs/MEDICIONES.md`. (#96)
-
-### Cambiado
-
-- **El límite de solicitudes por minuto usa una ventana deslizante** en un sorted set de Redis, en vez de un contador por minuto del reloj: ya no se puede hacer el doble del límite entre el final de un minuto y el inicio del siguiente. (#96)
+- **Video de demostración** de 7 min 35 s, con miniatura en el README y enlace en `portal.yml` (`demo_video`): un recorrido por la app con Gmail conectado. (#109)
 
 ### Documentación
 
 - **SQLite a 100, 10.000 y 100.000 correos** en `docs/MEDICIONES.md`: ingesta, resumen del mes, consultas y tamaño de la base a tres escalas, con y sin índices, para responder qué cambia al crecer. (#31)
 - **Promerica descartado:** sin correos reales no se puede escribir su plantilla. El README ya no lo anuncia para el próximo mes y dice que no se lee. (#30)
 - **Tareas por motor** en `docs/ARQUITECTURA.md` (las tres estructuras de Redis y la invalidación de la caché) y cuatro decisiones nuevas en `docs/decisiones.md`. (#96)
-
 - **Pruebas documentadas por caso** en `docs/PRUEBAS.md`: cómo correrlas y las 336 pruebas agrupadas en caso normal, error de conexión y datos inválidos, con el archivo de cada una y qué comprueba. Incluye cuáles usan Redis y MongoDB de verdad y cómo activarlas en local. (#94)
 - **Decisiones técnicas en un solo lugar** en `docs/decisiones.md`: 27 decisiones reunidas de `docs/ARQUITECTURA.md`, `docs/MEDICIONES.md` y las bitácoras S1 a S4, cada una con qué se decidió, las alternativas descartadas, por qué y su costo. (#94)
 
