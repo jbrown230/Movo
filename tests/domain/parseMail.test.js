@@ -208,6 +208,11 @@ test('BN: un voucher en dólares y de madrugada', () => {
   assert.equal(parsed.date, costaRicaIso(2026, 9, 3, 0, 5));
 });
 
+test('BN: una moneda que Movo no sabe convertir no se cuenta como colones', () => {
+  const body = BN_VOUCHER_COMPRA.body.replace('CRC 3500,00', 'GBP 35,00');
+  assert.equal(parseMail({ ...BN_VOUCHER_COMPRA, body }).ok, false);
+});
+
 test('BN: se reconoce por el texto aunque el remitente no sea del banco', () => {
   const parsed = parseFirstApproved({ ...BN_VOUCHER_COMPRA, from: 'Yo <yo@correo.example>' });
   assert.equal(parsed.bank, 'BN');

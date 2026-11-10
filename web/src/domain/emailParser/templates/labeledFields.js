@@ -4,15 +4,18 @@
 // versión de texto plano el valor puede quedar en la línea siguiente. Las dos formas se leen igual.
 
 import { AMOUNT_PATTERN, parseAmount } from '../amount.js';
-import { detectCurrency } from '../currency.js';
+import { detectCurrency, isKnownCurrencyText } from '../currency.js';
 import { costaRicaToIso, to24Hour, TIME_PATTERN } from '../dateTime.js';
 import { collapseSpaces } from '../text.js';
 
 /** "15/01/2026, a las 10:30:15" o "15/01/2026 12:11:46 PM". */
 const DATE_TIME = new RegExp(`(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4}),?\\s*(?:a las\\s*)?${TIME_PATTERN}`, 'i');
 
-/** "CRC 12500.00", "250000.00 CRC" o "¢20000.00". */
-const MONEY = new RegExp(`^(CRC|USD|EUR|¢|₡|\\$)?\\s*${AMOUNT_PATTERN}\\s*(CRC|USD|EUR)?`, 'i');
+/**
+ * "CRC 12500.00", "250000.00 CRC" o "¢20000.00". El código de después se lee aunque no sea conocido ("15.00 GBP"),
+ * para poder rechazarlo en vez de contarlo como colones; uno desconocido delante ya no coincide.
+ */
+const MONEY = new RegExp(`^(CRC|USD|EUR|¢|₡|\\$)?\\s*${AMOUNT_PATTERN}(?:\\s*([A-Z]{3})(?![A-Z]))?`, 'i');
 
 /** Deja el texto en una forma estable: NFC, sin espacios raros ni caracteres invisibles. */
 export function normalizeText(raw) {
@@ -39,10 +42,11 @@ export function parseDate(value) {
   return costaRicaToIso({ year, month, day, hour: hour24, minute, second: second || 0 });
 }
 
-/** @returns {{amount: number, currency: string}|null} */
+/** @returns {{amount: number, currency: string}|null} null también si la moneda es una que Movo no sabe convertir. */
 export function parseMoney(value) {
   const match = value?.match(MONEY);
   if (!match) return null;
+  if (match[3] && !isKnownCurrencyText(match[3])) return null;
   const amount = parseAmount(match[2]);
   if (!amount || Number.isNaN(amount)) return null;
   return { amount, currency: detectCurrency(match[1] || match[3] || '') };

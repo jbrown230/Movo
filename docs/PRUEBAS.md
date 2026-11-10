@@ -1,6 +1,6 @@
 # Pruebas
 
-Movo tiene 355 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
+Movo tiene 357 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
 
 ## Cómo correrlas
 
@@ -14,7 +14,7 @@ npm run check          # lint, formato, pruebas y compilación: lo mismo que cor
 
 | Grupo | Carpeta | Pruebas | Con qué corre |
 |---|---|---|---|
-| Núcleo de la app | `tests/` (sin `presentation`) | 240 | `node --test`, con SQLite real (sql.js) y el servidor y Gmail simulados |
+| Núcleo de la app | `tests/` (sin `presentation`) | 242 | `node --test`, con SQLite real (sql.js) y el servidor y Gmail simulados |
 | Interfaz | `tests/presentation/` | 39 | Vitest y Testing Library sobre la app completa |
 | Servidor | `server/test/` | 76 | `node --test`, con los casos de uso reales y Redis, MongoDB y Google simulados |
 
@@ -80,7 +80,7 @@ Lo que llega mal formado, de otra aplicación o con valores fuera de lo permitid
 | Demasiadas solicitudes | `server/test/application/authenticateUser.test.js` y `http.api.test.js` | Límite por persona en el último minuto (ventana deslizante); el límite de una persona no afecta a otra. |
 | Correos publicitarios, sin plantilla o sin monto | `tests/domain/parseMail.test.js` y `tests/application/ingestMail.test.js` | Quedan como "Sin movimiento" y se pueden ver en la bandeja; la publicidad con montos no se lee como gasto. |
 | Compras negadas por el banco | `tests/domain/parseMail.test.js`, `tests/infrastructure/bcrHtml.test.js` y `tests/application/ingestMail.test.js` | No se registran como gasto; en una tabla con varias filas solo se registran las aprobadas. |
-| Monedas desconocidas | `tests/domain/parseMail.test.js` | Una moneda que Movo no sabe convertir no se cuenta como colones. |
+| Monedas desconocidas | `tests/domain/parseMail.test.js` y `davivienda.test.js` | Una moneda que Movo no sabe convertir no se cuenta como colones en el BCR, el BN ni Davivienda (antes o después del monto). |
 | Texto vacío, HTML sin estructura o un mensaje de Gmail sin cuerpo | `tests/application/ingestMail.test.js`, `tests/infrastructure/bcrHtml.test.js` y `gmailDecoder.test.js` | La lectura no se rompe. |
 | Falla a mitad de guardar un correo | `tests/application/ingestMail.test.js` | La transacción se deshace: no queda nada a medias. |
 | Una dirección de movimiento inválida | `tests/application/transactionActions.test.js` | Se rechaza sin cambiar nada. |

@@ -113,6 +113,13 @@ test('Davivienda: los avisos de seguridad, la solicitud de retiro y el estado de
   }
 });
 
+test('Davivienda: una moneda que Movo no sabe convertir no se cuenta como colones, vaya antes o después del monto', () => {
+  const after = DAVIVIENDA_TRANSFERENCIA_RECIBIDA.body.replace('250000.00 CRC', '250000.00 GBP');
+  const before = DAVIVIENDA_TARJETA_COMPRA.body.replace('CRC 8750.00', 'GBP 8750.00');
+  assert.equal(parseMail({ ...DAVIVIENDA_TRANSFERENCIA_RECIBIDA, body: after }).ok, false);
+  assert.equal(parseMail({ ...DAVIVIENDA_TARJETA_COMPRA, body: before }).ok, false);
+});
+
 test('Davivienda: la hora con "PM" de más ("23:49:50 PM") se lee en 24 horas', () => {
   assert.equal(parseDate('31/01/2026 23:49:50 PM'), costaRicaIso(2026, 1, 31, 23, 49, 50));
   assert.equal(parseDate('15/01/2026 12:11:46 PM'), costaRicaIso(2026, 1, 15, 12, 11, 46));

@@ -4,6 +4,7 @@
 
 ### Corregido
 
+- **BN y Davivienda ya no cuentan una moneda desconocida como colones.** Un voucher del BN con `TOTAL: GBP 15.00`, o un aviso de Davivienda con `Monto: 15.00 GBP`, se registraba como ₡15; ahora queda como "Sin movimiento" para registrarlo a mano, como ya pasaba en el BCR, BAC y Banco Popular. Sale del roadmap a 1 mes. (#105)
 - **Exportar a Excel funciona sin conexión** desde la primera vez. ExcelJS es una pieza aparte que el service worker solo guardaba al usarla con Internet; ahora la compilación escribe en `sw.js` la lista de todos los archivos de la app (`scripts/precache.mjs`) y el service worker los guarda al instalarse, y borra los de versiones anteriores. (#101)
 - **Al refrescar, la app se queda en la misma pestaña.** La pestaña va en la dirección (`#movimientos`, `#bandeja`, `#ajustes`, `#metas`), así que refrescar la conserva y el botón Atrás del navegador o del teléfono vuelve a la anterior. (#102)
 

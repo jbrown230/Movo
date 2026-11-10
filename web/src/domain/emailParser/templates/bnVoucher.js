@@ -12,7 +12,7 @@
 
 import { Direction, TransactionType } from '../../types.js';
 import { AMOUNT_PATTERN, parseAmount } from '../amount.js';
-import { detectCurrency } from '../currency.js';
+import { detectCurrency, isKnownCurrencyText } from '../currency.js';
 import { costaRicaToIso, to24Hour } from '../dateTime.js';
 
 const MONTHS = [
@@ -43,6 +43,8 @@ export function parseBnVoucher(text) {
   const sentence = text.match(VOUCHER_SENTENCE);
   const total = text.match(TOTAL);
   if (!sentence || !total) return null;
+  // Una moneda que Movo no sabe convertir ("GBP") no se cuenta como colones: el correo queda para registrarlo a mano.
+  if (!isKnownCurrencyText(total[1])) return null;
 
   const [, merchant, day, monthName, year, hour, minute, meridiem] = sentence;
   const month = monthNumber(monthName);
