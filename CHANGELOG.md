@@ -5,6 +5,7 @@
 ### Cambiado
 
 - **Logotipo completo en el landing:** en la barra de arriba, la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola junto a la palabra escrita con la tipografía. La bienvenida de la app conserva la M en su cuadro translúcido. (#107)
+- **El landing usa el mismo lema que la app:** "Tus gastos se registran solos" en vez de "se anotan solos", también en el título de la pestaña y al compartir el enlace. El titular es un poco más chico para que la frase, más larga, no tape la M en 3D. (#107)
 
 ### Corregido
 
