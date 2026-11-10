@@ -108,6 +108,8 @@ NIO_PER_USD=36.6243
 | `RATE_LIMIT_PER_MIN` | Cuántas solicitudes por minuto puede hacer **cada persona** autenticada al servidor (por ejemplo, al sincronizar el respaldo). Cuenta en ventanas de un minuto; al pasarse, el servidor responde `429` ("Demasiadas solicitudes. Intenta en un minuto.") hasta el minuto siguiente. Por defecto, 60. Súbelo solo si tu uso real lo necesita. |
 | `NIO_PER_USD` | Tipo de cambio de reserva **del córdoba**, en córdobas por dólar (la tasa oficial fija de 2026). Se usa si el servicio del Banco Central de Nicaragua no responde. No hace falta tocarlo (ver el párrafo de córdobas, arriba). |
 
+Para comprobar que el respaldo guarda datos (`CLOUD_SYNC=true`), hay una lista de comandos de mongosh en [VERIFICAR-RESPALDO.md](VERIFICAR-RESPALDO.md).
+
 El `.env` vive solo en el servidor: está en `.gitignore` y `update.sh` no lo toca. Después de cambiarlo, reinicia con `bash deploy/update.sh` o `docker compose up -d --build`.
 
 ## 4. VPS con Docker
