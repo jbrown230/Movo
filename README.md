@@ -12,7 +12,7 @@ Proyecto final del curso Tópicos Avanzados de Bases de Datos, Universidad Nacio
 
 <a href="https://github.com/jbrown230/Movo/releases/tag/video-demo"><img src="docs/capturas/video-demo.png" alt="Video de demostración de Movo" width="240"></a>
 
-Recorrido de 7 min 35 s por la app, grabado en un teléfono con Gmail conectado: la bienvenida, la lectura de los correos del banco, los movimientos y las categorías, la bandeja, exportar a Excel, los filtros, el presupuesto, el tipo de cambio y el modo oscuro. [Ver o descargar el video](https://github.com/jbrown230/Movo/releases/tag/video-demo) (39,5 MB, del release `video-demo`). Se tapó con desenfoque la información personal de la cuenta.
+Recorrido de 7 min 35 s por la app, grabado en un teléfono con Gmail conectado: la bienvenida, la lectura de los correos del banco, los movimientos y las categorías, la bandeja, exportar a Excel, los filtros, el presupuesto, el tipo de cambio y el modo oscuro. [Ver o descargar el video](https://github.com/jbrown230/Movo/releases/tag/video-demo) (39,5 MB, del release `video-demo`).
 
 ## El problema
 
