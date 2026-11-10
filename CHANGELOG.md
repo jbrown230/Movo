@@ -1,5 +1,11 @@
 # Cambios
 
+## Sin publicar
+
+### Documentación
+
+- **Comparación del lector por reglas contra un modelo de lenguaje** en `docs/PARSER_VS_LLM.md` (semilla del TFG). Conjunto de evaluación de 41 correos con la respuesta correcta escrita a mano (`tests/fixtures/parserEvalSet.js`): formatos reales, variaciones de formato, correos sin movimiento, formatos desconocidos y correos de la demo. `npm run comparar-lector` califica el lector: 32 de 41 correos completamente bien, ningún movimiento inventado y 3 errores silenciosos ante cambios de formato. La parte del modelo de lenguaje queda documentada, sin ejecutar: el extractor con Claude está listo y se puede correr con `--llm` si se retoma, con el costo estimado en el documento. (#30)
+
 ## v1.0.0
 
 Entrega final: la lectura de correos más estricta con las monedas que no conoce, exportar a Excel sin conexión, las mediciones de SQLite y MongoDB, la ficha del portal y un video de demostración.

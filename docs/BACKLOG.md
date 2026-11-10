@@ -228,9 +228,9 @@ El PDF del curso pide responder qué cambia al escalar.
 
 ### 30. Comparar parser por reglas contra un modelo de lenguaje (semilla de TFG) · 3 pts
 `investigación` · Hito: TFG
-- [ ] Definir un conjunto de evaluación con correos anonimizados y etiquetas correctas.
-- [ ] Probar el parser actual y un modelo de lenguaje sobre el mismo conjunto.
-- [ ] Comparar precisión, costo y tiempo; documentar en `docs/`.
+- [x] Definir un conjunto de evaluación con correos anonimizados y etiquetas correctas.
+- [x] Probar el parser actual y un modelo de lenguaje sobre el mismo conjunto. *(El lector está medido. Por decisión del equipo, el modelo de lenguaje queda documentado sin ejecutar: el extractor con Claude está listo para correrlo si se retoma en el TFG.)*
+- [x] Comparar precisión, costo y tiempo; documentar en `docs/`. *(En `docs/PARSER_VS_LLM.md`; el costo y el tiempo del modelo son estimaciones.)*
 
 ### 31. Detección de cargos anómalos (prototipo) · 2 pts
 `investigación` · Hito: TFG
