@@ -2,6 +2,11 @@
 
 ## Sin publicar
 
+### Cambiado
+
+- **Logotipo completo en el landing:** en la barra de arriba, la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola junto a la palabra escrita con la tipografía. La bienvenida de la app conserva la M en su cuadro translúcido. (#107)
+- **El landing usa el mismo lema que la app:** "Tus gastos se registran solos" en vez de "se anotan solos", también en el título de la pestaña y al compartir el enlace. El titular es un poco más chico para que la frase, más larga, no tape la M en 3D. (#107)
+
 ### Corregido
 
 - **BN y Davivienda ya no cuentan una moneda desconocida como colones.** Un voucher del BN con `TOTAL: GBP 15.00`, o un aviso de Davivienda con `Monto: 15.00 GBP`, se registraba como ₡15; ahora queda como "Sin movimiento" para registrarlo a mano, como ya pasaba en el BCR, BAC y Banco Popular. Sale del roadmap a 1 mes. (#105)

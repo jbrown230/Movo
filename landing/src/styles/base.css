@@ -17,7 +17,7 @@
   --gutter: clamp(16px, 3vw, 40px);
   --radius: 999px;
 
-  --step-hero: clamp(54px, 7.6vw, 128px);
+  --step-hero: clamp(45px, 6.4vw, 108px); /* "se registran solos." mide como "se anotan solos." a 7,6vw */
   --step-display: clamp(52px, 9vw, 150px);
   --step-title: clamp(36px, 4.6vw, 76px);
   --step-lede: clamp(18px, 1.45vw, 22px);
@@ -213,19 +213,16 @@ button {
 .wordmark {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: -0.03em;
   text-decoration: none;
 }
+/* El logotipo completo (816 × 254). */
 .wordmark svg {
-  width: 38px;
-  height: 30px;
+  width: 116px;
+  height: 36px;
   transition: transform 400ms var(--ease-spring);
 }
 .wordmark:hover svg {
-  transform: translateY(-3px) rotate(-6deg);
+  transform: translateY(-3px);
 }
 .nav-links {
   display: flex;
