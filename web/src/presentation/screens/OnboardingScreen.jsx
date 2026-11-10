@@ -9,7 +9,9 @@ export function OnboardingScreen() {
   return (
     <section className="ob">
       <div className="ob-hero">
-        <Wordmark className="ob-wordmark" />
+        <div className="ob-badge">
+          <Wordmark className="ob-wordmark" />
+        </div>
         <h1>Tus gastos se registran solos.</h1>
         <p>
           Movo lee las notificaciones de tus bancos en Gmail y las convierte en movimientos ordenados por categoría. Sin
