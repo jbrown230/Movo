@@ -4,7 +4,7 @@
 
 ### Cambiado
 
-- **Logotipo completo en la bienvenida y en el landing:** la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola (y, en el landing, la palabra escrita con la tipografía). (#107)
+- **Logotipo completo en el landing:** en la barra de arriba, la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola junto a la palabra escrita con la tipografía. La bienvenida de la app conserva la M en su cuadro translúcido. (#107)
 
 ### Corregido
 

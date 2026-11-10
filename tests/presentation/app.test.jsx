@@ -55,11 +55,6 @@ describe('bienvenida', () => {
     expect(screen.getByText(/no tiene configurado el inicio de sesión con Google/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Ver el modo demo' })).toBeEnabled();
   });
-
-  test('muestra el logotipo completo de Movo', async () => {
-    render(<App />);
-    expect(await screen.findByRole('img', { name: 'Movo' })).toBeInTheDocument();
-  });
 });
 
 describe('modo demo', () => {
