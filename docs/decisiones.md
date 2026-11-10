@@ -141,9 +141,9 @@ Las decisiones que dan forma a Movo, reunidas en un solo lugar: qué se decidió
 
 ### 15. Una moneda desconocida no se cuenta como colones
 
-- **Qué se decidió.** En las tarjetas del BCR, una moneda que Movo no sabe convertir hace que esa fila no se lea y el correo quede como "Sin movimiento".
-- **Por qué.** Antes cualquier moneda no reconocida se leía como colones, y 300 córdobas quedaban como ₡300. Los lectores de BAC, BN y Davivienda todavía no lo hacen.
-- **Fuente.** [S3](seguimientos/S3.md), decisiones.
+- **Qué se decidió.** Una moneda que Movo no sabe convertir hace que esa fila no se lea y el correo quede como "Sin movimiento", para registrarlo a mano. Empezó en las tarjetas del BCR (S3); BAC y Banco Popular ya lo hacían porque solo aceptan monedas conocidas, y BN y Davivienda se sumaron después (#105).
+- **Por qué.** Antes cualquier moneda no reconocida se leía como colones, y 300 córdobas quedaban como ₡300.
+- **Fuente.** [S3](seguimientos/S3.md), decisiones; issue #105.
 
 ### 16. Banco Popular: no leer los avisos de movimiento en la cuenta
 
