@@ -8,6 +8,7 @@ afterEach(() => {
   localStorage.clear();
   delete document.documentElement.dataset.theme;
   sessionStorage.clear();
+  history.replaceState(null, '', '/'); // la pestaña va en la dirección: cada prueba empieza en el inicio
 });
 
 window.scrollTo = vi.fn();

@@ -2,6 +2,11 @@
 
 ## Sin publicar
 
+### Corregido
+
+- **Exportar a Excel funciona sin conexión** desde la primera vez. ExcelJS es una pieza aparte que el service worker solo guardaba al usarla con Internet; ahora la compilación escribe en `sw.js` la lista de todos los archivos de la app (`scripts/precache.mjs`) y el service worker los guarda al instalarse, y borra los de versiones anteriores. (#101)
+- **Al refrescar, la app se queda en la misma pestaña.** La pestaña va en la dirección (`#movimientos`, `#bandeja`, `#ajustes`, `#metas`), así que refrescar la conserva y el botón Atrás del navegador o del teléfono vuelve a la anterior. (#102)
+
 ### Agregado
 
 - **Roadmap a 1 mes** en el README, como pide el enunciado (1 mes, 6 meses y TFG), y la documentación de MongoDB incluye las metas de ahorro entre lo que se respalda. (#99)

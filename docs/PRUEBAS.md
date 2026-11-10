@@ -1,6 +1,6 @@
 # Pruebas
 
-Movo tiene 346 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
+Movo tiene 355 pruebas automáticas que corren en el CI en cada pull request. Este documento las agrupa en los tres casos que pide el enunciado: **caso normal**, **error de conexión** y **datos inválidos**. Para cada uno dice en qué archivo están las pruebas y qué comprueban.
 
 ## Cómo correrlas
 
@@ -14,8 +14,8 @@ npm run check          # lint, formato, pruebas y compilación: lo mismo que cor
 
 | Grupo | Carpeta | Pruebas | Con qué corre |
 |---|---|---|---|
-| Núcleo de la app | `tests/` (sin `presentation`) | 235 | `node --test`, con SQLite real (sql.js) y el servidor y Gmail simulados |
-| Interfaz | `tests/presentation/` | 35 | Vitest y Testing Library sobre la app completa |
+| Núcleo de la app | `tests/` (sin `presentation`) | 240 | `node --test`, con SQLite real (sql.js) y el servidor y Gmail simulados |
+| Interfaz | `tests/presentation/` | 39 | Vitest y Testing Library sobre la app completa |
 | Servidor | `server/test/` | 76 | `node --test`, con los casos de uso reales y Redis, MongoDB y Google simulados |
 
 Las pruebas que usan **Redis y MongoDB de verdad** corren solo si existen `REDIS_URL` y `MONGO_URL`. El CI (`.github/workflows/ci.yml`) los levanta como servicios (`redis:7-alpine` y `mongo:7`), así que en cada pull request corren todas. En local, `docker compose up -d redis mongo` y esas dos variables las activan; sin ellas, esos grupos se saltan y avisan por qué.
@@ -41,7 +41,8 @@ El flujo principal de punta a punta, y cada caso de uso con datos correctos.
 | API HTTP | `server/test/adapters/http.api.test.js` | Configuración, salud, sincronización con token válido y separación por persona. |
 | Caché | `server/test/adapters/cache.test.js` | La misma batería en memoria y en Redis real: valores con vencimiento, la ventana deslizante del límite por minuto (sorted set), que olvida las solicitudes viejas, y el hash del resumen, que se reemplaza completo y se invalida al borrarlo. |
 | Resumen del respaldo | `server/test/application/getBackupSummary.test.js`, `backupStore.contract.test.js` y `http.api.test.js` | El aggregation pipeline cuenta por tipo y separa los eliminados (en memoria y en MongoDB real); el resumen sale de la caché la segunda vez; sincronizar un cambio o borrar el respaldo lo invalida, y una sincronización sin cambios no. |
-| Interfaz | `tests/presentation/app.test.jsx` | Navegación entre pestañas, filtros, confirmaciones (una acción cancelada no se ejecuta), modo demo y Ajustes. |
+| Interfaz | `tests/presentation/app.test.jsx` | Navegación entre pestañas (que queda en la dirección: refrescar y Atrás la conservan), filtros, confirmaciones (una acción cancelada no se ejecuta), modo demo y Ajustes. |
+| Uso sin conexión | `tests/build/precache.test.js` | La compilación escribe en el service worker todos los archivos de la app, incluida la pieza de ExcelJS, para exportar sin conexión. |
 | Migraciones de SQLite | `tests/infrastructure/schemaMigration.test.js` | Una base nueva queda con todas las tablas; migrar dos veces no hace nada; una base de la versión 1 se actualiza sin perder datos. |
 
 ## 2. Error de conexión
