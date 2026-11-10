@@ -35,7 +35,8 @@ function fitWindows(stage, fits) {
     fits.forEach((fit) => fit.style.setProperty('--fit', scale.toFixed(3)));
   };
   resize();
-  window.addEventListener('resize', resize);
+  // El escenario cambia de alto cuando carga la letra o gira el teléfono: se vuelve a ajustar cada vez.
+  new ResizeObserver(resize).observe(stage);
 }
 
 /** Centro de un elemento dentro de `root`. Usa offset*, que no cambia con las transformaciones. */
