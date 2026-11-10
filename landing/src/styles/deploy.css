@@ -26,9 +26,14 @@
   font-weight: 700;
   color: var(--violet);
 }
+/* Todos los pasos comparten la misma celda: el alto lo marca el más largo, sin números a mano. */
 .deploy-clauses {
+  display: grid;
+}
+.deploy .clause {
   position: relative;
-  min-height: 15em;
+  inset: auto;
+  grid-area: 1 / 1;
 }
 .deploy .clause-title {
   max-width: 12ch;
@@ -628,7 +633,8 @@
   }
   .deploy-sticky {
     grid-template-columns: 1fr;
-    grid-template-rows: 50svh 1fr;
+    /* La escena toma el alto que sobra; el texto y el botón nunca se recortan, aunque la pantalla sea baja. */
+    grid-template-rows: minmax(150px, 1fr) auto;
   }
   .deploy-stage {
     --win-w: 430px;
@@ -636,9 +642,9 @@
     order: -1;
   }
   .deploy-text {
-    padding-top: 22px;
-    grid-template-rows: auto 1fr auto;
-    gap: 18px;
+    padding: 22px var(--gutter) 24px;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
   }
   .deploy-main {
     align-self: start;
@@ -651,10 +657,6 @@
     margin-bottom: 10px;
     font-size: 15px;
   }
-  .deploy-clauses {
-    /* Los pasos son absolutos: se reserva el alto del más largo para que el botón de la guía no se pise con el texto. */
-    min-height: 178px;
-  }
   .deploy .clause-title {
     font-size: 9vw;
     max-width: none;
@@ -664,14 +666,5 @@
   }
   .term {
     font-size: 12.5px;
-  }
-}
-
-@media (max-width: 860px) and (max-height: 720px) {
-  .deploy-sticky {
-    grid-template-rows: 40svh 1fr;
-  }
-  .deploy-clauses {
-    min-height: 150px;
   }
 }

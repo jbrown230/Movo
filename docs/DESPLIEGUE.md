@@ -73,11 +73,11 @@ Google mostrará "Google no verificó esta app". Para pruebas es normal: toca "C
 
 ### 3.1 Sacar el token del BCCR (opcional)
 
-Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica para el tipo de cambio. Esa API pide un token personal:
+Movo consulta la API del Sistema de Divulgación de Datos Económicos (SDDE) del Banco Central de Costa Rica para el tipo de cambio. Esa API pide un token personal. El flujo, según el [estándar oficial de la API del SDDE](https://gee.bccr.fi.cr/indicadoreseconomicos/Documentos/DocumentosMetodologiasNotasTecnicas/Estandar_API_SDDE.pdf), es: registro de usuario → generar el token → enviarlo como Bearer en cada consulta.
 
-1. Abre el sitio de Indicadores Económicos del BCCR (https://gee.bccr.fi.cr/indicadoreseconomicos/) y **regístrate** con tu correo. Confirma el correo que te llega.
-2. Inicia sesión y entra a **Mi Perfil → Generar token**.
-3. Copia el token y pégalo en el `.env` como `BCCR_TOKEN`. Es una credencial: no la subas al repositorio ni la pegues en chats.
+1. Abre el sitio de Indicadores Económicos de Costa Rica del BCCR (https://sdd.bccr.fi.cr/es/IndicadoresEconomicos/Inicio/) y completa el **registro de usuario**.
+2. Con tu cuenta, entra a **Mi Perfil → Generar token**.
+3. Copia el token y pégalo en el `.env` como `BCCR_TOKEN`. Es una credencial: no la subas al repositorio ni la pegues en chats. Movo lo envía en cada consulta como `Authorization: Bearer <token>`.
 4. Reinicia con `bash deploy/update.sh` (o `docker compose up -d --build`) y revisa `https://movo.tudominio.com/api/fx`: `source` debe decir "BCCR, tipo de cambio de venta".
 
 Sin token, o si el BCCR no responde, Movo usa `FX_FALLBACK`. El BCCR responde `401` si el token no existe o venció, `403` si la cuenta no tiene una suscripción válida y `429` si haces demasiadas consultas. `BCCR_EMAIL` no lo usa el servidor: con el token basta.
