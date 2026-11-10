@@ -192,14 +192,11 @@ textarea {
   width: 24px;
   height: 24px;
 }
-.mark.mark-large {
-  width: 64px;
-  height: 64px;
-  border-radius: 20px;
-}
-.mark.mark-large svg {
-  width: 38px;
-  height: 38px;
+/* El logotipo completo de la bienvenida (816 × 254). */
+.ob-wordmark {
+  display: block;
+  width: 180px;
+  height: 56px;
 }
 .mark {
   width: 40px;

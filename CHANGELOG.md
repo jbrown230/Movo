@@ -2,6 +2,10 @@
 
 ## Sin publicar
 
+### Cambiado
+
+- **Logotipo completo en la bienvenida y en el landing:** la M con su flecha y "ovo" con el mismo trazo, en blanco con la flecha verde menta, en lugar de la M sola (y, en el landing, la palabra escrita con la tipografía). (#107)
+
 ### Corregido
 
 - **BN y Davivienda ya no cuentan una moneda desconocida como colones.** Un voucher del BN con `TOTAL: GBP 15.00`, o un aviso de Davivienda con `Monto: 15.00 GBP`, se registraba como ₡15; ahora queda como "Sin movimiento" para registrarlo a mano, como ya pasaba en el BCR, BAC y Banco Popular. Sale del roadmap a 1 mes. (#105)

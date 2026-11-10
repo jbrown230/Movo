@@ -1,4 +1,4 @@
-import { Logo } from '../components/Logo.jsx';
+import { Wordmark } from '../components/Logo.jsx';
 import { useSession } from '../state/SessionProvider.jsx';
 
 /** Pantalla de bienvenida: conectar con Google o probar el modo demo. */
@@ -9,9 +9,7 @@ export function OnboardingScreen() {
   return (
     <section className="ob">
       <div className="ob-hero">
-        <div className="mark mark-large">
-          <Logo />
-        </div>
+        <Wordmark className="ob-wordmark" />
         <h1>Tus gastos se registran solos.</h1>
         <p>
           Movo lee las notificaciones de tus bancos en Gmail y las convierte en movimientos ordenados por categoría. Sin

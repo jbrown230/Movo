@@ -26,3 +26,28 @@ export function Logo(svgProps) {
     </svg>
   );
 }
+
+/**
+ * El logotipo completo: la misma M y "ovo" con el mismo trazo, como una sola palabra. Para fondos oscuros.
+ * El tamaño lo da el contenedor; la proporción es 816 × 254.
+ */
+export function Wordmark(svgProps) {
+  return (
+    <svg
+      viewBox="108 140 816 254"
+      fill="none"
+      strokeWidth={STROKE_WIDTH}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      role="img"
+      aria-label="Movo"
+      {...svgProps}
+    >
+      <path d="M136 366V200L252 322L368 206" stroke={LETTER_COLOR} />
+      <path d="M368 366V168M327 209L368 168L409 209" stroke={ARROW_COLOR} />
+      <circle cx="492" cy="300" r="66" stroke={LETTER_COLOR} />
+      <path d="M598 236L661 366L724 236" stroke={LETTER_COLOR} />
+      <circle cx="830" cy="300" r="66" stroke={LETTER_COLOR} />
+    </svg>
+  );
+}
