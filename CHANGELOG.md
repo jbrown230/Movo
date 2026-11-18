@@ -11,6 +11,10 @@
   - **Los movimientos aparecen mientras se leen**: el primero enseguida y después cada 2 segundos, en vez de esperar al último correo.
   - **Se descargan 6 correos a la vez** en lugar de 4. La lectura espera a la red casi todo el tiempo, y 6 queda lejos del límite de Gmail.
 
+### Corregido
+
+- **En la bandeja, la hora de los correos de Wink ya no se sale de la pantalla.** Wink escribe desde `transacciones@holawink.com`, sin un nombre, así que la bandeja mostraba esa dirección entera y empujaba la hora ("Ayer, 1:40 p. m.") fuera de la fila. Ahora un remitente largo se corta con "…" y la hora queda siempre completa a la derecha.
+
 ### Agregado
 
 - **Wink como banco nuevo.** El lector entiende los avisos de `transacciones@holawink.com`, escritos a partir de correos reales anonimizados: **SINPE Móvil enviado y recibido**, **compra con tarjeta** y **pago de tarjeta de crédito**. Lee tanto el HTML (que trae tablas) como la parte de texto plano.
