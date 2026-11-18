@@ -34,9 +34,9 @@ const NO_MAIL_SOURCE = {
 };
 
 /**
- * @param {{ backend?: object, mailSource?: object, database?: import('sql.js').Database }} [options]
+ * @param {{ backend?: object, mailSource?: object, database?: import('sql.js').Database, yieldToUi?: () => Promise<void> }} [options]
  */
-export function createTestApp({ backend = OFFLINE_BACKEND, mailSource = NO_MAIL_SOURCE, database } = {}) {
+export function createTestApp({ backend = OFFLINE_BACKEND, mailSource = NO_MAIL_SOURCE, database, yieldToUi } = {}) {
   const db = database ?? new SQL.Database();
   const storage = createSqliteStorage(db);
   const services = createServices({
@@ -45,6 +45,7 @@ export function createTestApp({ backend = OFFLINE_BACKEND, mailSource = NO_MAIL_
     backend,
     buildDemoMails: buildDemoSeedMails,
     writeMovementsWorkbook,
+    yieldToUi,
   });
   return { db, storage, services, queries: services.queries };
 }

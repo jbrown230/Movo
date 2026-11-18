@@ -6,6 +6,8 @@ import { useNavigation } from './NavigationProvider.jsx';
 import { useSession } from './SessionProvider.jsx';
 import { useToast } from './ToastProvider.jsx';
 
+const SHOW_PARTIAL_RESULTS_EVERY_MS = 2000; // cada cuánto se redibuja la pantalla con lo leído hasta ahora
+
 /** Qué se le dice a la persona después de buscar correos. Devuelve null si no hay nada que decir. */
 function describeScanResult({ newTransactions, firstTransaction }, { quiet }) {
   if (newTransactions === 1) {
@@ -32,10 +34,18 @@ export function useInboxScan({ reconnect, syncBackup }) {
   const runScan = useCallback(
     async (token, { quiet }) => {
       setProgressText('Buscando correos…');
+      let lastRefreshAt = 0; // 0: el primer correo leído ya se muestra enseguida
       try {
         const summary = await services.scanInbox({
           token,
-          onProgress: (done, total) => setProgressText(`Leyendo ${done} de ${total}…`),
+          onProgress: (done, total) => {
+            setProgressText(`Leyendo ${done} de ${total}…`);
+            // Los movimientos van apareciendo mientras se leen, en vez de esperar al último correo.
+            if (Date.now() - lastRefreshAt >= SHOW_PARTIAL_RESULTS_EVERY_MS) {
+              lastRefreshAt = Date.now();
+              refresh();
+            }
+          },
         });
         if (summary.firstTransaction) flashTransaction(summary.firstTransaction.id);
         refresh();

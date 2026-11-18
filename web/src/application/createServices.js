@@ -20,8 +20,9 @@ import { createSavingsGoals } from './savingsGoals.js';
  * @param {import('./ports.js').BackendApi} dependencies.backend
  * @param {(now: Date) => import('../domain/types.js').IncomingMail[]} dependencies.buildDemoMails  Correos de ejemplo del modo demo.
  * @param {import('./ports.js').WorkbookWriter['writeMovementsWorkbook']} dependencies.writeMovementsWorkbook  Dibuja el Excel.
+ * @param {() => Promise<void>} [dependencies.yieldToUi]  Respiro para la pantalla entre un correo y otro al leer Gmail.
  */
-export function createServices({ storage, mailSource, backend, buildDemoMails, writeMovementsWorkbook }) {
+export function createServices({ storage, mailSource, backend, buildDemoMails, writeMovementsWorkbook, yieldToUi }) {
   const { transactions, mails, rules, settings, savingsGoals, localState, backup, atomically } = storage;
 
   const preferences = createPreferences({ settings, localState });
@@ -47,7 +48,7 @@ export function createServices({ storage, mailSource, backend, buildDemoMails, w
     readMail,
     reparseMail,
     reparseIfParserChanged,
-    scanInbox: createScanInbox({ mailSource, readMail, mails, preferences }),
+    scanInbox: createScanInbox({ mailSource, readMail, mails, preferences, yieldToUi }),
     refreshExchangeRate: createRefreshExchangeRate({ backend, localState, transactions, atomically }),
     backup: createBackupSync({ backup, localState, backend }),
     seedDemoData: createSeedDemoData({ readMail, preferences, buildDemoMails }),
