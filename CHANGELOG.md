@@ -1,5 +1,16 @@
 # Cambios
 
+## Sin publicar
+
+### Cambiado
+
+- **El primer arranque con muchos correos ya no deja la app pegada.** Al conectar Gmail por primera vez se leen hasta 300 correos de los últimos 45 días, y cada uno ocupaba la pantalla de una vez. Con la CPU de un teléfono (simulada 6 veces más lenta que la de un computador), un correo de 50 KB bloqueaba unos 57 ms y ahora unos 38 ms; uno de 18 KB, 25 ms y ahora 18 ms. Cinco cambios:
+  - **Se descodifica solo lo que hace falta y más rápido.** El base64 se leía con una función por carácter y se descodificaban las dos versiones del mensaje (texto y HTML) aunque se usa una; ahora es un bucle simple, unas 15 veces más rápido, y el texto plano solo se descodifica si el HTML no sirve. El resultado es idéntico.
+  - **Entre un correo y el siguiente se le cede el control a la pantalla** (`scheduler.yield`, o un temporizador de 0 ms si el navegador no lo tiene), para que los toques y el dibujo no esperen a que termine la lectura.
+  - **La lectura empieza 600 ms después de entrar**, cuando ya se dibujó la pantalla de inicio, en vez de arrancar a la vez que ella.
+  - **Los movimientos aparecen mientras se leen**: el primero enseguida y después cada 2 segundos, en vez de esperar al último correo.
+  - **Se descargan 6 correos a la vez** en lugar de 4. La lectura espera a la red casi todo el tiempo, y 6 queda lejos del límite de Gmail.
+
 ## v1.0.0
 
 Entrega final: la lectura de correos más estricta con las monedas que no conoce, exportar a Excel sin conexión, las mediciones de SQLite y MongoDB, la ficha del portal, un video de demostración y la comparación del lector contra un modelo de lenguaje.

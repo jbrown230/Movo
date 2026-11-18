@@ -14,19 +14,25 @@ import { useToast } from './ToastProvider.jsx';
 const GmailContext = createContext(null);
 
 const SCAN_AGAIN_AFTER_MS = 120_000; // al volver a la app, se busca otra vez si pasaron más de 2 minutos
+// Al entrar, la primera pantalla se dibuja antes de empezar a leer. Si arrancan a la vez (sobre todo en la primera
+// lectura, con cientos de correos), la pantalla de inicio tarda en responder.
+const FIRST_SCAN_DELAY_MS = 600;
 
 /** Busca correos en silencio al entrar y cada vez que la persona vuelve a la app. */
 function useAutomaticScan({ scan, services, isDemo }) {
   useEffect(() => {
     if (isDemo) return undefined;
-    if (getSavedToken()) scan({ quiet: true });
+    const firstScan = getSavedToken() ? setTimeout(() => scan({ quiet: true }), FIRST_SCAN_DELAY_MS) : null;
 
     const scanWhenVisible = () => {
       const wasAwayLongEnough = Date.now() - (services.preferences.lastScanAt() || 0) > SCAN_AGAIN_AFTER_MS;
       if (document.visibilityState === 'visible' && getSavedToken() && wasAwayLongEnough) scan({ quiet: true });
     };
     document.addEventListener('visibilitychange', scanWhenVisible);
-    return () => document.removeEventListener('visibilitychange', scanWhenVisible);
+    return () => {
+      clearTimeout(firstScan);
+      document.removeEventListener('visibilitychange', scanWhenVisible);
+    };
     // Solo al entrar con esta sesión.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [services]);
