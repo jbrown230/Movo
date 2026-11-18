@@ -15,7 +15,7 @@ import { collapseSpaces } from './text.js';
 import { TEMPLATES } from './templates/index.js';
 
 /** Súbelo cuando cambie el lector: la app vuelve a leer los correos no reconocidos. */
-export const PARSER_VERSION = 10;
+export const PARSER_VERSION = 11;
 
 const MAX_COUNTERPARTY_LENGTH = 80;
 
@@ -37,11 +37,12 @@ const CARD_HINTS = /tarjeta|compra|comercio|autorizaci/i;
  */
 
 /** Primera plantilla que reconoce el correo, con sus transacciones sin normalizar. */
-function runTemplates(body, bank) {
+function runTemplates(mail, bank) {
+  const body = mail.body || '';
   const preferred = TEMPLATES.filter((template) => template.bank === bank);
   const others = TEMPLATES.filter((template) => template.bank !== bank);
   for (const template of [...preferred, ...others]) {
-    const rawItems = template.parse(body);
+    const rawItems = template.parse(body, mail);
     if (rawItems?.some((item) => item.amount > 0)) return { template, rawItems };
   }
   return null;
@@ -86,7 +87,7 @@ export function parseMail(mail) {
   const text = `${mail.subject || ''}\n${body}`;
   let bank = detectBank(mail.from, text);
 
-  const found = runTemplates(body, bank);
+  const found = runTemplates(mail, bank);
   if (!found) return { ok: false, bank, reason: 'No hay una plantilla oficial para este correo.' };
 
   // Si el remitente identifica otro banco, se respeta; si no, manda la plantilla.

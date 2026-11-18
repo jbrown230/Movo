@@ -31,6 +31,8 @@ export const BANKS = Object.freeze({
     senderPattern: /(bpdc\.fi\.cr|bancopopularinforma|\bbp\.fi\.cr)/i,
     textPattern: /\bBanco Popular\b/i,
   },
+  // Wink es una billetera digital, no un banco con ese nombre; igual se maneja como uno: tiene cuenta, SINPE y tarjeta.
+  WINK: { name: 'Wink', color: '#695EFF', senderPattern: /holawink/i, textPattern: /\bEl equipo de WINK\b/i },
 });
 
 /** Color de marca de un banco (gris si no se reconoce). */

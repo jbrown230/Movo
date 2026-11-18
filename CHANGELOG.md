@@ -11,6 +11,15 @@
   - **Los movimientos aparecen mientras se leen**: el primero enseguida y después cada 2 segundos, en vez de esperar al último correo.
   - **Se descargan 6 correos a la vez** en lugar de 4. La lectura espera a la red casi todo el tiempo, y 6 queda lejos del límite de Gmail.
 
+### Agregado
+
+- **Wink como banco nuevo.** El lector entiende los avisos de `transacciones@holawink.com`, escritos a partir de correos reales anonimizados: **SINPE Móvil enviado y recibido**, **compra con tarjeta** y **pago de tarjeta de crédito**. Lee tanto el HTML (que trae tablas) como la parte de texto plano.
+  - El aviso del SINPE enviado solo trae el día en el cuerpo; la hora se toma del asunto (`Notificación de envío 15/01/2026 - 10:30`). Para eso las plantillas ahora reciben también el correo (`parse(cuerpo, correo)`); el resto siguen leyendo solo el cuerpo.
+  - El **pago de la tarjeta de crédito** queda como "Entre mis cuentas" y no como gasto: las compras ya se registraron con el aviso de cada compra, y contar también el pago las contaría dos veces. Se puede cambiar en "¿Cómo contarlo?".
+  - Limitaciones del formato: el SINPE recibido no dice quién lo envió (queda como "SINPE MÓVIL"), el aviso de compra no distingue tarjeta de crédito de débito, y un monto en una moneda que Movo no sabe convertir no se lee, como en los demás bancos.
+  - Wink entra en la búsqueda de Gmail por defecto (`from:transacciones@holawink.com`) y se sube `PARSER_VERSION` a 11, así que la app vuelve a revisar el historial de 45 días y lee los avisos que antes no entendía.
+  - La prueba de privacidad reconoce las direcciones públicas de Wink y vigila los nombres que escribe en sus avisos: destinatario, titular de la tarjeta y saludo.
+
 ## v1.0.0
 
 Entrega final: la lectura de correos más estricta con las monedas que no conoce, exportar a Excel sin conexión, las mediciones de SQLite y MongoDB, la ficha del portal, un video de demostración y la comparación del lector contra un modelo de lenguaje.
