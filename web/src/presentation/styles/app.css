@@ -724,14 +724,21 @@ textarea {
   justify-content: space-between;
   gap: 8px;
 }
+/* Un remitente sin nombre llega como una dirección larga ("transacciones@holawink.com"): se corta con "…" y la hora
+   se queda siempre completa a la derecha. */
 .mail .f {
   font-weight: 700;
   font-size: 15px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mail .tm {
   font-size: 12px;
   color: var(--muted);
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .mail .s {
   font-size: 14px;
