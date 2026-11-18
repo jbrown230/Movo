@@ -66,6 +66,7 @@ const ALLOWED_EMAIL_DOMAINS = [
   'bpdc.fi.cr', // remitentes públicos de Banco Popular
   'bancopopularinforma.fi.cr',
   'bp.fi.cr', // correos de atención públicos de Banco Popular
+  'holawink.com', // remitente de las notificaciones y correo de soporte públicos de Wink
   'bancobcr.demo',
   'bac.demo',
   'bn.demo', // remitentes del modo demo
@@ -90,6 +91,7 @@ const FAKE_NAMES = new Set([
   'PERSONA DESTINO PRUEBA',
   'PERSONA ORIGEN PRUEBA',
   'CLIENTE',
+  'WINKER', // así saluda Wink cuando no usa el nombre de la persona
 ]);
 
 test('no hay correos personales: solo direcciones públicas del banco o de ejemplo', () => {
@@ -168,6 +170,9 @@ test('los correos de ejemplo solo usan nombres de personas ficticios', () => {
     /Estimado\s*\(a\)\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\s*:/g,
     /\(DTR\)\s+a\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\s+por un monto/g,
     /al tel[eé]fono\s+\d+\s+de\s+([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .]+?)\./g,
+    // Wink: "Nombre del destinatario: NOMBRE", "Titular: NOMBRE" (de la tarjeta) y el saludo "¡Hola NOMBRE!".
+    /(?:Nombre del destinatario|Titular)\s*:\*?\s*([^\n\r]*)/gi,
+    /¡Hola\s+([^!\n\r]+)!/g,
   ];
   const unexpected = [];
   for (const file of FIXTURES) {

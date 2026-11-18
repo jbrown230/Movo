@@ -12,12 +12,17 @@ import { parseDaviviendaTransfer } from './daviviendaTransfer.js';
 import { parsePopularCard } from './popularCard.js';
 import { parsePopularSinpe } from './popularSinpe.js';
 import { parseBacSynthetic, parseBnSynthetic } from './syntheticBanks.js';
+import { parseWinkCard } from './winkCard.js';
+import { parseWinkCardPayment } from './winkCardPayment.js';
+import { parseWinkSinpe } from './winkSinpe.js';
 
 /**
  * @typedef {Object} Template
  * @property {string} bank   Clave del banco (ver domain/banks.js).
  * @property {string} name   Nombre que se muestra como "lector" en la bandeja.
- * @property {(text: string) => Array|null} parse  Devuelve las transacciones o null si el texto no es de esta plantilla.
+ * @property {(text: string, mail?: {subject?: string}) => Array|null} parse  Devuelve las transacciones o null si el
+ *   texto no es de esta plantilla. Casi todas leen solo el cuerpo; `mail` sirve para lo que el banco escribe en el
+ *   asunto (Wink pone la hora del SINPE enviado ahí).
  */
 
 /** @type {Template[]} */
@@ -34,4 +39,7 @@ export const TEMPLATES = [
   { bank: 'DAVIVIENDA', name: 'Davivienda transferencia', parse: parseDaviviendaTransfer },
   { bank: 'POPULAR', name: 'Popular tarjeta', parse: parsePopularCard },
   { bank: 'POPULAR', name: 'Popular SINPE', parse: parsePopularSinpe },
+  { bank: 'WINK', name: 'Wink SINPE', parse: parseWinkSinpe },
+  { bank: 'WINK', name: 'Wink tarjeta', parse: parseWinkCard },
+  { bank: 'WINK', name: 'Wink pago de tarjeta', parse: parseWinkCardPayment },
 ];
